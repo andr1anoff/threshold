@@ -1,0 +1,23 @@
+export const REGIONS = [
+  { id:"Gaza & Middle East",  label:"Gaza & Middle East",  ei:58, category:"conflict", trend:2 },
+  { id:"Ukraine",             label:"Ukraine",             ei:58, category:"conflict", trend:0 },
+  { id:"Sudan",               label:"Sudan",               ei:41, category:"conflict", trend:1 },
+  { id:"South China Sea",     label:"South China Sea",     ei:32, category:"tension",  trend:1 },
+  { id:"Taiwan Strait",       label:"Taiwan Strait",       ei:28, category:"tension",  trend:0 },
+  { id:"Yemen",               label:"Yemen",               ei:38, category:"conflict", trend:-1 },
+  { id:"Sahel",               label:"Sahel",               ei:40, category:"conflict", trend:2 },
+  { id:"Korean Peninsula",    label:"Korean Peninsula",    ei:24, category:"tension",  trend:0 },
+  { id:"Myanmar",             label:"Myanmar",             ei:35, category:"conflict", trend:0 },
+  { id:"DRC",                 label:"DRC",                 ei:36, category:"conflict", trend:1 },
+  { id:"Syria",               label:"Syria",               ei:30, category:"conflict", trend:-1 },
+  { id:"Somalia",             label:"Somalia",             ei:34, category:"conflict", trend:0 },
+  { id:"Baltic",              label:"Baltic",              ei:22, category:"tension",  trend:3 },
+  { id:"Haiti",               label:"Haiti",               ei:33, category:"conflict", trend:0 },
+  { id:"Ethiopia",            label:"Ethiopia",            ei:31, category:"conflict", trend:-1 },
+  { id:"South Caucasus",      label:"South Caucasus",      ei:27, category:"tension",  trend:1 },
+  { id:"Libya",               label:"Libya",               ei:29, category:"conflict", trend:0 },
+  { id:"Kosovo",              label:"Kosovo",              ei:18, category:"tension",  trend:0 },
+  { id:"Arctic",              label:"Arctic",              ei:14, category:"tension",  trend:2 },
+  { id:"Mozambique",          label:"Mozambique",          ei:28, category:"conflict", trend:0 },
+];
+export const DI_HISTORY = {};
