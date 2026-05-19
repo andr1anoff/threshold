@@ -6,6 +6,13 @@ Rate limit: 30 RPM / 1000 RPD on free tier → 2.5s delay between requests.
 import os, json, logging, time
 from groq import Groq
 
+# Must match incidents_category_check constraint in Supabase exactly
+VALID_CATEGORIES = frozenset({
+    'cyber', 'airspace', 'maritime', 'disinfo', 'proxy', 'economic',
+    'military', 'diplomatic', 'civilian',
+    'unknown', 'unclassifiable', 'none',
+})
+
 logger = logging.getLogger(__name__)
 
 FAST_MODEL = "llama-3.1-8b-instant"
@@ -42,6 +49,15 @@ JSON:
 }}"""
 
 
+class RateLimitError(Exception):
+    """RPM limit — retry after backoff."""
+    pass
+
+class DailyLimitError(Exception):
+    """TPD exhausted — stop pipeline entirely for today."""
+    pass
+
+
 def _call_groq(prompt: str, model: str = FAST_MODEL, max_tokens: int = 200) -> str | None:
     """Single Groq API call with error handling."""
     try:
@@ -54,15 +70,16 @@ def _call_groq(prompt: str, model: str = FAST_MODEL, max_tokens: int = 200) -> s
         )
         return r.choices[0].message.content.strip()
     except Exception as e:
-        if "429" in str(e) or "rate_limit" in str(e).lower():
-            logger.warning(f"[groq] Rate limited: {e}")
+        err = str(e)
+        if "429" in err or "rate_limit" in err.lower():
+            # Distinguish TPD (tokens per day) from RPM
+            if "tokens per day" in err.lower() or "TPD" in err:
+                logger.error("[groq] Daily token limit (TPD) exhausted — aborting pipeline")
+                raise DailyLimitError()
+            logger.warning(f"[groq] Rate limited (RPM): {e}")
             raise RateLimitError()
         logger.error(f"[groq] Error: {e}")
         return None
-
-
-class RateLimitError(Exception):
-    pass
 
 
 def classify_incident(text: str) -> dict | None:
@@ -75,12 +92,14 @@ def classify_incident(text: str) -> dict | None:
                 return None
             raw = raw.replace("```json", "").replace("```", "").strip()
             return json.loads(raw)
+        except DailyLimitError:
+            raise  # propagate up to pipeline → abort
         except RateLimitError:
             wait = 60 * (attempt + 1)
-            logger.warning(f"[classify] Rate limit, waiting {wait}s")
+            logger.warning(f"[classify] RPM limit, waiting {wait}s (attempt {attempt+1}/3)")
             time.sleep(wait)
         except json.JSONDecodeError:
-            logger.warning(f"[classify] JSON parse error")
+            logger.warning("[classify] JSON parse error")
             return None
         except Exception as e:
             logger.error(f"[classify] {e}")
@@ -139,20 +158,19 @@ def cross_verify_incidents(db) -> dict:
 
 def run_classification_pipeline(db) -> dict:
     """
-    Loop until ALL 'none' and 'unknown' incidents are classified.
-    
-    Root cause of previous bug:
-    - LLM sometimes returns category='none' for ambiguous incidents
-    - Those incidents were written back to DB as 'none' → infinite retry loop
-    - Fix: if LLM returns 'none', mark as 'unknown' (won't be retried next cycle)
-    - Skip incidents with no text → mark 'unclassifiable'
+    Classify all 'none' and 'unknown' incidents via LLM.
+
+    Key fixes vs previous version:
+    1. VALID_CATEGORIES allowlist → bad LLM output never hits DB constraint
+    2. DB write failure → mark 'unclassifiable', don't retry forever
+    3. DailyLimitError (TPD) → abort pipeline immediately, not spin all night
     """
     classified_inc = 0
+    skipped_inc = 0
     batch_size = 50
-    max_batches = 30  # safety cap: 30 * 100 = 3000 max per call
+    max_batches = 30
 
     for batch_num in range(max_batches):
-        # Fetch unprocessed incidents
         unknown_batch = db.table("incidents").select("id,title,raw_text,category") \
             .eq("category", "unknown").limit(batch_size).execute().data
         none_batch = db.table("incidents").select("id,title,raw_text,category") \
@@ -160,36 +178,34 @@ def run_classification_pipeline(db) -> dict:
         batch = unknown_batch + none_batch
 
         if not batch:
-            logger.info(f"[classifier] ✓ All incidents classified. Total: {classified_inc} in {batch_num} batches.")
+            logger.info(f"[classifier] ✓ Done. classified={classified_inc} skipped={skipped_inc} batches={batch_num}")
             break
 
-        logger.info(f"[classifier] Batch {batch_num + 1}: {len(batch)} incidents ({classified_inc} classified so far)")
+        logger.info(f"[classifier] Batch {batch_num + 1}: {len(batch)} incidents")
 
         for inc in batch:
             raw = (inc.get("raw_text") or inc.get("title") or "").strip()
 
-            # No text → mark unclassifiable, skip forever
             if not raw:
-                try:
-                    db.table("incidents").update({"category": "unclassifiable"}).eq("id", inc["id"]).execute()
-                except Exception:
-                    pass
+                db.table("incidents").update({"category": "unclassifiable"}).eq("id", inc["id"]).execute()
+                skipped_inc += 1
                 continue
 
-            result = classify_incident(raw)
-            time.sleep(2.5)  # 24 req/min — safe under 30 RPM free tier limit
+            try:
+                result = classify_incident(raw)
+            except DailyLimitError:
+                logger.error(f"[classifier] TPD exhausted after {classified_inc} classified — stopping")
+                return {"incidents": classified_inc, "exercises": 0, "aborted": "tpd_exhausted"}
+
+            time.sleep(2.5)
 
             if not result:
-                # LLM failed → mark unknown, will retry next cycle
-                try:
-                    db.table("incidents").update({"category": "unknown"}).eq("id", inc["id"]).execute()
-                except Exception:
-                    pass
+                # LLM failed all retries — leave as 'unknown', will retry next scheduled cycle
                 continue
 
-            # KEY FIX: never write 'none' back — that's what caused the infinite loop
-            category = result.get("category") or "unknown"
-            if category in ("none", "", None):
+            # Allowlist guard: if LLM returns anything not in DB constraint → 'unknown'
+            category = (result.get("category") or "").strip().lower()
+            if category not in VALID_CATEGORIES or category in ("none", "unclassifiable"):
                 category = "unknown"
 
             esc_level = max(1, min(5, int(result.get("escalation_level", 2) or 2)))
@@ -206,10 +222,16 @@ def run_classification_pipeline(db) -> dict:
                 db.table("incidents").update(update).eq("id", inc["id"]).execute()
                 classified_inc += 1
             except Exception as e:
-                logger.warning(f"[classifier] DB update error for {inc['id']}: {e}")
+                # DB write failed (e.g. constraint) — mark unclassifiable so we never retry
+                logger.warning(f"[classifier] DB error for {inc['id']}, marking unclassifiable: {e}")
+                try:
+                    db.table("incidents").update({"category": "unclassifiable"}).eq("id", inc["id"]).execute()
+                except Exception:
+                    pass
+                skipped_inc += 1
 
     else:
-        logger.warning(f"[classifier] Hit max_batches limit ({max_batches}). Classified {classified_inc} so far.")
+        logger.warning(f"[classifier] Hit max_batches ({max_batches}). classified={classified_inc}")
 
     # Also classify exercise rhetoric
     classified_ex = 0

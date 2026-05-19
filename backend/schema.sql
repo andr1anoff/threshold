@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS incidents (
   date             DATE NOT NULL,
   title            TEXT NOT NULL,
   description      TEXT,
-  category         TEXT CHECK (category IN ('cyber','airspace','maritime','disinfo','economic','proxy','unknown','none')),
+  category         TEXT CHECK (category IN ('cyber','airspace','maritime','disinfo','proxy','economic','military','diplomatic','civilian','unknown','unclassifiable','none')),
   actors           TEXT[],
   region           TEXT,
   source_url       TEXT UNIQUE,
