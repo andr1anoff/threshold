@@ -8,7 +8,7 @@ const API = import.meta.env.VITE_API_URL || "https://threshold-production-d13c.u
 const BRIEF_SECTIONS = ["Situation overview","Recent signals","Exercise activity","Rhetoric assessment","Source confidence","Limitations"];
 const LOADING_STAGES = ["Loading incident data…","Matching exercise signals…","Assessing rhetoric patterns…","Synthesising brief…"];
 
-export default function BriefsPage() {
+export default function PatternsPage() {
   const navigate = useNavigate();
   const [region, setRegion]     = useState(null);
   const [narrative, setNarrative] = useState("");
