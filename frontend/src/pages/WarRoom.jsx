@@ -450,13 +450,11 @@ export default function WarRoom() {
               <div style={{flex:1,position:"relative",overflow:"hidden"}}>
                 {mapContainer}
               </div>
-              <div style={{width:320,borderLeft:`1px solid ${FAINT}`,display:"flex",flexDirection:"column",background:CREAM,flexShrink:0,overflow:"hidden"}}>
-                {/* List — scrolls independently */}
+              <div style={{width:300,borderLeft:`1px solid ${FAINT}`,display:"flex",flexDirection:"column",background:CREAM,flexShrink:0}}>
                 <div style={{flex:"1 1 0",minHeight:0,overflowY:"auto"}}>
-                  <ExListDesktop/>
-                </div>
-                {/* Detail — fixed height, pinned to bottom, never collapses */}
-                <div style={{height:300,flexShrink:0,borderTop:`2px solid ${FAINT}`,overflowY:"auto",background:CREAM}}>
+                <ExListDesktop/>
+              </div>
+                <div style={{borderTop:`1px solid ${FAINT}`,overflowY:"auto",height:280,flexShrink:0,background:CREAM}}>
                   <ExerciseDetail ex={sel}/>
                 </div>
               </div>

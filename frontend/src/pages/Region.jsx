@@ -10,17 +10,15 @@ const EI_COLOR = s => s==null?"#94a3b8":s>=65?"#8B2030":s>=45?"#C0622B":s>=25?"#
 const EI_LABEL = s => s==null?"NO DATA":s>=65?"HIGH":s>=45?"MODERATE":s>=25?"ELEVATED":"LOW";
 
 const CAT_META = {
-  cyber:      { label:"Cyber",       color:"#8B2030" },
-  airspace:   { label:"Airspace",    color:"#C0622B" },
-  maritime:   { label:"Maritime",    color:"#185FA5" },
-  disinfo:    { label:"Disinfo",     color:"#7C3AED" },
-  military:   { label:"Military",    color:"#8B2030" },
-  diplomatic: { label:"Diplomatic",  color:"#185FA5" },
-  civilian:   { label:"Civilian",    color:"#B07D1A" },
-  economic:   { label:"Economic",    color:"#2D7A4F" },
-  proxy:      { label:"Proxy",       color:"#B07D1A" },
-  none:       { label:"Unclassified",color:"rgba(26,16,8,0.4)" },
-  unknown:    { label:"Pending",     color:"rgba(26,16,8,0.4)" },
+  cyber:     { label:"Cyber",       color:"#8B2030" },
+  airspace:  { label:"Airspace",    color:"#C0622B" },
+  maritime:  { label:"Maritime",    color:"#185FA5" },
+  disinfo:   { label:"Disinfo",     color:"#7C3AED" },
+  military:  { label:"Military",    color:"#8B2030" },
+  economic:  { label:"Economic",    color:"#2D7A4F" },
+  proxy:     { label:"Proxy",       color:"#B07D1A" },
+  none:      { label:"Unclassified",color:"rgba(26,16,8,0.4)" },
+  unknown:   { label:"Pending",     color:"rgba(26,16,8,0.4)" },
 };
 
 export default function RegionPage() {
