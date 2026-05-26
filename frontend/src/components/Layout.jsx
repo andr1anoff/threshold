@@ -5,6 +5,7 @@ import Logo from "./Logo";
 function useDarkMode() {
   const [dark, setDark] = useState(() => {
     if (typeof window === "undefined") return false;
+    // Default is LIGHT. Dark only if user explicitly chose it.
     return localStorage.getItem("threshold-dark") === "1";
   });
   useEffect(() => {
@@ -239,7 +240,7 @@ export default function Layout({ children }) {
           </div>
           <div style={{ borderTop:"1px solid rgba(245,240,232,0.08)", paddingTop:16, display:"flex", justifyContent:"space-between", flexWrap:"wrap", gap:8, fontSize:10, color:"rgba(245,240,232,0.2)" }}>
             <span>© 2026 Threshold · Research indicator — not an official intelligence assessment.</span>
-            <span style={{ fontFamily:"var(--mono)" }}>v0.9 · threshold-lyart.vercel.app</span>
+            <span style={{ fontFamily:"var(--mono)" }}>v15.3β · threshold-lyart.vercel.app</span>
           </div>
         </footer>
       )}

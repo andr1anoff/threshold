@@ -32,7 +32,7 @@ function Accordion({ title, children }) {
     <div style={{ border:"1px solid var(--card-border)", borderRadius:10, overflow:"hidden", marginBottom:8 }}>
       <button onClick={() => setOpen(!open)} style={{
         width:"100%", textAlign:"left", padding:"13px 18px",
-        background: open ? "rgba(26,16,8,0.02)" : "#fff",
+        background: open ? "var(--ink-03)" : "var(--card)",
         border:"none", cursor:"pointer",
         display:"flex", justifyContent:"space-between", alignItems:"center",
       }}>
@@ -113,7 +113,7 @@ export default function AboutPage() {
         {/* Limitations — prominent */}
         <section id="limitations" style={{ marginBottom:44 }}>
           <SectionLabel>LIMITATIONS</SectionLabel>
-          <div style={{ background:"rgba(26,16,8,0.02)", border:"1px solid rgba(26,16,8,0.1)", borderRadius:14, padding:24 }}>
+          <div style={{ background:"var(--ink-03)", border:"1px solid var(--card-border)", borderRadius:14, padding:24 }}>
             <div style={{ fontSize:15, fontWeight:700, color:"var(--ink)", marginBottom:12 }}>Threshold is not a prediction engine.</div>
             <p style={{ fontSize:13, color:"var(--ink-muted)", lineHeight:1.7, marginBottom:14 }}>
               The Escalation Index is a transparent heuristic indicator designed to compare observable escalation signals across regions. Scores should be interpreted as structured situational awareness, not as forecasts or official risk assessments.
@@ -262,7 +262,7 @@ export default function AboutPage() {
             <p style={{ fontSize:13, color:"rgba(245,240,232,0.6)", marginBottom:18, lineHeight:1.6 }}>
               For methodological inquiries, data access, or academic collaboration:
             </p>
-            <a href="mailto:ivaa03@zedat.fu-berlin.de" style={{ display:"inline-block", background:"var(--card)", color:"var(--crimson)", fontSize:13, fontWeight:700, padding:"10px 22px", borderRadius:999, textDecoration:"none" }}>
+            <a href="mailto:ivaa03@zedat.fu-berlin.de" style={{ display:"inline-block", background:"rgba(245,240,232,0.15)", color:"#fff", fontSize:13, fontWeight:700, padding:"10px 22px", borderRadius:999, textDecoration:"none" }}>
               Email us
             </a>
           </div>

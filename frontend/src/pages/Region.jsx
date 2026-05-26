@@ -157,18 +157,18 @@ export default function RegionPage() {
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" vertical={false} />
                   <XAxis
                     dataKey="date"
-                    tick={{ fontSize:10, fontFamily:"var(--mono)", fill:"rgba(26,16,8,0.4)" }}
+                    tick={{ fontSize:10, fontFamily:"var(--mono)", fill:"var(--ink-40)" }}
                     axisLine={false}
                     tickLine={false}
-                    label={{ value:"Date", position:"insideBottom", offset:-4, fontSize:9, fill:"rgba(26,16,8,0.3)", fontFamily:"var(--mono)" }}
+                    label={{ value:"Date", position:"insideBottom", offset:-4, fontSize:9, fill:"var(--ink-40)", fontFamily:"var(--mono)" }}
                   />
                   <YAxis
                     domain={[0, 100]}
-                    tick={{ fontSize:10, fontFamily:"var(--mono)", fill:"rgba(26,16,8,0.4)" }}
+                    tick={{ fontSize:10, fontFamily:"var(--mono)", fill:"var(--ink-40)" }}
                     axisLine={false}
                     tickLine={false}
                     width={32}
-                    label={{ value:"Escalation Index", angle:-90, position:"insideLeft", offset:10, fontSize:9, fill:"rgba(26,16,8,0.3)", fontFamily:"var(--mono)" }}
+                    label={{ value:"Escalation Index", angle:-90, position:"insideLeft", offset:10, fontSize:9, fill:"var(--ink-40)", fontFamily:"var(--mono)" }}
                   />
                   <Tooltip
                     contentStyle={{ fontFamily:"var(--mono)", fontSize:11, border:"1px solid var(--rule)", background:"var(--cream)", borderRadius:4 }}

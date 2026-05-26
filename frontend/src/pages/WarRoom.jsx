@@ -204,6 +204,8 @@ export default function WarRoom() {
     });
     L.control.zoom({position:'bottomright'}).addTo(map);
     const isDark = document.body.classList.contains('dark-mode');
+    const labelColor = isDark ? '#ffffff' : null; // null = use marker color
+    const labelShadow = isDark ? 'none' : `0 0 6px ${CREAM},0 0 3px ${CREAM}`;
 
     if (isDark) {
       // Dark/night map tile
@@ -290,7 +292,7 @@ export default function WarRoom() {
       m._em=true;
       const lbl = L.divIcon({
         className:'',
-        html:`<div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:0.8px;color:${c.marker};white-space:nowrap;pointer-events:none;text-shadow:0 0 6px ${CREAM},0 0 3px ${CREAM};font-weight:${isSel?700:isHov?600:400};opacity:${opacity}">${ex.name}</div>`,
+        html:`<div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:0.8px;color:${labelColor||c.marker};white-space:nowrap;pointer-events:none;text-shadow:${labelShadow};font-weight:${isSel?700:isHov?600:400};opacity:${opacity}">${ex.name}</div>`,
         iconSize:[220,14], iconAnchor:[-(size/2+4),7],
       });
       const lm = L.marker([lat,lng],{icon:lbl,interactive:false}).addTo(map); lm._em=true;

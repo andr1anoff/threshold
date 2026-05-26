@@ -182,44 +182,54 @@ function RowIncident({ inc }) {
   return (
     <article style={{
       display:"grid",
-      gridTemplateColumns:"clamp(80px,15vw,110px) 1fr auto",
-      gap:"12px 16px", padding:"14px 0",
+      gridTemplateColumns:"100px 130px 1fr 90px",
+      gap:"0 20px", padding:"14px 0",
       borderBottom:"1px solid var(--rule)",
-      alignItems:"flex-start",
+      alignItems:"start",
     }}>
-      <span className="mono small" style={{ color:"var(--ink-40)", paddingTop:1 }}>{inc.time||""}</span>
-      <span style={{ display:"inline-flex", alignItems:"center", gap:6, alignSelf:"flex-start", paddingTop:2 }}>
+      {/* Col 1: type glyph */}
+      <span style={{ display:"inline-flex", alignItems:"center", gap:6, paddingTop:2 }}>
         <span style={{ fontSize:13, color:cat.color }}>{cat.glyph}</span>
         <span className="micro" style={{ color:cat.color, fontSize:10 }}>{cat.label}</span>
       </span>
+
+      {/* Col 2: date */}
+      <span className="mono small" style={{ color:"var(--ink-40)", paddingTop:2 }}>
+        {inc.date?.slice(0,10) || ""}
+      </span>
+
+      {/* Col 3: title + description */}
       <div>
-        <div style={{ fontSize:14, color:"var(--ink)", lineHeight:1.4, marginBottom:inc.description?4:0 }}>{inc.title}</div>
+        <div style={{ fontSize:15, color:"var(--ink)", lineHeight:1.4, marginBottom:inc.description?4:0 }}>{inc.title}</div>
         {inc.description && <div className="small" style={{ color:"var(--ink-55)", lineHeight:1.5, marginTop:4 }}>{inc.description}</div>}
       </div>
-      <span style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4, paddingTop:1 }}>
-        {regionObj ? (
-          <span className="tt-wrap">
-            <span className="mono small" style={{ color:"var(--ink-70)" }}>{regionObj.short}</span>
-            <span className="tt">{regionObj.label}</span>
-          </span>
-        ) : (
-          <span className="mono small" style={{ color:"var(--ink-55)" }}>{inc.region}</span>
-        )}
-        {inc.escalation_level >= 3 && (
-          <span className="mono" style={{ fontSize:9, color:"var(--hi)", letterSpacing:"0.1em" }}>EL{inc.escalation_level}</span>
-        )}
+
+      {/* Col 4: region + EL + source — all right-aligned, source at bottom */}
+      <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:3, minHeight:40, justifyContent:"space-between" }}>
+        <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:2 }}>
+          {regionObj ? (
+            <span className="tt-wrap">
+              <span className="mono small" style={{ color:"var(--ink-70)" }}>{regionObj.short}</span>
+              <span className="tt">{regionObj.label}</span>
+            </span>
+          ) : (
+            <span className="mono small" style={{ color:"var(--ink-55)" }}>{inc.region}</span>
+          )}
+          {inc.escalation_level >= 3 && (
+            <span className="mono" style={{ fontSize:9, color:"var(--hi)", letterSpacing:"0.1em" }}>EL{inc.escalation_level}</span>
+          )}
+        </div>
         {inc.source_url ? (
           <a href={inc.source_url} target="_blank" rel="noopener noreferrer"
-            className="mono small"
-            style={{ color:"var(--ink-40)", textDecoration:"underline", textUnderlineOffset:3, fontSize:10 }}
+            style={{ color:"var(--ink-40)", textDecoration:"underline", textUnderlineOffset:3, fontSize:10, fontFamily:"var(--mono)", whiteSpace:"nowrap" }}
             onClick={e => e.stopPropagation()}
           >
             {(inc.source_name || "src").split(" ")[0]} ↗
           </a>
         ) : inc.source_name ? (
-          <span className="mono small" style={{ color:"var(--ink-40)", fontSize:10 }}>{inc.source_name}</span>
+          <span style={{ color:"var(--ink-40)", fontSize:10, fontFamily:"var(--mono)" }}>{inc.source_name}</span>
         ) : null}
-      </span>
+      </div>
     </article>
   );
 }
