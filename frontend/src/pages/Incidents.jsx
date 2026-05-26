@@ -130,7 +130,10 @@ export default function IncidentsPage() {
             <span className="micro" style={{ alignSelf:"center", marginRight:6 }}>REGION</span>
             <button className={`chip ${region==="all"?"is-active":""}`} onClick={()=>setRegion("all")}>All</button>
             {REGIONS.map(r => (
-              <button key={r.id} className={`chip ${region===r.id?"is-active":""}`} onClick={()=>setRegion(r.id)}>{r.short||r.id.slice(0,3).toUpperCase()}</button>
+              <span key={r.id} className="tt-wrap">
+                <button className={`chip ${region===r.id?"is-active":""}`} onClick={()=>setRegion(r.id)}>{r.short||r.id.slice(0,3).toUpperCase()}</button>
+                <span className="tt">{r.label}</span>
+              </span>
             ))}
           </div>
 

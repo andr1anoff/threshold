@@ -1,6 +1,23 @@
 import { Link, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Logo from "./Logo";
+
+function UtcClock() {
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const hh = String(now.getUTCHours()).padStart(2, "0");
+  const mm = String(now.getUTCMinutes()).padStart(2, "0");
+  const ss = String(now.getUTCSeconds()).padStart(2, "0");
+  return (
+    <span className="mono" style={{ fontSize:11, letterSpacing:"0.05em", color:"var(--ink-55)" }}>
+      {hh}<span className="blink" style={{ opacity:0.5 }}>:</span>{mm}<span className="blink" style={{ opacity:0.5 }}>:</span>{ss}
+      <span style={{ marginLeft:5, fontSize:"0.85em", color:"var(--ink-40)" }}>UTC</span>
+    </span>
+  );
+}
 
 const NAV = [
   { label:"Overview",  path:"/" },
@@ -17,6 +34,13 @@ export default function Layout({ children }) {
   const loc = useLocation();
   const isWarRoom = loc.pathname === "/warroom";
   const [menuOpen, setMenuOpen] = useState(false);
+  const [dark, setDark] = useState(() => document.body.classList.contains("dark-mode"));
+
+  function toggleDark() {
+    const next = !dark;
+    setDark(next);
+    document.body.classList.toggle("dark-mode", next);
+  }
 
   return (
     <div style={{ display:"flex", flexDirection:"column", minHeight:"100dvh", background:"var(--cream)", maxWidth:"100vw", overflowX:"hidden" }}>
@@ -56,6 +80,22 @@ export default function Layout({ children }) {
             );
           })}
         </nav>
+
+        {/* UTC clock — desktop only */}
+        <div className="hide-mobile" style={{ display:"flex", alignItems:"center", gap:10, flexShrink:0 }}>
+          <span style={{ width:5, height:5, borderRadius:"50%", background:"var(--lo)", flexShrink:0, animation:"pulse-dot 2.2s ease-in-out infinite" }}/>
+          <UtcClock />
+        </div>
+
+        {/* Dark mode toggle */}
+        <button
+          onClick={toggleDark}
+          title={dark ? "Light mode" : "Dark mode"}
+          style={{
+            background:"none", border:"1px solid var(--ink-faint)", borderRadius:6,
+            padding:"5px 8px", cursor:"pointer", fontSize:13, flexShrink:0, color:"var(--ink-55)",
+          }}
+        >{dark ? "☀" : "◑"}</button>
 
         <a href="mailto:ivaa03@zedat.fu-berlin.de"
           style={{
