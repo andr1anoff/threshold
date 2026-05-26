@@ -5,9 +5,9 @@ import Logo from "../components/Logo";
 const SOURCES = [
   { name:"OCHA / ReliefWeb", cat:"Institutional", desc:"UN humanitarian and conflict reports by country.", url:"https://reliefweb.int", conf:"High" },
   { name:"UCDP Uppsala",     cat:"Academic",       desc:"Verified armed conflict events, geocoded.", url:"https://ucdp.uu.se", conf:"High" },
-  { name:"UN News",          cat:"Institutional", desc:"Official UN press releases — peace & security, regional.", url:"https://news.un.org", conf:"High" },
+  { name:"UN News",          cat:"Institutional", desc:"Official UN press releases: peace & security, regional.", url:"https://news.un.org", conf:"High" },
   { name:"ICRC",             cat:"Institutional", desc:"International Committee of the Red Cross field reporting.", url:"https://icrc.org", conf:"High" },
-  { name:"SHAPE NATO",       cat:"Official",       desc:"Supreme HQ Allied Powers Europe — exercise announcements.", url:"https://shape.nato.int", conf:"High" },
+  { name:"SHAPE NATO",       cat:"Official",       desc:"Supreme HQ Allied Powers Europe: exercise announcements.", url:"https://shape.nato.int", conf:"High" },
   { name:"DeepState",        cat:"OSINT",          desc:"Ukrainian frontline tracker. Used for tactical context.", url:"https://deepstatemap.live", conf:"Medium" },
   { name:"CIT / Leviev",     cat:"OSINT",          desc:"Conflict Intelligence Team. Arms tracking, verified imagery.", url:"https://citeam.org", conf:"Medium" },
   { name:"Bellingcat",       cat:"OSINT",          desc:"Open-source investigation. OSINT verification.", url:"https://bellingcat.com", conf:"Medium" },
@@ -105,7 +105,7 @@ export default function AboutPage() {
               Developed as part of the MA North American Studies programme at the John F. Kennedy Institute, Freie Universität Berlin. Research project · Summer Term 2026.
             </p>
             <p style={{ fontSize:14, lineHeight:1.75, color:"var(--ink-muted)" }}>
-              The platform demonstrates how open-source intelligence — aggregated, LLM-classified, and cross-verified — can produce structured escalation signals without access to classified data.
+              The platform demonstrates how open-source intelligence (aggregated, LLM-classified, and cross-verified) can produce structured escalation signals without access to classified data.
             </p>
           </div>
         </section>
@@ -237,7 +237,7 @@ export default function AboutPage() {
               For methodological inquiries, data access, or academic collaboration:
             </p>
             <a href="mailto:ivaa03@zedat.fu-berlin.de" style={{ display:"inline-block", background:"#fff", color:"var(--crimson)", fontSize:13, fontWeight:700, padding:"10px 22px", borderRadius:999, textDecoration:"none" }}>
-              ivaa03@zedat.fu-berlin.de
+              Email us
             </a>
           </div>
         </section>
