@@ -11,21 +11,24 @@ export default function IncidentsPage() {
   const [cat, setCat]             = useState("all");
   const [search, setSearch]       = useState("");
   const [elMin, setElMin]         = useState(0);
+  const [loading, setLoading]     = useState(false);
 
   useEffect(() => {
     const url = region === "all"
       ? `${API}/api/incidents/`
       : `${API}/api/incidents/?region=${encodeURIComponent(region)}`;
+    setLoading(true);
+    // Clear immediately so stale data from previous region doesn't show
+    if (region !== "all") setIncidents([]);
     fetch(url)
       .then(r => r.json())
       .then(d => {
-        if (d.data?.length) {
-          setIncidents(d.data);
-          const dates = d.data.map(i => i.date).filter(Boolean).sort().reverse();
-          if (dates[0]) setLastSync(dates[0].slice(0,10));
-        }
+        setIncidents(d.data || []);
+        const dates = (d.data || []).map(i => i.date).filter(Boolean).sort().reverse();
+        if (dates[0]) setLastSync(dates[0].slice(0,10));
       })
-      .catch(() => {});
+      .catch(() => { if (region === "all") setIncidents(INCIDENTS); })
+      .finally(() => setLoading(false));
   }, [region]);
 
   const filtered = useMemo(() => incidents.filter(inc => {
@@ -122,7 +125,22 @@ export default function IncidentsPage() {
 
         {/* ─── INCIDENT LIST ─────────────────────── */}
         <section className="container-wide" style={{ paddingTop:24, paddingBottom:80 }}>
-          {filtered.length === 0 ? (
+          {loading ? (
+            <div style={{ padding:"80px 0", textAlign:"center" }}>
+              <div className="display-serif" style={{ fontSize:64, color:"var(--ink-15)", marginBottom:16 }}>◎</div>
+              <div className="mono small" style={{ color:"var(--ink-40)", letterSpacing:"0.12em" }}>LOADING…</div>
+            </div>
+          ) : filtered.length === 0 && region !== "all" ? (
+            <div style={{ padding:"80px 0", textAlign:"center" }}>
+              <div className="display-serif" style={{ fontSize:64, color:"var(--ink-15)", marginBottom:16 }}>—</div>
+              <div className="body" style={{ marginBottom:8 }}>No indexed incidents for this region.</div>
+              <div className="mono small" style={{ color:"var(--ink-40)", marginBottom:24 }}>
+                Data appears here automatically once the scraper indexes events for{" "}
+                <span style={{ color:"var(--ink)" }}>{region}</span>.
+              </div>
+              <button className="btn-ghost" onClick={()=>{ setRegion("all"); setCat("all"); setSearch(""); setElMin(0); }}>← All regions</button>
+            </div>
+          ) : filtered.length === 0 ? (
             <div style={{ padding:"80px 0", textAlign:"center" }}>
               <div className="body" style={{ marginBottom:16 }}>No incidents match these filters.</div>
               <button className="btn-ghost" onClick={()=>{ setRegion("all"); setCat("all"); setSearch(""); setElMin(0); }}>Clear filters</button>
