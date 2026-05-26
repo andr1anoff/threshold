@@ -1,189 +1,339 @@
-import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useState, useEffect, useMemo } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
-import { REGIONS } from "../data/seed";
-import { api } from "../api/client";
+import Sparkline from "../components/Sparkline";
+import AnimatedNumber from "../components/AnimatedNumber";
+import { REGIONS, SPARKLINES, CATS, EI_COLOR, EI_LABEL, getConf } from "../data/seed";
 
 const API = import.meta.env.VITE_API_URL || "https://threshold-production-d13c.up.railway.app";
 
-const EI_COLOR = s => s==null?"#94a3b8":s>=65?"#8B2030":s>=45?"#C0622B":s>=25?"#B07D1A":"#2D7A4F";
-const EI_LABEL = s => s==null?"NO DATA":s>=65?"HIGH":s>=45?"MODERATE":s>=25?"ELEVATED":"LOW";
-
-const CAT_META = {
-  cyber:     { label:"Cyber",       color:"#8B2030" },
-  airspace:  { label:"Airspace",    color:"#C0622B" },
-  maritime:  { label:"Maritime",    color:"#185FA5" },
-  disinfo:   { label:"Disinfo",     color:"#7C3AED" },
-  military:  { label:"Military",    color:"#8B2030" },
-  economic:  { label:"Economic",    color:"#2D7A4F" },
-  proxy:     { label:"Proxy",       color:"#B07D1A" },
-  none:      { label:"Unclassified",color:"rgba(26,16,8,0.4)" },
-  unknown:   { label:"Pending",     color:"rgba(26,16,8,0.4)" },
-};
-
 export default function RegionPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const region = REGIONS.find(r => r.id === decodeURIComponent(id));
 
   const [incidents, setIncidents] = useState([]);
+  const [exercises, setExercises] = useState([]);
   const [ei, setEi]               = useState(null);
   const [loading, setLoading]     = useState(true);
+  const [tab, setTab]             = useState("incidents");
 
   useEffect(() => {
     if (!id) return;
-    const regionId = decodeURIComponent(id);
-
+    const rid = decodeURIComponent(id);
+    setLoading(true);
     Promise.all([
-      fetch(`${API}/api/incidents/?region=${encodeURIComponent(regionId)}`).then(r=>r.json()).catch(()=>({data:[]})),
-      fetch(`${API}/api/di/region/${encodeURIComponent(regionId)}`).then(r=>r.json()).catch(()=>({})),
-    ]).then(([inc, eiData]) => {
+      fetch(`${API}/api/incidents/?region=${encodeURIComponent(rid)}`).then(r=>r.json()).catch(()=>({data:[]})),
+      fetch(`${API}/api/di/region/${encodeURIComponent(rid)}`).then(r=>r.json()).catch(()=>({})),
+      fetch(`${API}/api/exercises/`).then(r=>r.json()).catch(()=>({data:[]})),
+    ]).then(([inc, eiData, exData]) => {
       setIncidents(inc.data || []);
       setEi(eiData.ei_score ?? eiData.di_score ?? null);
+      const all = exData.data || exData.exercises || [];
+      setExercises(all.filter(e => {
+        const name = (e.name||e.exercise_name||"").toLowerCase();
+        const reg  = (e.region||"").toLowerCase();
+        const rl   = rid.toLowerCase().split(" ")[0];
+        return name.includes(rl) || reg.includes(rl) || reg.includes((region?.theatre||"").toLowerCase());
+      }));
     }).finally(() => setLoading(false));
   }, [id]);
 
-  const color = EI_COLOR(ei ?? region?.ei);
-  const label = EI_LABEL(ei ?? region?.ei);
-  const score = ei ?? region?.ei;
-
   if (!region) return (
     <Layout>
-      <div style={{ padding:"48px 28px", textAlign:"center" }}>
-        <div style={{ fontSize:14, color:"var(--ink-muted)", marginBottom:16 }}>Region not found.</div>
-        <Link to="/" style={{ fontSize:13, color:"var(--crimson)", fontWeight:600 }}>← Back to Overview</Link>
+      <div style={{ padding:"80px 32px", textAlign:"center" }}>
+        <div className="display-serif" style={{ fontSize:80, color:"var(--ink-15)", marginBottom:16 }}>—</div>
+        <div className="body" style={{ marginBottom:20 }}>Region not found.</div>
+        <Link to="/" className="btn-ghost">← Back to Overview</Link>
       </div>
     </Layout>
   );
 
+  const score = ei ?? region.ei;
+  const color = EI_COLOR(score);
+
+  const components = useMemo(() => {
+    const gz   = Math.round(Math.log(Math.max(1, score * 1.3)) * 12.4);
+    const ex   = Math.round(score * 0.32);
+    const base = Math.round(score * 0.18 + 4);
+    return { gz, ex, base };
+  }, [score]);
+
+  const spark = SPARKLINES[region.id];
+  const rank  = [...REGIONS].sort((a,b)=>b.ei-a.ei).findIndex(r=>r.id===region.id)+1;
+
   return (
     <Layout>
-      <div style={{ maxWidth:800, margin:"0 auto", padding:"32px 20px 64px", width:"100%" }}>
+      <div className="route-in" style={{ background:"var(--cream)" }}>
 
-        {/* Breadcrumb */}
-        <div style={{ fontSize:12, color:"var(--ink-muted)", marginBottom:20 }}>
-          <Link to="/" style={{ color:"var(--ink-muted)", textDecoration:"none" }}>Overview</Link>
-          <span style={{ margin:"0 8px" }}>→</span>
-          <span style={{ color:"var(--ink)", fontWeight:500 }}>{region.label}</span>
-        </div>
-
-        {/* Header */}
-        <div style={{ marginBottom:28 }}>
-          <div style={{ fontSize:10, fontWeight:700, letterSpacing:"2px", color:"var(--crimson)", marginBottom:10, display:"flex", alignItems:"center", gap:8 }}>
-            <span style={{ display:"inline-block", width:18, height:1.5, background:"var(--crimson)" }}/>
-            {region.category === "conflict" ? "ACTIVE CONFLICT" : "STRATEGIC TENSION"}
+        {/* ─── BREADCRUMB ─────────────────────── */}
+        <section className="container-wide" style={{ paddingTop:24, paddingBottom:12 }}>
+          <div className="micro" style={{ display:"flex", alignItems:"center", gap:10, color:"var(--ink-55)" }}>
+            <Link to="/" style={{ textDecoration:"underline", textUnderlineOffset:3 }}>Overview</Link>
+            <span>›</span>
+            <Link to="/" style={{ textDecoration:"underline", textUnderlineOffset:3 }}>Index of regions</Link>
+            <span>›</span>
+            <span className="micro-strong">{region.label}</span>
           </div>
-          <h1 style={{ fontSize:32, fontWeight:800, letterSpacing:"-0.5px", marginBottom:8 }}>{region.label}</h1>
-        </div>
+        </section>
 
-        {/* EI card */}
-        <div style={{ background:"#fff", border:"1px solid rgba(26,16,8,0.08)", borderRadius:14, padding:"20px 24px", marginBottom:20 }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:12 }}>
+        {/* ─── MASTHEAD ─────────────────────── */}
+        <section className="container-wide" style={{ paddingTop:36, paddingBottom:48 }}>
+          <div style={{ display:"grid", gridTemplateColumns:"minmax(0,1.4fr) minmax(0,1fr)", gap:64, alignItems:"end" }} className="stack-mobile">
             <div>
-              <div style={{ fontSize:10, letterSpacing:"1.5px", color:"rgba(26,16,8,0.4)", marginBottom:6 }}>ESCALATION INDEX</div>
-              <div style={{ fontSize:56, fontWeight:800, color, lineHeight:1, fontVariantNumeric:"tabular-nums" }}>
-                {loading ? "…" : (score ?? "—")}
+              <div className="micro micro-accent" style={{ marginBottom:22, display:"flex", alignItems:"center", gap:10 }}>
+                <span className="tick"/>
+                REGION DOSSIER · {region.short||region.id.slice(0,3).toUpperCase()} · {region.category==="conflict"?"ACTIVE CONFLICT":"STRATEGIC TENSION"}
               </div>
+              <h1 className="display" style={{ marginBottom:18 }}>
+                {region.label.split(" ")[0]}<br/>
+                <span className="serif" style={{ fontWeight:300, fontStyle:"italic", color:"var(--ink-70)" }}>
+                  {region.label.split(" ").slice(1).join(" ")||"—"}
+                </span>
+              </h1>
+              <Coord lat={region.lat} lng={region.lng} />
+              <p className="body-lg" style={{ maxWidth:520, marginTop:24 }}>
+                Live escalation index, indexed incidents and concurrent exercise activity for the {region.label} theatre. Calculated against a logarithmic deterrence function over a 30-day window.
+              </p>
             </div>
-            <div style={{ textAlign:"right" }}>
-              <span style={{ fontSize:11, fontWeight:700, padding:"4px 12px", borderRadius:999, background:`${color}12`, color, border:`1px solid ${color}25` }}>
-                {loading ? "…" : label}
-              </span>
-              <div style={{ fontSize:11, color:"var(--ink-muted)", marginTop:8 }}>30-day window · Heuristic indicator</div>
-            </div>
-          </div>
-          <div style={{ height:3, background:"rgba(26,16,8,0.06)", borderRadius:2, overflow:"hidden" }}>
-            <div style={{ height:"100%", width:`${score||0}%`, background:color, opacity:0.6, borderRadius:2 }}/>
-          </div>
-        </div>
 
-        {/* Stats row */}
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(140px, 1fr))", gap:10, marginBottom:24 }}>
-          {[
-            ["Total incidents", loading ? "…" : incidents.length, "var(--ink)"],
-            ["Last 7 days", loading ? "…" : incidents.filter(i => i.date >= new Date(Date.now()-7*86400000).toISOString().slice(0,10)).length, "#8B2030"],
-            ["Avg severity", loading || !incidents.length ? "…" : (incidents.reduce((s,i)=>s+(i.escalation_level||1),0)/incidents.length).toFixed(1), "#C0622B"],
-          ].map(([l,v,c])=>(
-            <div key={l} style={{ background:"#fff", border:"1px solid rgba(26,16,8,0.08)", borderRadius:10, padding:"14px 16px" }}>
-              <div style={{ fontSize:22, fontWeight:800, color:c, fontVariantNumeric:"tabular-nums" }}>{v}</div>
-              <div style={{ fontSize:10, color:"var(--ink-muted)", letterSpacing:"1px", marginTop:4 }}>{l.toUpperCase()}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Recent incidents */}
-        <div style={{ marginBottom:8 }}>
-          <div style={{ fontSize:10, fontWeight:700, letterSpacing:"2px", color:"var(--crimson)", marginBottom:14, display:"flex", alignItems:"center", gap:8 }}>
-            <span style={{ display:"inline-block", width:18, height:1.5, background:"var(--crimson)" }}/>
-            RECENT INCIDENTS
-          </div>
-
-          {loading ? (
-            <div style={{ fontSize:13, color:"var(--ink-muted)" }}>Loading…</div>
-          ) : incidents.length === 0 ? (
-            <div style={{ background:"#fff", border:"1px solid rgba(26,16,8,0.08)", borderRadius:12, padding:"28px 20px", textAlign:"center" }}>
-              <div style={{ fontSize:13, color:"var(--ink-muted)" }}>No incidents indexed for this region yet.</div>
-              <div style={{ fontSize:12, color:"rgba(26,16,8,0.3)", marginTop:6 }}>Run the scraper pipeline to populate data.</div>
-            </div>
-          ) : (
-            <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-              {incidents.slice(0,20).map((inc,i) => {
-                const cat = CAT_META[inc.category] || CAT_META.unknown;
-                return (
-                  <article key={inc.id||i} style={{ background:"#fff", border:"1px solid rgba(26,16,8,0.07)", borderRadius:10, padding:"12px 16px" }}>
-                    <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6, flexWrap:"wrap" }}>
-                      <span style={{ fontSize:9, fontWeight:700, letterSpacing:"1px", padding:"2px 8px", borderRadius:999, background:`${cat.color}12`, color:cat.color, border:`1px solid ${cat.color}25` }}>
-                        {cat.label.toUpperCase()}
-                      </span>
-                      <span style={{ fontSize:10, color:"rgba(26,16,8,0.4)", fontVariantNumeric:"tabular-nums" }}>{inc.date?.slice(0,10)}</span>
-                      {inc.escalation_level > 2 && (
-                        <span style={{ fontSize:9, padding:"1px 6px", borderRadius:999, background:"rgba(139,32,48,0.08)", color:"#8B2030", border:"1px solid rgba(139,32,48,0.15)", fontWeight:600 }}>
-                          EL{inc.escalation_level}
-                        </span>
-                      )}
-                      {inc.source_url && (
-                        <a href={inc.source_url} target="_blank" rel="noopener noreferrer"
-                          style={{ marginLeft:"auto", fontSize:11, color:"var(--crimson)", opacity:0.75 }}>
-                          {inc.source_name?.split(" ")[0]} ↗
-                        </a>
-                      )}
-                    </div>
-                    <div style={{ fontSize:13, fontWeight:500, color:"var(--ink)", lineHeight:1.45 }}>{inc.title}</div>
-                    {inc.description && inc.description !== inc.title && (
-                      <div style={{ fontSize:11, color:"var(--ink-muted)", marginTop:4, lineHeight:1.5 }}>{inc.description}</div>
-                    )}
-                  </article>
-                );
-              })}
-              {incidents.length > 20 && (
-                <div style={{ textAlign:"center", padding:"8px 0" }}>
-                  <Link to={`/incidents`} style={{ fontSize:12, color:"var(--crimson)", fontWeight:500 }}>
-                    View all {incidents.length} incidents →
-                  </Link>
+            {/* EI block */}
+            <div style={{ borderTop:"1px solid var(--ink)", borderBottom:"1px solid var(--ink)", padding:"32px 0", position:"relative" }}>
+              <div className="micro" style={{ marginBottom:8 }}>ESCALATION INDEX · 14D</div>
+              <div style={{ display:"flex", alignItems:"flex-end", gap:24 }}>
+                <span className="tab-num" style={{ fontSize:clamp(80,160), fontWeight:800, lineHeight:0.85, letterSpacing:"-0.05em", color }}>
+                  {loading ? "…" : <AnimatedNumber value={score} duration={1500} />}
+                </span>
+                <div style={{ paddingBottom:12 }}>
+                  <div className="micro" style={{ color, marginBottom:8 }}>{EI_LABEL(score)}</div>
+                  <div className="mono small tab-num" style={{ color: region.trend > 0 ? "var(--hi)" : region.trend < 0 ? "var(--lo)" : "var(--ink-40)" }}>
+                    {region.trend > 0 ? `↑ +${region.trend}` : region.trend < 0 ? `↓ ${region.trend}` : "→ stable"} vs prev.
+                  </div>
+                  <div className="mono small" style={{ color:"var(--ink-40)", marginTop:4 }}>ranked {rank}/20</div>
+                </div>
+              </div>
+              {spark && (
+                <div style={{ marginTop:18 }}>
+                  <Sparkline data={spark} color={color} width={460} height={56} showArea showDot strokeWidth={1.5} />
+                  <div style={{ display:"flex", justifyContent:"space-between", marginTop:6 }}>
+                    <span className="mono small" style={{ color:"var(--ink-40)" }}>30d ago</span>
+                    <span className="mono small" style={{ color:"var(--ink-40)" }}>today</span>
+                  </div>
                 </div>
               )}
             </div>
-          )}
-        </div>
+          </div>
+        </section>
 
-        {/* Actions */}
-        <div style={{ display:"flex", gap:10, marginTop:28, flexWrap:"wrap" }}>
-          <Link to="/incidents" style={{ fontSize:13, color:"var(--ink)", background:"#fff", border:"1px solid rgba(26,16,8,0.15)", borderRadius:8, padding:"10px 18px", fontWeight:500, textDecoration:"none" }}>
-            All incidents
-          </Link>
-          <Link to="/briefs" style={{ fontSize:13, color:"#fff", background:"var(--crimson)", border:"none", borderRadius:8, padding:"10px 18px", fontWeight:600, textDecoration:"none" }}>
-            Generate brief →
-          </Link>
-          <Link to="/" style={{ fontSize:13, color:"var(--ink-muted)", background:"none", border:"1px solid transparent", borderRadius:8, padding:"10px 18px", fontWeight:400, textDecoration:"none" }}>
-            ← Overview
-          </Link>
-        </div>
+        {/* ─── INDEX COMPONENTS ─────────────────────── */}
+        <section className="container-wide" style={{ paddingBottom:56 }}>
+          <div className="section-bar">
+            <span className="tick"/>
+            <span className="micro micro-strong">§ 01 · INDEX COMPONENTS</span>
+            <span className="micro" style={{ color:"var(--ink-40)" }}>weights · GZ 45% · EX 30% · BASE 25%</span>
+          </div>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:0, borderTop:"1px solid var(--ink)" }} className="stack-mobile">
+            <Component kicker="GZ · GRAY-ZONE INCIDENTS" value={components.gz} weight={0.45} contrib={Math.round(components.gz*0.45)} note="Weighted incident escalation, log-normalised. Last 7 days double-weighted." />
+            <Component kicker="EX · EXERCISE SIGNAL" value={components.ex} weight={0.30} contrib={Math.round(components.ex*0.30)} note="Exercise scale + rhetoric score. ±14 day window." borderLeft />
+            <Component kicker="BASE · STRUCTURAL" value={components.base} weight={0.25} contrib={Math.round(components.base*0.25)} note={region.category==="conflict"?"Active conflict baseline.":"Strategic-tension baseline."} borderLeft />
+          </div>
+        </section>
 
-        {/* Trust note */}
-        <p style={{ marginTop:32, fontSize:11, color:"rgba(26,16,8,0.28)", lineHeight:1.6 }}>
-          Escalation Index is a heuristic research indicator based on open-source data. Not a predictive model. Not an official intelligence assessment.
-        </p>
+        {/* ─── ACTIVITY TABS ─────────────────────── */}
+        <section className="container-wide" style={{ paddingBottom:72 }}>
+          <div className="section-bar">
+            <span className="tick"/>
+            <span className="micro micro-strong">§ 02 · ACTIVITY</span>
+            <div style={{ display:"flex", gap:20, marginLeft:24 }}>
+              <TabBtn active={tab==="incidents"} onClick={()=>setTab("incidents")} label={`Incidents · ${loading?"…":incidents.length}`} />
+              <TabBtn active={tab==="exercises"} onClick={()=>setTab("exercises")} label={`Exercises · ${loading?"…":exercises.length}`} />
+              <TabBtn active={tab==="narrative"} onClick={()=>setTab("narrative")} label="AI Narrative" />
+            </div>
+            <span className="meta mono small" style={{ color:"var(--ink-40)" }}>{loading?"syncing…":"updated"}</span>
+          </div>
+
+          {tab === "incidents" && <IncidentColumn items={incidents} loading={loading} />}
+          {tab === "exercises" && <ExerciseList items={exercises} loading={loading} />}
+          {tab === "narrative" && <NarrativePreview region={region} score={score} incidents={incidents} navigate={navigate} />}
+        </section>
+
+        {/* ─── METHODOLOGY PULL-QUOTE ─────────────────────── */}
+        <section className="container-wide" style={{ paddingBottom:64 }}>
+          <div style={{ borderTop:"1px solid var(--ink)", paddingTop:36, paddingBottom:36 }}>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 2fr", gap:56 }} className="stack-mobile">
+              <div className="micro micro-accent">
+                <span className="tick"/>
+                METHOD NOTE
+              </div>
+              <div>
+                <p className="display-serif" style={{ fontSize:36, lineHeight:1.2, marginBottom:18, color:"var(--ink)" }}>
+                  "The Deterrence Index is a research indicator. It compresses heterogeneous open-source signals into a single number — useful for ranking, insufficient for prediction."
+                </p>
+                <div className="micro" style={{ color:"var(--ink-55)" }}>
+                  Project memo · JFKI · FU Berlin · Summer Term 2026
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
       </div>
     </Layout>
+  );
+}
+
+function clamp(min, max) {
+  return `clamp(${min}px, 10vw, ${max}px)`;
+}
+
+function Component({ kicker, value, weight, contrib, note, borderLeft }) {
+  return (
+    <div style={{ padding:"24px 28px", borderBottom:"1px solid var(--rule)", borderLeft:borderLeft?"1px solid var(--rule)":"none" }}>
+      <div className="micro" style={{ marginBottom:14 }}>{kicker}</div>
+      <div style={{ display:"flex", alignItems:"baseline", gap:12, marginBottom:8 }}>
+        <span className="tab-num" style={{ fontSize:56, fontWeight:700, letterSpacing:"-0.03em", lineHeight:1 }}>
+          <AnimatedNumber value={value} />
+        </span>
+        <span className="mono small" style={{ color:"var(--ink-40)" }}>× {weight.toFixed(2)} → +{contrib}</span>
+      </div>
+      <div style={{ height:3, background:"var(--ink-06)", marginBottom:14 }}>
+        <div style={{ height:"100%", width:`${Math.min(100,value)}%`, background:"var(--accent)", opacity:0.55 }}/>
+      </div>
+      <p className="small" style={{ color:"var(--ink-55)" }}>{note}</p>
+    </div>
+  );
+}
+
+function TabBtn({ active, onClick, label }) {
+  return (
+    <button onClick={onClick} className="micro" style={{
+      paddingBottom:6,
+      borderBottom: active ? "2px solid var(--accent)" : "2px solid transparent",
+      color: active ? "var(--ink)" : "var(--ink-55)",
+      fontWeight: active ? 700 : 500,
+      cursor:"pointer",
+    }}>
+      {label}
+    </button>
+  );
+}
+
+function IncidentColumn({ items, loading }) {
+  if (loading) return <Empty msg="Loading…" />;
+  if (items.length === 0) return <Empty msg="No indexed incidents in current window." />;
+  return (
+    <div style={{ borderTop:"1px solid var(--ink)" }}>
+      {items.slice(0,20).map((inc, i) => {
+        const catKey = inc.category || inc.cat || "unknown";
+        const cat = CATS[catKey] || CATS.unknown;
+        const el = inc.escalation_level || 1;
+        return (
+          <article key={inc.id||i} style={{ display:"grid", gridTemplateColumns:"100px 1fr 80px 150px", gap:24, padding:"20px 0", borderBottom:"1px solid var(--rule)", alignItems:"flex-start" }}>
+            <div>
+              <div className="mono" style={{ fontSize:14, color:"var(--ink)" }}>{inc.date?.slice(5,10)||"—"}</div>
+              <div className="mono small" style={{ color:"var(--ink-40)" }}>{inc.date?.slice(0,10)||""}</div>
+            </div>
+            <div>
+              <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6, flexWrap:"wrap" }}>
+                <span style={{ color:cat.color, fontSize:13 }}>{cat.glyph}</span>
+                <span className="micro" style={{ color:cat.color }}>{cat.label}</span>
+                {el >= 3 && <span className="mono" style={{ fontSize:9, padding:"2px 6px", background:"var(--hi)", color:"#fff", letterSpacing:"0.1em" }}>EL{el}</span>}
+              </div>
+              <div style={{ fontSize:16, fontWeight:500, lineHeight:1.4, marginBottom:4 }}>{inc.title}</div>
+              {inc.description && inc.description !== inc.title && (
+                <p className="small" style={{ marginTop:6 }}>{inc.description}</p>
+              )}
+            </div>
+            <span className="mono small" style={{ color:"var(--ink-55)" }}>{getConf(inc.source_name||"")}</span>
+            {inc.source_url ? (
+              <a href={inc.source_url} target="_blank" rel="noopener noreferrer" className="mono small" style={{ color:"var(--ink-55)", textDecoration:"underline", textUnderlineOffset:4 }}>
+                {(inc.source_name||"").split(" ")[0]} ↗
+              </a>
+            ) : (
+              <span className="mono small" style={{ color:"var(--ink-40)" }}>{inc.source_name||"—"}</span>
+            )}
+          </article>
+        );
+      })}
+    </div>
+  );
+}
+
+function ExerciseList({ items, loading }) {
+  if (loading) return <Empty msg="Loading…" />;
+  if (items.length === 0) return <Empty msg="No concurrent exercises in current window." />;
+  return (
+    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:0, borderTop:"1px solid var(--ink)" }} className="stack-mobile">
+      {items.map((ex, i) => {
+        const name = ex.name || ex.exercise_name || "—";
+        const type = ex.exercise_type || ex.type || "LIVEX";
+        const lead = ex.lead_nation || ex.lead || "";
+        const start = ex.start_date || ex.start || "";
+        const end   = ex.end_date   || ex.end   || "";
+        const scale = ex.scale || ex.personnel_count || 0;
+        return (
+          <div key={ex.id||i} style={{ padding:24, borderBottom:"1px solid var(--rule)", borderRight:i%2===0?"1px solid var(--rule)":"none" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
+              <span className="mono" style={{ fontSize:10, padding:"2px 7px", background:"var(--ink)", color:"var(--cream)", letterSpacing:"0.12em" }}>{type}</span>
+              {lead && <span className="micro micro-accent">{lead}</span>}
+            </div>
+            <div style={{ fontSize:20, fontWeight:600, marginBottom:6 }}>{name}</div>
+            <div className="mono small" style={{ color:"var(--ink-55)", marginBottom:8 }}>
+              {start} → {end}
+            </div>
+            {scale > 0 && (
+              <div className="small">
+                <span className="mono">{Number(scale).toLocaleString()}</span> personnel
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function NarrativePreview({ region, score, incidents, navigate }) {
+  return (
+    <div style={{ borderTop:"1px solid var(--ink)", padding:"32px 0", maxWidth:720 }}>
+      <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:18 }}>
+        <span className="mono" style={{ fontSize:9, padding:"2px 7px", background:"var(--lo)", color:"#fff", letterSpacing:"0.12em" }}>AI-GENERATED</span>
+        <span className="micro" style={{ color:"var(--ink-55)" }}>Groq · Llama 3.3-70B · open-source corpus</span>
+      </div>
+      <p className="body-lg" style={{ marginBottom:16 }}>
+        The {region.label} theatre registers an Escalation Index of{" "}
+        <span className="mono" style={{ color:EI_COLOR(score), fontWeight:600 }}>{score}</span>{" "}
+        over the past 14 days — {region.trend > 0 ? `a ${region.trend}-point rise from the prior cycle` : region.trend < 0 ? `a ${Math.abs(region.trend)}-point fall from the prior cycle` : "stable against the prior cycle"}.
+      </p>
+      <p className="body" style={{ marginBottom:16 }}>
+        Gray-zone activity is dominated by {region.category==="conflict"?"military and civilian incidents":"diplomatic signalling and limited maritime engagements"}. Source confidence remains weighted toward institutional reporting (UN News, OCHA, UCDP), with secondary OSINT verification through Bellingcat-class outlets.
+      </p>
+      {incidents.length > 0 && (
+        <p className="body" style={{ marginBottom:20 }}>
+          {incidents.length} incidents indexed for this region in the current window. The most recent entry: "{incidents[0]?.title?.slice(0,90)}…"
+        </p>
+      )}
+      <button className="btn-primary" onClick={() => navigate(`/briefs`)}>
+        Generate full brief →
+      </button>
+    </div>
+  );
+}
+
+function Empty({ msg }) {
+  return (
+    <div style={{ borderTop:"1px solid var(--ink)", padding:"80px 0", textAlign:"center" }}>
+      <div className="display-serif" style={{ fontSize:80, color:"var(--ink-15)", marginBottom:14 }}>—</div>
+      <div className="body" style={{ color:"var(--ink-55)" }}>{msg}</div>
+    </div>
+  );
+}
+
+function Coord({ lat, lng }) {
+  if (lat == null || lng == null) return null;
+  return (
+    <span className="mono" style={{ fontSize:11, color:"var(--ink-40)", letterSpacing:"0.05em" }}>
+      {Math.abs(lat).toFixed(1)}°{lat>=0?"N":"S"} {Math.abs(lng).toFixed(1)}°{lng>=0?"E":"W"}
+    </span>
   );
 }

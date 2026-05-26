@@ -1,325 +1,350 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
 import Sparkline from "../components/Sparkline";
-import { REGIONS } from "../data/seed";
+import AnimatedNumber from "../components/AnimatedNumber";
+import { REGIONS, SPARKLINES, CATS, EI_COLOR, EI_LABEL, getConf } from "../data/seed";
 
 const API = import.meta.env.VITE_API_URL || "https://threshold-production-d13c.up.railway.app";
 
-const EI_COLOR = s => s==null?"#94a3b8":s>=65?"#8B2030":s>=45?"#C0622B":s>=25?"#B07D1A":"#2D7A4F";
-const EI_LABEL = s => s==null?"NO DATA":s>=65?"HIGH":s>=45?"MODERATE":s>=25?"ELEVATED":"LOW";
-const EI_BG    = s => s==null?"rgba(148,163,184,0.08)":s>=65?"rgba(139,32,48,0.07)":s>=45?"rgba(192,98,43,0.07)":s>=25?"rgba(176,125,26,0.07)":"rgba(45,122,79,0.07)";
+const MEDIAN_SPARK = [26,28,27,29,31,30,28,32,33,31,30,32,34,33,35,33,32,31,32,33,34,33,32,33,34];
 
-const SORT_OPTS = [
-  {key:"ei",label:"By Index"},
-  {key:"alpha",label:"A–Z"},
-  {key:"rising",label:"Rising"},
-];
-const FILTER_OPTS = [
-  {key:"all",label:"All"},
-  {key:"high",label:"High"},
-  {key:"moderate",label:"Moderate"},
-  {key:"low",label:"Low"},
-  {key:"conflict",label:"Active Conflict"},
-  {key:"tension",label:"Strategic Tension"},
-];
+export default function Home() {
+  const navigate = useNavigate();
+  const [sort, setSort]     = useState("ei");
+  const [filter, setFilter] = useState("all");
+  const [view, setView]     = useState("index");
+  const [incidents, setIncidents] = useState([]);
+  const [totalIndexed, setTotalIndexed] = useState(1247);
 
-function RegionCard({ region, onClick, selected, sparkData }) {
-  const color = EI_COLOR(region.ei);
-  const label = EI_LABEL(region.ei);
-  const bg    = EI_BG(region.ei);
-  const isSel = selected?.id === region.id;
-  const trend = region.trend; // null = no data, number = delta
+  useEffect(() => {
+    fetch(`${API}/api/incidents/?limit=6`)
+      .then(r => r.json())
+      .then(d => { if (d.data?.length) setIncidents(d.data.slice(0, 6)); })
+      .catch(() => {});
+    fetch(`${API}/api/incidents/`)
+      .then(r => r.json())
+      .then(d => { if (d.data?.length) setTotalIndexed(d.data.length); })
+      .catch(() => {});
+  }, []);
+
+  const medianEI = useMemo(() => {
+    const v = [...REGIONS].map(r => r.ei).sort((a, b) => a - b);
+    return v[Math.floor(v.length / 2)];
+  }, []);
+
+  const critical = REGIONS.filter(r => r.ei >= 50);
+  const rising   = REGIONS.filter(r => r.trend > 0).length;
+
+  const filtered = useMemo(() => REGIONS.filter(r => {
+    if (filter === "all")      return true;
+    if (filter === "high")     return r.ei >= 50;
+    if (filter === "moderate") return r.ei >= 25 && r.ei < 50;
+    if (filter === "low")      return r.ei < 25;
+    if (filter === "conflict") return r.category === "conflict";
+    if (filter === "tension")  return r.category === "tension";
+    if (filter === "rising")   return r.trend > 0;
+    return true;
+  }), [filter]);
+
+  const sorted = useMemo(() => [...filtered].sort((a, b) => {
+    if (sort === "ei")     return b.ei - a.ei;
+    if (sort === "alpha")  return a.label.localeCompare(b.label);
+    if (sort === "rising") return b.trend - a.trend;
+    return 0;
+  }), [filtered, sort]);
+
+  const today = new Date();
+  const weekAgo = new Date(today - 7 * 86400000);
+  const windowLabel = `${weekAgo.getDate()} ${weekAgo.toLocaleString("en-GB",{month:"long"})} → ${today.getDate()} ${today.toLocaleString("en-GB",{month:"long",year:"numeric"})}`;
 
   return (
-    <div
-      role="button" tabIndex={0}
-      aria-pressed={isSel}
-      onClick={() => onClick(region)}
-      onKeyDown={e => (e.key==="Enter"||e.key===" ") && onClick(region)}
-      style={{
-        background: isSel ? bg : "#fff",
-        border: `1px solid ${isSel ? color+"50" : "rgba(26,16,8,0.08)"}`,
-        borderRadius:12, padding:"18px 20px", cursor:"pointer",
-        transition:"all .18s",
-        boxShadow: isSel ? `0 4px 20px rgba(26,16,8,0.10)` : "0 1px 3px rgba(26,16,8,0.04)",
-        outline:"none",
-      }}
-    >
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10 }}>
-        <span style={{ fontSize:13, fontWeight:600, color:"var(--ink)", lineHeight:1.3 }}>{region.label}</span>
-        <span style={{ fontSize:9, fontWeight:700, letterSpacing:"1.5px", padding:"3px 8px", borderRadius:999, background:bg, color, border:`1px solid ${color}22`, whiteSpace:"nowrap", flexShrink:0, marginLeft:8 }}>
-          {label}
-        </span>
-      </div>
+    <Layout>
+      <div className="route-in">
 
-      <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", marginBottom:8 }}>
-        <div style={{ fontSize:44, fontWeight:800, lineHeight:1, color, letterSpacing:"-1.5px", fontVariantNumeric:"tabular-nums" }}>
-          {region.ei ?? "—"}
-        </div>
-        {/* Sparkline — shows when history exists, invisible otherwise */}
-        <div style={{ paddingBottom:4 }}>
-          <Sparkline data={sparkData} color={color} width={72} height={26}/>
-        </div>
-      </div>
+        {/* ─── EDITORIAL HERO ─────────────────────── */}
+        <section style={{ paddingTop:72, paddingBottom:56, position:"relative" }}>
+          <div className="container-wide">
+            <div style={{ display:"grid", gridTemplateColumns:"1.4fr 1fr", gap:64, alignItems:"end" }} className="stack-mobile">
 
-      <div style={{ height:2, background:"rgba(26,16,8,0.06)", borderRadius:1, overflow:"hidden", marginBottom:10 }}>
-        <div style={{ height:"100%", width:`${region.ei||0}%`, background:color, opacity:0.55, borderRadius:1 }}/>
-      </div>
+              <div>
+                <div className="micro micro-accent" style={{ marginBottom:28, display:"flex", alignItems:"center", gap:10 }}>
+                  <span className="tick"/>
+                  GEOPOLITICAL ESCALATION MONITOR · ISSUE 14
+                </div>
+                <h1 className="display" style={{ marginBottom:28 }}>
+                  Twenty<br/>
+                  <span className="serif" style={{ fontWeight:300, fontStyle:"italic" }}>threshold</span>
+                  <span style={{ color:"var(--accent)" }}>.</span><br/>
+                  <span style={{ color:"var(--ink-55)" }}>The crossings, indexed.</span>
+                </h1>
+                <p className="body-lg" style={{ maxWidth:540, marginBottom:32 }}>
+                  A research instrument. Twenty conflict and strategic-tension regions, observed daily through open sources, indexed against a logarithmic escalation function.
+                </p>
+                <div style={{ display:"flex", gap:12 }}>
+                  <button className="btn-primary" onClick={() => navigate(`/region/${encodeURIComponent(REGIONS[0].id)}`)}>
+                    Open dossier →
+                  </button>
+                  <button className="btn-ghost" onClick={() => navigate("/about")}>Read methodology</button>
+                </div>
+              </div>
 
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-        <div style={{ fontSize:9, letterSpacing:"0.8px", fontWeight:500, color:"rgba(26,16,8,0.35)" }}>
-          {region.category==="conflict"?"ACTIVE CONFLICT":"STRATEGIC TENSION"}
-        </div>
-        {/* Trend — only shows when real data available */}
-        {trend != null && (
-          <div style={{ fontSize:10, fontWeight:600, fontVariantNumeric:"tabular-nums",
-            color: trend > 0 ? "#8B2030" : trend < 0 ? "#2D7A4F" : "rgba(26,16,8,0.35)" }}>
-            {trend > 0 ? `↑ +${trend}` : trend < 0 ? `↓ ${trend}` : "→ stable"}
+              <div style={{ borderLeft:"1px solid var(--ink)", paddingLeft:28 }} className="hide-mobile">
+                <div className="micro" style={{ marginBottom:14, color:"var(--ink)" }}>
+                  WINDOW · {windowLabel.toUpperCase()}
+                </div>
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:28 }}>
+                  <StatBlock n={totalIndexed} label="incidents indexed" />
+                  <StatBlock n={20} label="regions monitored" />
+                  <StatBlock n={critical.length} label="at high escalation" emphasis />
+                  <StatBlock n={rising} label="rising 7-day" />
+                </div>
+                <div style={{ marginTop:28, padding:"16px 0", borderTop:"1px solid var(--rule)" }}>
+                  <div className="micro" style={{ marginBottom:10 }}>ESCALATION INDEX · MEDIAN</div>
+                  <div style={{ display:"flex", alignItems:"baseline", gap:14 }}>
+                    <span className="tab-num" style={{ fontSize:64, fontWeight:800, letterSpacing:"-0.04em", lineHeight:1, color:EI_COLOR(medianEI) }}>
+                      <AnimatedNumber value={medianEI} duration={1500} />
+                    </span>
+                    <span className="small mono" style={{ color:EI_COLOR(medianEI) }}>{EI_LABEL(medianEI)}</span>
+                    <span className="small mono" style={{ color:"var(--ink-40)", marginLeft:"auto" }}>+1.2 vs prev.</span>
+                  </div>
+                  <div style={{ marginTop:14 }}>
+                    <Sparkline data={MEDIAN_SPARK} color="var(--ink)" width={300} height={36} showArea strokeWidth={1.5} />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
+
+          {/* Measurement marks */}
+          <div className="container-wide hide-mobile" style={{ marginTop:56 }}>
+            <div style={{ display:"flex", alignItems:"center", fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.15em", color:"var(--ink-40)" }}>
+              {Array.from({ length:21 }, (_, i) => (
+                <div key={i} style={{ flex:1, position:"relative", height:18, borderLeft:"1px solid var(--ink-15)" }}>
+                  {i % 5 === 0 && (
+                    <span style={{ position:"absolute", top:-16, left:4, color:"var(--ink-40)" }}>
+                      {String(i).padStart(2,"0")}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ─── REGION INDEX ─────────────────────── */}
+        <section className="container-wide" style={{ paddingTop:32, paddingBottom:60 }}>
+          <div className="section-bar">
+            <span className="tick"/>
+            <span className="micro micro-strong">§ 01 · INDEX OF REGIONS</span>
+            <span className="micro hide-mobile" style={{ color:"var(--ink-40)" }}>20 entries · sorted by escalation index</span>
+            <div className="meta" style={{ display:"flex", gap:8 }}>
+              <button className={`chip ${view==="index"?"is-active":""}`} onClick={()=>setView("index")}>Table</button>
+              <button className={`chip ${view==="grid"?"is-active":""}`}  onClick={()=>setView("grid")}>Grid</button>
+            </div>
+          </div>
+
+          <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:18 }}>
+            <span className="micro" style={{ alignSelf:"center", marginRight:6 }}>SORT</span>
+            {[["ei","By index"],["alpha","A–Z"],["rising","Rising"]].map(([k,l]) => (
+              <button key={k} className={`chip ${sort===k?"is-active":""}`} onClick={()=>setSort(k)}>{l}</button>
+            ))}
+            <span style={{ width:1, height:22, background:"var(--rule)", margin:"0 8px", alignSelf:"center" }}/>
+            <span className="micro" style={{ alignSelf:"center", marginRight:6 }}>FILTER</span>
+            {[["all","All"],["high","High"],["moderate","Moderate"],["low","Low"],["conflict","Active"],["tension","Tension"],["rising","Rising"]].map(([k,l]) => (
+              <button key={k} className={`chip is-accent ${filter===k?"is-active":""}`} onClick={()=>setFilter(k)}>{l}</button>
+            ))}
+            <span className="micro" style={{ marginLeft:"auto", alignSelf:"center", color:"var(--ink-40)" }}>{sorted.length}/20</span>
+          </div>
+
+          {view === "index"
+            ? <RegionTable regions={sorted} onSelect={r => navigate(`/region/${encodeURIComponent(r.id)}`)} />
+            : <RegionGrid  regions={sorted} onSelect={r => navigate(`/region/${encodeURIComponent(r.id)}`)} />
+          }
+        </section>
+
+        {/* ─── LATEST DISPATCHES ─────────────────────── */}
+        {incidents.length > 0 && (
+          <section className="container-wide" style={{ paddingTop:24, paddingBottom:72 }}>
+            <div className="section-bar">
+              <span className="tick"/>
+              <span className="micro micro-strong">§ 02 · LATEST DISPATCHES</span>
+              <span className="micro hide-mobile" style={{ color:"var(--ink-40)" }}>recent · {incidents.length} entries</span>
+              <button className="micro" style={{ cursor:"pointer", textDecoration:"underline", textUnderlineOffset:4, marginLeft:"auto", color:"var(--ink-55)" }} onClick={()=>navigate("/incidents")}>
+                All incidents →
+              </button>
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:0 }} className="stack-mobile">
+              {incidents.slice(0,6).map((inc, i) => <DispatchTile key={inc.id||i} inc={inc} idx={i} />)}
+            </div>
+          </section>
         )}
+
+      </div>
+    </Layout>
+  );
+}
+
+function StatBlock({ n, label, emphasis }) {
+  return (
+    <div>
+      <div className="tab-num" style={{ fontSize:56, fontWeight:800, letterSpacing:"-0.035em", lineHeight:1, color:emphasis?"var(--accent)":"var(--ink)", marginBottom:6 }}>
+        <AnimatedNumber value={n} duration={emphasis ? 1800 : 1200} />
+      </div>
+      <div className="micro">{label}</div>
+    </div>
+  );
+}
+
+function RegionTable({ regions, onSelect }) {
+  return (
+    <div style={{ borderTop:"1px solid var(--ink)" }}>
+      {/* Desktop header */}
+      <div style={{
+        display:"grid",
+        gridTemplateColumns:"32px 1fr 130px 80px 64px 160px 100px 24px",
+        gap:16, padding:"10px 0",
+        borderBottom:"1px solid var(--rule-strong)",
+        fontFamily:"var(--mono)", fontSize:10, fontWeight:500,
+        letterSpacing:"0.18em", textTransform:"uppercase", color:"var(--ink-55)",
+      }}>
+        <span style={{ textAlign:"center" }}>#</span>
+        <span>Region</span>
+        <span>Category</span>
+        <span style={{ textAlign:"right" }}>EI</span>
+        <span style={{ textAlign:"right" }}>7-day</span>
+        <span>30-day trend</span>
+        <span style={{ textAlign:"right" }}>Status</span>
+        <span/>
+      </div>
+
+      {regions.map((r, i) => {
+        const color = EI_COLOR(r.ei);
+        const spark = SPARKLINES[r.id];
+        return (
+          <div key={r.id}
+            onClick={() => onSelect(r)}
+            style={{
+              display:"grid",
+              gridTemplateColumns:"32px 1fr 130px 80px 64px 160px 100px 24px",
+              gap:16, padding:"16px 0",
+              borderBottom:"1px solid var(--rule)",
+              alignItems:"center", cursor:"pointer",
+              transition:"background 0.12s",
+            }}
+            onMouseEnter={e => e.currentTarget.style.background="var(--paper)"}
+            onMouseLeave={e => e.currentTarget.style.background="transparent"}
+          >
+            <span className="mono small" style={{ textAlign:"center", color:"var(--ink-40)" }}>{String(i+1).padStart(2,"0")}</span>
+            <div>
+              <div style={{ fontSize:16, fontWeight:600, color:"var(--ink)", marginBottom:2 }}>{r.label}</div>
+              <Coord lat={r.lat} lng={r.lng} />
+            </div>
+            <span className="mono small" style={{ color:"var(--ink-55)", letterSpacing:"0.06em", textTransform:"uppercase" }}>
+              {r.category === "conflict" ? "Active conflict" : "Strategic tension"}
+            </span>
+            <span style={{ fontSize:28, fontWeight:700, fontVariantNumeric:"tabular-nums", color, textAlign:"right", letterSpacing:"-0.02em" }}>
+              {r.ei}
+            </span>
+            <span className="mono small tab-num" style={{ textAlign:"right", color: r.trend > 0 ? "var(--hi)" : r.trend < 0 ? "var(--lo)" : "var(--ink-40)" }}>
+              {r.trend > 0 ? `+${r.trend}` : r.trend < 0 ? r.trend : "·"}
+            </span>
+            <div style={{ display:"flex", alignItems:"center" }}>
+              {spark && <Sparkline data={spark} color={color} width={150} height={22} strokeWidth={1.25} />}
+            </div>
+            <span style={{ textAlign:"right" }}>
+              <span className="micro" style={{ color }}>{EI_LABEL(r.ei)}</span>
+            </span>
+            <span style={{ color:"var(--ink-40)", textAlign:"right" }}>→</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function RegionGrid({ regions, onSelect }) {
+  return (
+    <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(240px, 1fr))", gap:0, borderTop:"1px solid var(--ink)", borderLeft:"1px solid var(--rule)" }}>
+      {regions.map((r, i) => {
+        const color = EI_COLOR(r.ei);
+        const spark = SPARKLINES[r.id];
+        return (
+          <div key={r.id}
+            onClick={() => onSelect(r)}
+            style={{
+              padding:"20px 20px 18px",
+              borderBottom:"1px solid var(--rule)",
+              borderRight:"1px solid var(--rule)",
+              cursor:"pointer",
+              background:"var(--paper)",
+              transition:"all 0.15s",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background="var(--cream)"; e.currentTarget.style.transform="translateY(-2px)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background="var(--paper)"; e.currentTarget.style.transform=""; }}
+          >
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14 }}>
+              <div>
+                <div className="mono small" style={{ color:"var(--ink-40)", marginBottom:4 }}>№ {String(i+1).padStart(2,"0")} · {r.short||r.id.slice(0,3).toUpperCase()}</div>
+                <div style={{ fontSize:17, fontWeight:600 }}>{r.label}</div>
+              </div>
+              <span className="micro" style={{ color }}>{EI_LABEL(r.ei)}</span>
+            </div>
+            <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", marginBottom:12 }}>
+              <span className="tab-num" style={{ fontSize:56, fontWeight:800, letterSpacing:"-0.035em", color, lineHeight:1 }}>{r.ei}</span>
+              <span style={{ paddingBottom:6 }}>
+                {spark && <Sparkline data={spark} color={color} width={88} height={28} />}
+              </span>
+            </div>
+            <div style={{ height:2, background:"var(--ink-06)", marginBottom:12 }}>
+              <div style={{ height:"100%", width:`${r.ei}%`, background:color, opacity:0.7 }}/>
+            </div>
+            <div style={{ display:"flex", justifyContent:"space-between", fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.12em", textTransform:"uppercase", color:"var(--ink-40)" }}>
+              <span>{r.category === "conflict" ? "Active" : "Tension"}</span>
+              <span style={{ color: r.trend > 0 ? "var(--hi)" : r.trend < 0 ? "var(--lo)" : "var(--ink-40)" }}>
+                {r.trend > 0 ? `↑ +${r.trend}` : r.trend < 0 ? `↓ ${r.trend}` : "→ stable"}
+              </span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function DispatchTile({ inc, idx }) {
+  const catKey = inc.category || inc.cat || "unknown";
+  const cat = CATS[catKey] || CATS.unknown;
+  return (
+    <div style={{
+      borderTop: idx >= 3 ? "1px solid var(--rule)" : "none",
+      borderRight: (idx % 3) < 2 ? "1px solid var(--rule)" : "none",
+      borderBottom: "1px solid var(--rule)",
+      borderLeft: idx % 3 === 0 ? "1px solid var(--rule)" : "none",
+      padding:"20px 24px", cursor:"pointer", transition:"background 0.12s",
+    }}
+      onMouseEnter={e => e.currentTarget.style.background="var(--paper)"}
+      onMouseLeave={e => e.currentTarget.style.background="transparent"}
+    >
+      <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
+        <span style={{ fontSize:14, color:cat.color }}>{cat.glyph}</span>
+        <span className="micro" style={{ color:cat.color }}>{cat.label}</span>
+        <span className="mono small" style={{ color:"var(--ink-40)", marginLeft:"auto" }}>{inc.date?.slice(0,10)||""}</span>
+      </div>
+      <div style={{ fontSize:14, fontWeight:500, lineHeight:1.4, color:"var(--ink)", marginBottom:8 }}>{inc.title||"—"}</div>
+      <div className="mono small" style={{ color:"var(--ink-40)", display:"flex", justifyContent:"space-between" }}>
+        <span>{inc.region||""}</span>
+        {(inc.source_name||inc.src) && <span>{(inc.source_name||inc.src)} ↗</span>}
       </div>
     </div>
   );
 }
 
-function RegionDrawer({ region, onClose, incidents }) {
-  const navigate = useNavigate();
-  if (!region) return null;
-  const color = EI_COLOR(region.ei);
-
+function Coord({ lat, lng }) {
+  if (lat == null || lng == null) return null;
   return (
-    <>
-      <div onClick={onClose} style={{ position:"fixed", inset:0, background:"rgba(26,16,8,0.15)", zIndex:40, backdropFilter:"blur(2px)" }}/>
-      <div role="dialog" aria-label={`${region.label} detail`} style={{
-        position:"fixed", right:0, top:56, bottom:0, width:360,
-        background:"var(--cream)", zIndex:50,
-        borderLeft:"1px solid rgba(26,16,8,0.10)",
-        display:"flex", flexDirection:"column",
-        boxShadow:"-8px 0 32px rgba(26,16,8,0.08)",
-        overflow:"hidden",
-      }}>
-        <div style={{ padding:"18px 20px", borderBottom:"1px solid rgba(26,16,8,0.08)", display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
-          <div>
-            <div style={{ fontSize:10, fontWeight:700, letterSpacing:"2px", color:"var(--crimson)", marginBottom:6 }}>REGION DETAIL</div>
-            <div style={{ fontSize:17, fontWeight:700, color:"var(--ink)" }}>{region.label}</div>
-          </div>
-          <button onClick={onClose} aria-label="Close" style={{ background:"none", border:"1px solid rgba(26,16,8,0.12)", borderRadius:6, padding:"5px 9px", cursor:"pointer", fontSize:14, color:"var(--ink-muted)" }}>✕</button>
-        </div>
-
-        <div style={{ padding:"16px 20px", borderBottom:"1px solid rgba(26,16,8,0.08)", background:`${color}06` }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end" }}>
-            <div>
-              <div style={{ fontSize:10, letterSpacing:"1.5px", color:"rgba(26,16,8,0.4)", marginBottom:4 }}>ESCALATION INDEX</div>
-              <div style={{ fontSize:48, fontWeight:800, color, lineHeight:1, fontVariantNumeric:"tabular-nums" }}>{region.ei ?? "—"}</div>
-            </div>
-            <div style={{ textAlign:"right" }}>
-              <div style={{ fontSize:11, fontWeight:700, letterSpacing:"1px", padding:"4px 10px", borderRadius:999, background:`${color}12`, color, border:`1px solid ${color}25`, marginBottom:6 }}>
-                {EI_LABEL(region.ei)}
-              </div>
-              <div style={{ fontSize:11, color:"rgba(26,16,8,0.4)" }}>
-                {region.category==="conflict"?"Active conflict":"Strategic tension"}
-              </div>
-            </div>
-          </div>
-          <div style={{ height:3, background:"rgba(26,16,8,0.06)", borderRadius:2, overflow:"hidden", marginTop:12 }}>
-            <div style={{ height:"100%", width:`${region.ei||0}%`, background:color, opacity:0.6 }}/>
-          </div>
-        </div>
-
-        <div style={{ flex:1, overflowY:"auto", padding:"14px 20px" }}>
-          <div style={{ fontSize:10, fontWeight:700, letterSpacing:"2px", color:"var(--ink-muted)", marginBottom:12 }}>RECENT INCIDENTS</div>
-          {incidents.length === 0 ? (
-            <div style={{ fontSize:12, color:"rgba(26,16,8,0.3)", lineHeight:1.6 }}>No indexed incidents for this region yet.</div>
-          ) : incidents.slice(0,5).map((inc,i) => (
-            <div key={i} style={{ marginBottom:10, paddingBottom:10, borderBottom:i<4?"1px solid rgba(26,16,8,0.06)":"none" }}>
-              <div style={{ fontSize:9, color:"rgba(26,16,8,0.35)", marginBottom:3, fontVariantNumeric:"tabular-nums" }}>{inc.date?.slice(0,10)}</div>
-              <div style={{ fontSize:12, fontWeight:500, color:"var(--ink)", lineHeight:1.4 }}>{inc.title}</div>
-            </div>
-          ))}
-        </div>
-
-        <div style={{ padding:"14px 20px", borderTop:"1px solid rgba(26,16,8,0.08)", display:"flex", gap:10 }}>
-          <button onClick={() => navigate("/incidents")} style={{ flex:1, fontSize:12, color:"var(--ink-muted)", background:"none", border:"1px solid rgba(26,16,8,0.15)", borderRadius:6, padding:"9px 0", cursor:"pointer", fontWeight:500 }}>
-            All incidents
-          </button>
-          <button onClick={() => navigate("/briefs")} style={{ flex:1, fontSize:12, color:"#fff", background:"var(--crimson)", border:"none", borderRadius:6, padding:"9px 0", cursor:"pointer", fontWeight:600 }}>
-            Generate brief →
-          </button>
-        </div>
-      </div>
-    </>
-  );
-}
-
-export default function Home() {
-  const [regions, setRegions]         = useState(REGIONS);
-  const [sort, setSort]               = useState("ei");
-  const [filter, setFilter]           = useState("all");
-  const [live, setLive]               = useState(false);
-  const [status, setStatus]           = useState(null);
-  const [drawerRegion, setDrawerRegion] = useState(null);
-  const [drawerIncidents, setDrawerIncidents] = useState([]);
-  // F2: trends from API — null per region until data available
-  const [trends, setTrends]           = useState({});
-  // F8: sparkline history per region
-  const [sparklines, setSparklines]   = useState({});
-
-  useEffect(() => {
-    // Load EI scores
-    fetch(`${API}/api/di/global`)
-      .then(r=>r.json())
-      .then(res => {
-        if (res.data?.length) {
-          setRegions(REGIONS.map(r => {
-            const lv = res.data.find(d => d.region===r.id);
-            return lv ? {...r, ei: Math.round(lv.ei_score ?? lv.di_score ?? r.ei)} : r;
-          }));
-          setLive(true);
-        }
-      }).catch(()=>{});
-
-    // F2: Load trends — returns null per region if insufficient data
-    fetch(`${API}/api/di/trends`)
-      .then(r=>r.json())
-      .then(d => { if (d.trends) setTrends(d.trends); })
-      .catch(()=>{});
-
-    // Status
-    fetch(`${API}/api/admin/status`)
-      .then(r=>r.json()).then(d=>setStatus(d)).catch(()=>{});
-  }, []);
-
-  // F8: Load sparkline history for all regions lazily
-  // Only fetch when we know there's data (status.ei_records > 20)
-  useEffect(() => {
-    if (!status?.ei_records || status.ei_records < 20) return;
-    // Fetch history for all regions in parallel, quietly
-    REGIONS.forEach(r => {
-      fetch(`${API}/api/di/history/${encodeURIComponent(r.id)}`)
-        .then(res=>res.json())
-        .then(d => {
-          if (d.data?.length >= 2) {
-            setSparklines(prev => ({...prev, [r.id]: d.data}));
-          }
-        }).catch(()=>{});
-    });
-  }, [status]);
-
-  function openDrawer(region) {
-    if (drawerRegion?.id === region.id) { setDrawerRegion(null); return; }
-    setDrawerRegion(region);
-    setDrawerIncidents([]);
-    fetch(`${API}/api/incidents/?region=${encodeURIComponent(region.id)}`)
-      .then(r=>r.json()).then(d=>setDrawerIncidents(d.data||[])).catch(()=>{});
-  }
-
-  // Merge live trends into regions (null = no data = don't show)
-  const regionsWithTrends = regions.map(r => ({
-    ...r,
-    trend: trends[r.id] ?? null,
-  }));
-
-  const filtered = regionsWithTrends.filter(r => {
-    if (filter==="all") return true;
-    if (filter==="high") return (r.ei??0)>=65;
-    if (filter==="moderate") return (r.ei??0)>=45&&(r.ei??0)<65;
-    if (filter==="low") return (r.ei??0)<45;
-    if (filter==="conflict") return r.category==="conflict";
-    if (filter==="tension") return r.category==="tension";
-    return true;
-  });
-
-  const sorted = [...filtered].sort((a,b) => {
-    if (sort==="ei") return (b.ei??0)-(a.ei??0);
-    if (sort==="alpha") return a.label.localeCompare(b.label);
-    if (sort==="rising") return (b.trend??-999)-(a.trend??-999);
-    return 0;
-  });
-
-  const critical = regions.filter(r=>(r.ei??0)>=65);
-
-  return (
-    <Layout>
-      {/* Hero */}
-      <div style={{ background:"linear-gradient(135deg,#6B1A2A 0%,#3D0A14 55%,#1A0508 100%)", padding:"36px 20px 32px", position:"relative", overflow:"hidden" }}>
-        <div style={{ position:"absolute", inset:0, opacity:0.03, backgroundImage:"radial-gradient(circle, white 1px, transparent 1px)", backgroundSize:"40px 40px" }} aria-hidden="true"/>
-        <div style={{ position:"relative", maxWidth:700 }}>
-          <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:10, fontWeight:700, letterSpacing:"2.5px", color:"rgba(245,240,232,0.4)", marginBottom:16 }}>
-            <div style={{ width:18, height:1.5, background:"rgba(245,240,232,0.4)" }} aria-hidden="true"/>
-            GEOPOLITICAL INTELLIGENCE
-          </div>
-          <h1 style={{ fontSize:"clamp(28px, 5vw, 42px)", fontWeight:800, letterSpacing:"-1px", lineHeight:1.1, color:"#fff", marginBottom:12 }}>
-            Escalation signals,<br/>monitored through open sources.
-          </h1>
-          <p style={{ fontSize:14, color:"rgba(245,240,232,0.55)", lineHeight:1.65, maxWidth:440, marginBottom:20 }}>
-            Open-source escalation monitoring across 20 conflict and strategic tension areas. Not an official intelligence assessment.
-          </p>
-          <div style={{ display:"flex", gap:20, flexWrap:"wrap", fontSize:11, color:"rgba(245,240,232,0.45)", letterSpacing:"0.5px" }}>
-            {live && <span style={{ display:"flex", alignItems:"center", gap:5, color:"rgba(74,222,128,0.85)", fontWeight:600 }}>
-              <span style={{ width:5, height:5, borderRadius:"50%", background:"#4ade80" }} aria-hidden="true"/>OSINT MONITORING ACTIVE
-            </span>}
-            <span>20 REGIONS</span>
-            {status?.incidents ? <span>{status.incidents.toLocaleString()} INCIDENTS INDEXED</span> : null}
-            <span>30-DAY WINDOW</span>
-          </div>
-        </div>
-      </div>
-
-      <div style={{ padding:"24px 20px 52px", maxWidth:1240, margin:"0 auto", width:"100%" }}>
-        {critical.length > 0 && (
-          <div role="alert" style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 16px", marginBottom:20, fontSize:12, fontWeight:500, background:"rgba(139,32,48,0.05)", border:"1px solid rgba(139,32,48,0.15)", borderRadius:10, color:"#8B2030" }}>
-            <span aria-hidden="true">▲</span>
-            <span>{critical.length} region{critical.length>1?"s":""} at high escalation: {critical.map(r=>r.label).join(", ")}</span>
-          </div>
-        )}
-
-        {/* Controls */}
-        <div style={{ display:"flex", flexWrap:"wrap", gap:12, alignItems:"center", marginBottom:20 }}>
-          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-            <span style={{ fontSize:10, fontWeight:700, letterSpacing:"1.5px", color:"var(--ink-muted)" }}>SORT</span>
-            {SORT_OPTS.map(o=>(
-              <button key={o.key} onClick={()=>setSort(o.key)} aria-pressed={sort===o.key} style={{ fontSize:12, fontWeight:sort===o.key?600:400, padding:"4px 12px", borderRadius:999, border:"1px solid", borderColor:sort===o.key?"var(--ink)":"rgba(26,16,8,0.15)", background:sort===o.key?"var(--ink)":"transparent", color:sort===o.key?"var(--cream)":"var(--ink-muted)", cursor:"pointer" }}>
-                {o.label}
-              </button>
-            ))}
-          </div>
-          <div style={{ width:1, height:18, background:"rgba(26,16,8,0.1)" }} aria-hidden="true"/>
-          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-            <span style={{ fontSize:10, fontWeight:700, letterSpacing:"1.5px", color:"var(--ink-muted)" }}>FILTER</span>
-            {FILTER_OPTS.map(o=>(
-              <button key={o.key} onClick={()=>setFilter(o.key)} aria-pressed={filter===o.key} style={{ fontSize:12, fontWeight:filter===o.key?600:400, padding:"4px 12px", borderRadius:999, border:"1px solid", borderColor:filter===o.key?"var(--crimson)":"rgba(26,16,8,0.15)", background:filter===o.key?"rgba(107,26,42,0.08)":"transparent", color:filter===o.key?"var(--crimson)":"var(--ink-muted)", cursor:"pointer" }}>
-                {o.label}
-              </button>
-            ))}
-          </div>
-          <span style={{ marginLeft:"auto", fontSize:11, color:"var(--ink-muted)", fontStyle:"italic" }}>
-            {sorted.length}/{regions.length} regions
-          </span>
-        </div>
-
-        {/* Grid */}
-        {sorted.length === 0 ? (
-          <div style={{ padding:"48px 0", textAlign:"center", color:"var(--ink-muted)", fontSize:14 }}>No regions match this filter.</div>
-        ) : (
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(min(240px, 100%), 1fr))", gap:10 }}>
-            {sorted.map(r => (
-              <RegionCard
-                key={r.id} region={r}
-                onClick={openDrawer}
-                selected={drawerRegion}
-                sparkData={sparklines[r.id] || null}
-              />
-            ))}
-          </div>
-        )}
-
-        <p style={{ marginTop:28, fontSize:11, color:"rgba(26,16,8,0.28)", lineHeight:1.6, maxWidth:600 }}>
-          The Escalation Index is a heuristic research indicator based on open-source data. Not a predictive model. Not an official intelligence assessment.
-        </p>
-      </div>
-
-      <RegionDrawer region={drawerRegion} onClose={()=>setDrawerRegion(null)} incidents={drawerIncidents}/>
-    </Layout>
+    <span className="mono" style={{ fontSize:10, color:"var(--ink-40)", letterSpacing:"0.05em" }}>
+      {Math.abs(lat).toFixed(1)}°{lat>=0?"N":"S"} {Math.abs(lng).toFixed(1)}°{lng>=0?"E":"W"}
+    </span>
   );
 }
