@@ -62,9 +62,12 @@ export default function Layout({ children }) {
                 style={{
                   fontSize:12, fontWeight:isActive?600:400,
                   color: isActive ? "var(--ink)" : "var(--ink-muted)",
-                  padding:"5px 10px", borderRadius:6, textDecoration:"none",
+                  padding:"5px 10px", textDecoration:"none",
+                  background:"transparent",
+                  border:"none",
                   borderBottom: isActive ? "2px solid var(--accent)" : "2px solid transparent",
                   whiteSpace:"nowrap", display:"none",
+                  marginBottom:-1,
                 }}
                 className="desktop-nav-link"
               >{n.label}</Link>
@@ -72,17 +75,15 @@ export default function Layout({ children }) {
           })}
         </nav>
 
-        {/* Right side: LIVE indicator + clock + About */}
-        <div className="hide-mobile" style={{ display:"flex", alignItems:"center", gap:10, flexShrink:0 }}>
-          <span className="pulse" style={{ width:6, height:6 }}/>
-          <span style={{ fontSize:10, fontWeight:600, letterSpacing:"2px", color:"var(--lo)" }}>LIVE</span>
+        {/* Live indicator + UTC clock — desktop only */}
+        <div className="hide-mobile" style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
+          <span className="pulse"/>
+          <span className="micro" style={{ fontSize:10, color:"var(--ink-55)" }}>LIVE</span>
           <UtcClock />
         </div>
 
-        <Link to="/about"
-          className="btn-ghost hide-mobile"
-          style={{ fontSize:12, padding:"6px 12px", flexShrink:0 }}
-        >About →</Link>
+        {/* About link */}
+        <Link to="/about" className="btn-ghost hide-mobile" style={{ flexShrink:0, fontSize:12, padding:"6px 12px" }}>About →</Link>
 
         {/* Hamburger */}
         <button
@@ -105,7 +106,7 @@ export default function Layout({ children }) {
         </button>
       </header>
 
-      {/* Mobile drawer */}
+      {/* Mobile drawer — above everything including map */}
       {menuOpen && (
         <div style={{
           position:"fixed", top:60, left:0, right:0, bottom:0,
@@ -114,7 +115,7 @@ export default function Layout({ children }) {
           borderTop:"1px solid var(--ink-faint)",
           overflowY:"auto",
         }}>
-          {[...NAV, { label:"About", path:"/about" }].map(n => {
+          {NAV.map(n => {
             const isActive = n.path==="/" ? loc.pathname==="/" : loc.pathname===n.path;
             return (
               <Link key={n.path} to={n.path} onClick={()=>setMenuOpen(false)}
@@ -129,6 +130,15 @@ export default function Layout({ children }) {
               </Link>
             );
           })}
+          <Link to="/about" onClick={()=>setMenuOpen(false)}
+            style={{
+              fontSize:16, fontWeight:400, color:"var(--ink-muted)",
+              padding:"14px 24px", textDecoration:"none",
+              borderBottom:"1px solid var(--ink-faint)",
+              borderLeft:"3px solid transparent",
+            }}>
+            About
+          </Link>
         </div>
       )}
 

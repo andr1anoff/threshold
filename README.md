@@ -6,6 +6,61 @@ Open-source intelligence platform monitoring escalation dynamics across 20 UN-re
 
 ---
 
+## v14 — Frontend Redesign (current branch: `claude/sharp-fermi-bqHFy`)
+
+### What changed in v14
+
+| File | Change |
+|------|--------|
+| `Layout.jsx` | Frosted-glass header (60px), bottom-border active nav, LIVE + UTC clock + About→ link, removed dark mode toggle & Contact |
+| `Home.jsx` | Simplified h1 hero, Grid default view, INCIDENTS static fallback, conditional sort label |
+| `Incidents.jsx` | Full-width ledger (max-width 920px), static INCIDENTS fallback, removed analytics sidebar, 4-col row layout |
+| `WarRoom.jsx` | Masthead with h1 + BigStats (active/upcoming/personnel) + filter strip, 380px sidebar, RUS/CHN badge, ExerciseDetail dock, static EXERCISES fallback |
+| `Patterns.jsx` | Flex layout fix for centered empty state |
+| `seed.js` | Added `cat` field to REGIONS, 30 static INCIDENTS, 8 static EXERCISES |
+| `index.css` | Added `@keyframes slide-up` |
+
+### How to push this branch to GitHub
+
+These changes are committed on branch `claude/sharp-fermi-bqHFy`. To push and merge:
+
+```bash
+# Option A — push the feature branch and open a PR
+git push -u origin claude/sharp-fermi-bqHFy
+# Then open a PR on GitHub: claude/sharp-fermi-bqHFy → main
+
+# Option B — merge directly into main and push
+git checkout main
+git merge claude/sharp-fermi-bqHFy
+git push origin main
+```
+
+If you downloaded this ZIP and want to apply only the changed files on top of an existing checkout:
+
+```bash
+# From your local clone of andr1anoff/threshold
+git checkout main                        # or whichever base branch
+git checkout -b v14-frontend             # new branch for the changes
+
+# Copy the 7 changed files from the ZIP into place:
+#   frontend/src/components/Layout.jsx
+#   frontend/src/data/seed.js
+#   frontend/src/index.css
+#   frontend/src/pages/Home.jsx
+#   frontend/src/pages/Incidents.jsx
+#   frontend/src/pages/Patterns.jsx
+#   frontend/src/pages/WarRoom.jsx
+
+git add frontend/src/
+git commit -m "v14: redesign frontend to match HTML prototype"
+git push -u origin v14-frontend
+# Open PR: v14-frontend → main
+```
+
+After merging to main, Vercel redeploys automatically.
+
+---
+
 ## Stack
 
 | Layer | Service |

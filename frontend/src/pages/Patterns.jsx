@@ -153,12 +153,14 @@ export default function BriefsPage() {
 
 function BriefEmpty() {
   return (
-    <div style={{ borderTop:"1px solid var(--ink)", flex:"1 1 auto", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"80px 24px", textAlign:"center" }}>
-      <div className="display-serif" style={{ fontSize:80, color:"var(--ink-15)", margin:"0 0 24px" }}>◎</div>
-      <h2 className="h2" style={{ marginBottom:12 }}>Select a region above</h2>
-      <p className="body" style={{ maxWidth:480, margin:"0 auto" }}>
-        Briefs summarise escalation dynamics, recent incidents, signal patterns, and source confidence for the selected region.
-      </p>
+    <div style={{ flex:"1 1 auto", display:"flex", flexDirection:"column" }}>
+      <div style={{ borderTop:"1px solid var(--ink)", flex:"1 1 auto", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"80px 24px", textAlign:"center" }}>
+        <div className="display-serif" style={{ fontSize:80, color:"var(--ink-15)", margin:"0 0 24px" }}>◎</div>
+        <h2 className="h2" style={{ marginBottom:12 }}>Select a region above</h2>
+        <p className="body" style={{ maxWidth:480, margin:"0 auto" }}>
+          Briefs summarise escalation dynamics, recent incidents, signal patterns, and source confidence for the selected region.
+        </p>
+      </div>
     </div>
   );
 }
