@@ -6,21 +6,13 @@ import { REGIONS, EI_COLOR, EI_LABEL } from "../data/seed";
 
 const API = import.meta.env.VITE_API_URL || "https://threshold-production-d13c.up.railway.app";
 
-// BRIEF_SECTIONS removed (v14-fix: visual artifact deleted per 1.4)
-
-const LOADING_STAGES = [
-  "Loading incident corpus…",
-  "Matching exercise signals…",
-  "Scoring rhetoric vectors…",
-  "Cross-referencing source confidence…",
-  "Synthesising narrative…",
-];
+// BRIEF_SECTIONS removed (v14-fix)
+// LOADING_STAGES removed (v15.1: replaced with simple spinner)
 
 export default function BriefsPage() {
   const navigate = useNavigate();
   const [regionId, setRegionId]   = useState(null);
   const [loading, setLoading]     = useState(false);
-  const [stage, setStage]         = useState(0);
   const [narrative, setNarrative] = useState("");
   const [briefObj, setBriefObj]   = useState(null);
   const [error, setError]         = useState("");
@@ -36,28 +28,21 @@ export default function BriefsPage() {
       .catch(() => {});
   }
 
-  async function generate(rid) {
+  async function generate(rid, force = false) {
     setRegionId(rid);
     setNarrative("");
     setBriefObj(null);
     setError("");
     setLoading(true);
-    setStage(0);
-
-    let s = 0;
-    const ticker = setInterval(() => {
-      s += 1;
-      if (s < LOADING_STAGES.length - 1) setStage(s);
-    }, 800);
 
     try {
-      const res = await fetch(`${API}/api/admin/narrative/${encodeURIComponent(rid)}`);
+      const url = `${API}/api/admin/narrative/${encodeURIComponent(rid)}${force ? "?force=true" : ""}`;
+      const res = await fetch(url);
       if (!res.ok) {
         const d = await res.json().catch(()=>({}));
         const detail = d.detail || `HTTP ${res.status}`;
         // 404 = no incidents indexed for this region
         if (res.status === 404) {
-          clearInterval(ticker);
           setError(`No recent open-source data for "${rid}". Run the scraper pipeline to index incidents for this region.`);
           setLoading(false);
           return;
@@ -65,8 +50,6 @@ export default function BriefsPage() {
         throw new Error(detail);
       }
       const d = await res.json();
-      clearInterval(ticker);
-      setStage(LOADING_STAGES.length - 1);
       if (d.narrative) {
         setNarrative(d.narrative);
         setGeneratedAt(new Date().toLocaleString("en-GB",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}));
@@ -74,7 +57,6 @@ export default function BriefsPage() {
         throw new Error("LLM returned empty response.");
       }
     } catch(e) {
-      clearInterval(ticker);
       const msg = e.message || "";
       if (msg.includes("404") || msg.includes("No data") || msg.includes("no data")) {
         setBriefObj(buildLocalBrief(rid));
@@ -142,10 +124,10 @@ export default function BriefsPage() {
         {/* ─── OUTPUT ─────────────────────── */}
         <section className="container-wide" style={{ paddingBottom:80, flex:"1 1 auto", display:"flex", flexDirection:"column" }}>
           {!regionId && <BriefEmpty />}
-          {loading && <BriefLoading region={currentRegion} stage={stage} />}
+          {loading && <BriefLoading region={currentRegion} />}
           {!loading && error && <BriefError error={error} onClear={()=>setError("")} />}
-          {!loading && !error && narrative && <BriefText narrative={narrative} region={currentRegion} generatedAt={generatedAt} onCopy={copyBrief} copied={copied} onRegenerate={()=>generate(regionId)} navigate={navigate} />}
-          {!loading && !error && briefObj && !narrative && <BriefOutput brief={briefObj} region={currentRegion} generatedAt={generatedAt} onCopy={copyBrief} copied={copied} onRegenerate={()=>generate(regionId)} navigate={navigate} />}
+          {!loading && !error && narrative && <BriefText narrative={narrative} region={currentRegion} generatedAt={generatedAt} onCopy={copyBrief} copied={copied} onRegenerate={()=>generate(regionId, true)} navigate={navigate} />}
+          {!loading && !error && briefObj && !narrative && <BriefOutput brief={briefObj} region={currentRegion} generatedAt={generatedAt} onCopy={copyBrief} copied={copied} onRegenerate={()=>generate(regionId, true)} navigate={navigate} />}
         </section>
       </div>
     </Layout>
@@ -166,25 +148,17 @@ function BriefEmpty() {
   );
 }
 
-function BriefLoading({ region, stage }) {
+function BriefLoading({ region }) {
   return (
-    <div style={{ borderTop:"1px solid var(--ink)", padding:"48px 0" }}>
-      <div className="micro" style={{ marginBottom:16 }}>SYNTHESISING · {region?.label?.toUpperCase()}</div>
-      <h2 className="h2" style={{ marginBottom:24 }}>{LOADING_STAGES[stage]}</h2>
-      <div style={{ display:"flex", flexDirection:"column", gap:6, maxWidth:480 }}>
-        {LOADING_STAGES.map((s, i) => (
-          <div key={i} style={{ display:"flex", alignItems:"center", gap:12 }}>
-            <span className="mono small" style={{ width:24, color:i<=stage?"var(--accent)":"var(--ink-25)" }}>
-              {i < stage ? "✓" : i === stage ? "›" : " "}
-            </span>
-            <span className="small" style={{ color:i<=stage?"var(--ink)":"var(--ink-40)" }}>{s}</span>
-            {i < stage && <span className="mono small" style={{ color:"var(--ink-40)", marginLeft:"auto" }}>OK</span>}
-          </div>
-        ))}
+    <div style={{ borderTop:"1px solid var(--ink)", padding:"80px 0", textAlign:"center" }}>
+      <div className="display-serif" style={{ fontSize:80, color:"var(--ink-15)", marginBottom:24, animation:"spin 3s linear infinite", display:"inline-block" }}>◎</div>
+      <div className="h2" style={{ marginBottom:10 }}>
+        {region ? `Generating brief · ${region.label}` : "Generating brief…"}
       </div>
-      <div style={{ marginTop:32, height:2, background:"var(--ink-06)" }}>
-        <div style={{ height:"100%", width:`${((stage+1)/LOADING_STAGES.length)*100}%`, background:"var(--accent)", transition:"width 0.6s ease" }}/>
-      </div>
+      <p className="body" style={{ color:"var(--ink-55)", maxWidth:400, margin:"0 auto" }}>
+        Synthesising from open-source corpus via Groq · LLaMA 3.3-70B
+      </p>
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
