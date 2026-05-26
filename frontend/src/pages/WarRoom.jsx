@@ -203,8 +203,16 @@ export default function WarRoom() {
       attributionControl:false,
     });
     L.control.zoom({position:'bottomright'}).addTo(map);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',{maxZoom:7,subdomains:'abcd'}).addTo(map);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',{maxZoom:7,subdomains:'abcd',opacity:0.35}).addTo(map);
+    const isDark = document.body.classList.contains('dark-mode');
+
+    if (isDark) {
+      // Dark/night map tile
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',{maxZoom:7,subdomains:'abcd'}).addTo(map);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',{maxZoom:7,subdomains:'abcd',opacity:0.5}).addTo(map);
+    } else {
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',{maxZoom:7,subdomains:'abcd'}).addTo(map);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',{maxZoom:7,subdomains:'abcd',opacity:0.35}).addTo(map);
+    }
     for (let i=-90;i<=90;i+=15) L.polyline([[-85,i],[85,i]],{color:'rgba(107,26,42,0.05)',weight:0.4}).addTo(map);
     for (let i=-180;i<=180;i+=30) L.polyline([[-85,i],[85,i]],{color:'rgba(107,26,42,0.05)',weight:0.4}).addTo(map);
     L.polyline([[-85,0],[85,0]],{color:'rgba(107,26,42,0.10)',weight:0.7,dashArray:'5,5'}).addTo(map);

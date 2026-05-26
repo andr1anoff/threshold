@@ -29,7 +29,7 @@ const BASELINE_SCALE = [
 function Accordion({ title, children }) {
   const [open, setOpen] = useState(false);
   return (
-    <div style={{ border:"1px solid rgba(26,16,8,0.08)", borderRadius:10, overflow:"hidden", marginBottom:8 }}>
+    <div style={{ border:"1px solid var(--card-border)", borderRadius:10, overflow:"hidden", marginBottom:8 }}>
       <button onClick={() => setOpen(!open)} style={{
         width:"100%", textAlign:"left", padding:"13px 18px",
         background: open ? "rgba(26,16,8,0.02)" : "#fff",
@@ -100,7 +100,7 @@ export default function AboutPage() {
         {/* Project Context */}
         <section id="project" style={{ marginBottom:44 }}>
           <SectionLabel>PROJECT CONTEXT</SectionLabel>
-          <div style={{ background:"#fff", border:"1px solid rgba(26,16,8,0.08)", borderRadius:14, padding:24 }}>
+          <div style={{ background:"var(--card)", border:"1px solid var(--card-border)", borderRadius:14, padding:24 }}>
             <p style={{ fontSize:14, lineHeight:1.75, color:"var(--ink)", marginBottom:12 }}>
               Developed as part of the MA North American Studies programme at the John F. Kennedy Institute, Freie Universität Berlin. Research project · Summer Term 2026.
             </p>
@@ -131,7 +131,7 @@ export default function AboutPage() {
         {/* Methodology */}
         <section id="methodology" style={{ marginBottom:44 }}>
           <SectionLabel>METHODOLOGY</SectionLabel>
-          <div style={{ background:"#fff", border:"1px solid rgba(26,16,8,0.08)", borderRadius:14, padding:24, marginBottom:10 }}>
+          <div style={{ background:"var(--card)", border:"1px solid var(--card-border)", borderRadius:14, padding:24, marginBottom:10 }}>
             <p style={{ fontSize:13, color:"var(--ink-muted)", marginBottom:16, lineHeight:1.7 }}>
               The Escalation Index (EI) is a <strong style={{ color:"var(--ink)" }}>theory-driven composite indicator</strong>, not a statistical factor analysis. Components and weights are selected based on escalation theory and interpretability.
             </p>
@@ -198,7 +198,7 @@ export default function AboutPage() {
           </p>
           <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
             {SOURCES.map(s => (
-              <div key={s.name} style={{ background:"#fff", border:"1px solid rgba(26,16,8,0.08)", borderRadius:12, padding:"13px 18px", display:"flex", gap:14, alignItems:"flex-start" }}>
+              <div key={s.name} style={{ background:"var(--card)", border:"1px solid var(--card-border)", borderRadius:12, padding:"13px 18px", display:"flex", gap:14, alignItems:"flex-start" }}>
                 <div style={{ display:"flex", flexDirection:"column", gap:4, flexShrink:0 }}>
                   <span style={{ fontSize:8, fontWeight:700, letterSpacing:"1px", padding:"2px 6px", borderRadius:3, background:`${CAT_COLOR[s.cat]}10`, color:CAT_COLOR[s.cat], border:`1px solid ${CAT_COLOR[s.cat]}25` }}>
                     {s.cat.toUpperCase()}
@@ -221,7 +221,7 @@ export default function AboutPage() {
         {/* Validation Roadmap */}
         <section id="validation" style={{ marginBottom:44 }}>
           <SectionLabel>VALIDATION ROADMAP</SectionLabel>
-          <div style={{ background:"#fff", border:"1px solid rgba(26,16,8,0.08)", borderRadius:14, padding:24 }}>
+          <div style={{ background:"var(--card)", border:"1px solid var(--card-border)", borderRadius:14, padding:24 }}>
             <p style={{ fontSize:13, color:"var(--ink-muted)", lineHeight:1.75 }}>
               Future iterations should include backtesting against known escalation episodes, sensitivity analysis of component weights, and case comparisons across regions such as Ukraine, Taiwan, the Red Sea, and Israel/Iran. Additional steps may include expert review of baseline values and calibration of the exercise rhetoric scoring rubric.
             </p>
@@ -231,7 +231,7 @@ export default function AboutPage() {
         {/* References */}
         <section id="references" style={{ marginBottom:44 }}>
           <SectionLabel>REFERENCES</SectionLabel>
-          <div style={{ background:"#fff", border:"1px solid rgba(26,16,8,0.08)", borderRadius:14, padding:24 }}>
+          <div style={{ background:"var(--card)", border:"1px solid var(--card-border)", borderRadius:14, padding:24 }}>
             <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
               {[
                 { authors:"Fearon, J. D.", year:"1995", title:"Rationalist Explanations for War", journal:"International Organization, 49(3), 379–414" },
@@ -262,7 +262,7 @@ export default function AboutPage() {
             <p style={{ fontSize:13, color:"rgba(245,240,232,0.6)", marginBottom:18, lineHeight:1.6 }}>
               For methodological inquiries, data access, or academic collaboration:
             </p>
-            <a href="mailto:ivaa03@zedat.fu-berlin.de" style={{ display:"inline-block", background:"#fff", color:"var(--crimson)", fontSize:13, fontWeight:700, padding:"10px 22px", borderRadius:999, textDecoration:"none" }}>
+            <a href="mailto:ivaa03@zedat.fu-berlin.de" style={{ display:"inline-block", background:"var(--card)", color:"var(--crimson)", fontSize:13, fontWeight:700, padding:"10px 22px", borderRadius:999, textDecoration:"none" }}>
               Email us
             </a>
           </div>

@@ -150,11 +150,12 @@ export default function Layout({ children }) {
             return (
               <Link key={n.path} to={n.path} onClick={()=>setMenuOpen(false)}
                 style={{
-                  fontSize:16, fontWeight:isActive?700:400,
-                  color:isActive?"var(--ink)":"var(--ink-muted)",
-                  padding:"14px 24px", textDecoration:"none",
+                  fontSize:18, fontWeight:isActive?700:500,
+                  color:isActive?"var(--ink)":"var(--ink-55)",
+                  padding:"16px 24px", textDecoration:"none",
                   borderBottom:"1px solid var(--ink-faint)",
                   borderLeft:isActive?"3px solid var(--crimson)":"3px solid transparent",
+                  display:"block",
                 }}>
                 {n.label}
               </Link>
@@ -162,13 +163,29 @@ export default function Layout({ children }) {
           })}
           <Link to="/about" onClick={()=>setMenuOpen(false)}
             style={{
-              fontSize:16, fontWeight:400, color:"var(--ink-muted)",
-              padding:"14px 24px", textDecoration:"none",
+              fontSize:18, fontWeight:500, color:"var(--ink-55)",
+              padding:"16px 24px", textDecoration:"none",
               borderBottom:"1px solid var(--ink-faint)",
               borderLeft:"3px solid transparent",
+              display:"block",
             }}>
             About
           </Link>
+          {/* Dark mode toggle in mobile menu */}
+          <button onClick={()=>{ setDark(d=>!d); }}
+            style={{
+              fontSize:16, fontWeight:500, color:"var(--ink-55)",
+              padding:"16px 24px", textDecoration:"none",
+              borderBottom:"1px solid var(--ink-faint)",
+              borderLeft:"3px solid transparent",
+              background:"none", border:"none",
+              borderBottom:"1px solid var(--ink-faint)",
+              width:"100%", textAlign:"left", cursor:"pointer",
+              display:"flex", alignItems:"center", gap:12,
+            }}>
+            <span style={{ fontSize:18 }}>{dark ? "☀" : "◑"}</span>
+            {dark ? "Light mode" : "Dark mode"}
+          </button>
         </div>
       )}
 
@@ -178,7 +195,7 @@ export default function Layout({ children }) {
 
       {!isWarRoom && (
         <footer role="contentinfo" style={{
-          background:"var(--ink)", color:"rgba(245,240,232,0.5)",
+          background:"#0F0B07", color:"rgba(245,240,232,0.5)",
           padding:"28px 20px 20px", flexShrink:0,
           paddingBottom:"calc(20px + env(safe-area-inset-bottom))",
         }}>

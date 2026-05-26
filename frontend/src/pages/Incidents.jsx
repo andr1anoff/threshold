@@ -181,18 +181,19 @@ function RowIncident({ inc }) {
   const regionObj = REGIONS.find(r => r.label === inc.region);
   return (
     <article style={{
-      display:"grid", gridTemplateColumns:"64px 110px 1fr 90px",
-      gap:20, padding:"14px 0",
+      display:"grid",
+      gridTemplateColumns:"clamp(80px,15vw,110px) 1fr auto",
+      gap:"12px 16px", padding:"14px 0",
       borderBottom:"1px solid var(--rule)",
       alignItems:"flex-start",
     }}>
       <span className="mono small" style={{ color:"var(--ink-40)", paddingTop:1 }}>{inc.time||""}</span>
-      <span style={{ display:"inline-flex", alignItems:"center", gap:6, alignSelf:"center" }}>
+      <span style={{ display:"inline-flex", alignItems:"center", gap:6, alignSelf:"flex-start", paddingTop:2 }}>
         <span style={{ fontSize:13, color:cat.color }}>{cat.glyph}</span>
         <span className="micro" style={{ color:cat.color, fontSize:10 }}>{cat.label}</span>
       </span>
       <div>
-        <div style={{ fontSize:15, color:"var(--ink)", lineHeight:1.4, marginBottom:inc.description?4:0 }}>{inc.title}</div>
+        <div style={{ fontSize:14, color:"var(--ink)", lineHeight:1.4, marginBottom:inc.description?4:0 }}>{inc.title}</div>
         {inc.description && <div className="small" style={{ color:"var(--ink-55)", lineHeight:1.5, marginTop:4 }}>{inc.description}</div>}
       </div>
       <span style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4, paddingTop:1 }}>

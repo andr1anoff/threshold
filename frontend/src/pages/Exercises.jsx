@@ -44,11 +44,11 @@ function ExerciseTimeline({ exercises }) {
   while (cur <= rawMax) { months.push(new Date(cur)); cur.setMonth(cur.getMonth()+1); }
 
   return (
-    <div style={{ background:"#fff", border:"1px solid rgba(26,16,8,0.08)", borderRadius:14, padding:"20px 24px", overflowX:"auto" }}>
+    <div style={{ background:"var(--card)", border:"1px solid var(--card-border)", borderRadius:14, padding:"20px 24px", overflowX:"auto" }}>
       <div style={{ minWidth:600 }}>
         {/* Month axis */}
         <div style={{ position:"relative", height:20, marginBottom:10, marginLeft:160 }}>
-          <div style={{ position:"absolute", inset:0, borderBottom:"1px solid rgba(26,16,8,0.08)" }}/>
+          <div style={{ position:"absolute", inset:0, borderBottom:"1px solid var(--card-border)" }}/>
           {months.filter((_,i)=>i%2===0||months.length<=8).map((m,i) => (
             <div key={i} style={{ position:"absolute", left:`${getX(m.toISOString())}%`, transform:"translateX(-50%)", fontSize:9, color:"var(--ink-muted)", letterSpacing:"0.5px", whiteSpace:"nowrap" }}>
               {m.toLocaleDateString("en-GB",{month:"short",year:"2-digit"})}
@@ -143,9 +143,9 @@ export default function ExercisesPage() {
 
         {/* Stats */}
         {exercises.length > 0 && (
-          <div style={{ display:"flex", gap:0, marginBottom:24, border:"1px solid rgba(26,16,8,0.08)", borderRadius:10, overflow:"hidden", background:"#fff", overflowX:"auto" }}>
+          <div style={{ display:"flex", gap:0, marginBottom:24, border:"1px solid var(--card-border)", borderRadius:10, overflow:"hidden", background:"var(--card)", overflowX:"auto" }}>
             {[["Total",exercises.length,"var(--ink)"],["NATO",nato,"#8B2030"],["Multilateral",multi,"#185FA5"],["National",nat,"#3B6D11"]].map(([l,v,c],i)=>(
-              <div key={l} style={{ flex:1, minWidth:70, padding:"14px 12px", borderRight:i<3?"1px solid rgba(26,16,8,0.08)":"none", textAlign:"center" }}>
+              <div key={l} style={{ flex:1, minWidth:70, padding:"14px 12px", borderRight:i<3?"1px solid var(--card-border)":"none", textAlign:"center" }}>
                 <div style={{ fontSize:26, fontWeight:800, color:c, letterSpacing:"-0.5px", fontVariantNumeric:"tabular-nums" }}>{v}</div>
                 <div style={{ fontSize:10, letterSpacing:"1.5px", color:"var(--ink-muted)", marginTop:3, fontWeight:500 }}>{l.toUpperCase()}</div>
               </div>
@@ -177,7 +177,7 @@ export default function ExercisesPage() {
         {loading ? (
           <div style={{ fontSize:13, color:"var(--ink-muted)", padding:40 }}>Loading…</div>
         ) : sorted.length === 0 ? (
-          <div style={{ background:"#fff", border:"1px solid var(--ink-faint)", borderRadius:14, padding:"36px 28px" }}>
+          <div style={{ background:"var(--card)", border:"1px solid var(--ink-faint)", borderRadius:14, padding:"36px 28px" }}>
             <div style={{ fontSize:11, fontWeight:700, letterSpacing:"2px", color:"var(--ink-muted)", marginBottom:14 }}>NO EXERCISES IN CURRENT DATASET</div>
             <p style={{ fontSize:14, color:"var(--ink-muted)", lineHeight:1.7, marginBottom:24, maxWidth:520 }}>
               No verified exercise records within the current dataset. Exercise data is scraped from SHAPE NATO, Wikipedia, and Defense.gov on each pipeline run.
@@ -206,7 +206,7 @@ export default function ExercisesPage() {
               const badge = getBadgeStyle(ex);
               const rhColor = getRhetColor(ex.rhetoric_score);
               return (
-                <div key={ex.id||i} style={{ background:"#fff", border:"1px solid rgba(26,16,8,0.08)", borderRadius:12, padding:"18px 20px" }}>
+                <div key={ex.id||i} style={{ background:"var(--card)", border:"1px solid var(--card-border)", borderRadius:12, padding:"18px 20px" }}>
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10 }}>
                     <div style={{ flex:1 }}>
                       <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>

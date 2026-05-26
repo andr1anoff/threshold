@@ -253,7 +253,7 @@ function RegionTable({ regions, onSelect }) {
 
 function RegionGrid({ regions, onSelect }) {
   return (
-    <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(240px, 1fr))", gap:0, borderTop:"1px solid var(--ink)", borderLeft:"1px solid var(--rule)" }}>
+    <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(min(240px, 100%), 1fr))", gap:0, borderTop:"1px solid var(--ink)", borderLeft:"1px solid var(--rule)" }}>
       {regions.map((r, i) => {
         const color = EI_COLOR(r.ei);
         const spark = SPARKLINES[r.id];
