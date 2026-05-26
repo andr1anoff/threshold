@@ -87,11 +87,26 @@ export default function Home() {
                 <button className="btn-ghost" onClick={() => navigate("/incidents")}>View incidents</button>
               </div>
               <div className="hide-mobile">
-                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:32 }}>
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
                   <StatBlock n={totalIndexed} label="incidents indexed" />
                   <StatBlock n={20} label="regions monitored" />
                   <StatBlock n={critical.length} label="at high escalation" emphasis />
                   <StatBlock n={rising} label="rising · 7-day" />
+                </div>
+              </div>
+              {/* Mobile: compact inline stats */}
+              <div style={{ display:"none" }} className="show-mobile-flex">
+                <div style={{ display:"flex", gap:16, flexWrap:"wrap", marginTop:8 }}>
+                  {[
+                    [totalIndexed, "incidents"],
+                    [critical.length, "high EI", true],
+                    [rising, "rising"],
+                  ].map(([n, label, emph]) => (
+                    <div key={label} style={{ display:"flex", alignItems:"baseline", gap:6 }}>
+                      <span style={{ fontSize:24, fontWeight:800, letterSpacing:"-0.03em", color: emph ? "var(--accent)" : "var(--ink)" }}>{n}</span>
+                      <span className="micro" style={{ color:"var(--ink-40)" }}>{label}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

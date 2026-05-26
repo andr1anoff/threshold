@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { CRIMSON } from "../data/seed";
+
+const CRIMSON = "#6B1A2A";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export default function NarrativeBlock({ region, hasData = false }) {

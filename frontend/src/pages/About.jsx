@@ -228,6 +228,32 @@ export default function AboutPage() {
           </div>
         </section>
 
+        {/* References */}
+        <section id="references" style={{ marginBottom:44 }}>
+          <SectionLabel>REFERENCES</SectionLabel>
+          <div style={{ background:"#fff", border:"1px solid rgba(26,16,8,0.08)", borderRadius:14, padding:24 }}>
+            <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+              {[
+                { authors:"Fearon, J. D.", year:"1995", title:"Rationalist Explanations for War", journal:"International Organization, 49(3), 379–414" },
+                { authors:"Schelling, T. C.", year:"1960", title:"The Strategy of Conflict", journal:"Harvard University Press" },
+                { authors:"Powell, R.", year:"2003", title:"Nuclear Deterrence Theory, Nuclear Proliferation, and National Missile Defense", journal:"International Security, 27(4), 86–118" },
+                { authors:"Ritter, J. M. & Wolford, S.", year:"2012", title:"Bargaining and the Inefficiency of Conflict", journal:"Journal of Theoretical Politics, 24(4), 496–514" },
+                { authors:"UCDP", year:"2024", title:"Uppsala Conflict Data Program Codebook, v24.1", journal:"Uppsala University, Department of Peace and Conflict Research" },
+                { authors:"OCHA", year:"2024", title:"ReliefWeb Crisis Data Methodology", journal:"United Nations Office for the Coordination of Humanitarian Affairs" },
+              ].map((ref, i) => (
+                <div key={i} style={{ paddingBottom:10, borderBottom:"1px solid rgba(26,16,8,0.06)", display:"flex", gap:16 }}>
+                  <span style={{ fontFamily:"var(--mono)", fontSize:10, color:"var(--crimson)", flexShrink:0, paddingTop:2 }}>[{String(i+1).padStart(2,"0")}]</span>
+                  <div>
+                    <span style={{ fontSize:13, color:"var(--ink)", fontWeight:500 }}>{ref.authors} ({ref.year}). </span>
+                    <span style={{ fontSize:13, color:"var(--ink)", fontStyle:"italic" }}>{ref.title}. </span>
+                    <span style={{ fontSize:12, color:"var(--ink-55)" }}>{ref.journal}.</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Contact */}
         <section id="contact">
           <SectionLabel>CONTACT</SectionLabel>

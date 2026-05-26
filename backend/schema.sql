@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS exercises (
   participants   TEXT[],
   scale          INT,
   lead_nation    TEXT,
-  exercise_type  TEXT CHECK (exercise_type IN ('NATO','bilateral','national','SCO','CSTO','unknown')),
+  exercise_type  TEXT CHECK (exercise_type IN ('LIVEX','CPX','CAX','MAREX','ADEX','FTX','TTX','CX','NATO','bilateral','national','SCO','CSTO','unknown')),
   signal_target  TEXT,
   rhetoric_score FLOAT CHECK (rhetoric_score BETWEEN -1.0 AND 1.0),
   source_url     TEXT UNIQUE,
@@ -83,3 +83,9 @@ CREATE POLICY "Public read" ON correlations FOR SELECT USING (true);
 -- v7: content deduplication
 ALTER TABLE incidents ADD COLUMN IF NOT EXISTS content_hash TEXT;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_incidents_content_hash ON incidents(content_hash);
+
+-- v15.1: fix exercise_type constraint to include operational types (LIVEX, CPX, etc.)
+-- Run this migration if constraint errors appear on exercise inserts:
+ALTER TABLE exercises DROP CONSTRAINT IF EXISTS exercises_exercise_type_check;
+ALTER TABLE exercises ADD CONSTRAINT exercises_exercise_type_check
+  CHECK (exercise_type IN ('LIVEX','CPX','CAX','MAREX','ADEX','FTX','TTX','CX','NATO','bilateral','national','SCO','CSTO','unknown'));

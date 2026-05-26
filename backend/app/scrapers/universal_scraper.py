@@ -84,23 +84,18 @@ def extract_brief(text: str, max_chars: int = 280) -> str:
 
 # ── LLM Security Filter ──────────────────────────────────────────────
 
-def is_security_incident(title: str, description: str) -> bool:
-    """
-    Quick LLM check: is this a security incident or just a mention?
-    Filters out diplomatic meetings, economic news, aid delivery, etc.
-    Falls back to True if LLM is unavailable (better false positive than missed event).
-    """
+def _is_security_incident_sync(title: str, description: str) -> bool:
+    """Sync Groq check — run via asyncio.to_thread from async context."""
     try:
-        from groq import Groq
-        client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-        
+        from app.llm.classifier import _get_client
+        client = _get_client()
         prompt = f"""Classify this news as SECURITY_INCIDENT or NOT_SECURITY.
 
-SECURITY_INCIDENT = military attack, airstrike, shelling, drone strike, troop movement, 
-naval incident, cyberattack, cross-border firing, armed clash, ceasefire violation, 
+SECURITY_INCIDENT = military attack, airstrike, shelling, drone strike, troop movement,
+naval incident, cyberattack, cross-border firing, armed clash, ceasefire violation,
 missile launch, bombing, occupation activity, infiltration, border incident.
 
-NOT_SECURITY = diplomatic meeting, political statement, economic news, aid delivery, 
+NOT_SECURITY = diplomatic meeting, political statement, economic news, aid delivery,
 refugee report, opinion piece, cultural event, election news, protest (non-violent),
 legislation, trade deal, summit, press conference.
 
@@ -108,7 +103,6 @@ Title: {title}
 Description: {description[:200]}
 
 Reply with EXACTLY one word: SECURITY_INCIDENT or NOT_SECURITY."""
-
         response = client.chat.completions.create(
             model="llama-3.1-8b-instant",
             messages=[{"role": "user", "content": prompt}],
@@ -117,10 +111,14 @@ Reply with EXACTLY one word: SECURITY_INCIDENT or NOT_SECURITY."""
         )
         result = response.choices[0].message.content.strip().upper()
         return "SECURITY_INCIDENT" in result
-    
     except Exception as e:
         logger.warning(f"Security filter LLM unavailable, accepting article: {e}")
-        return True  # If LLM fails, keep the article rather than lose data
+        return True
+
+
+async def is_security_incident(title: str, description: str) -> bool:
+    """Async wrapper — runs Groq in thread to avoid blocking the event loop."""
+    return await asyncio.to_thread(_is_security_incident_sync, title, description)
 
 # ── HTTP Helpers ─────────────────────────────────────────────────────
 
@@ -191,7 +189,7 @@ async def scrape_rss_all(db) -> int:
                         continue
                     
                     # 🔒 LLM SECURITY FILTER
-                    if not is_security_incident(title, summary):
+                    if not await is_security_incident(title, summary):
                         skipped_non_security += 1
                         continue
                     
@@ -272,7 +270,7 @@ async def scrape_reliefweb(db) -> int:
                         if not link or not title: continue
                         
                         # 🔒 LLM SECURITY FILTER
-                        if not is_security_incident(title, body):
+                        if not await is_security_incident(title, body):
                             skipped_non_security += 1
                             continue
                         
@@ -321,7 +319,7 @@ async def scrape_guardian(db) -> int:
                     if not link or not title: continue
                     
                     # 🔒 LLM SECURITY FILTER
-                    if not is_security_incident(title, desc):
+                    if not await is_security_incident(title, desc):
                         skipped_non_security += 1
                         continue
                     
@@ -368,7 +366,7 @@ async def scrape_wikipedia(db) -> int:
                         continue
                     
                     # 🔒 LLM SECURITY FILTER
-                    if not is_security_incident(text[:200], text[200:400]):
+                    if not await is_security_incident(text[:200], text[200:400]):
                         skipped_non_security += 1
                         continue
                     
@@ -426,7 +424,7 @@ async def scrape_un_news(db) -> int:
                     if not region: continue
                     
                     # 🔒 LLM SECURITY FILTER
-                    if not is_security_incident(title, summary):
+                    if not await is_security_incident(title, summary):
                         skipped_non_security += 1
                         continue
                     

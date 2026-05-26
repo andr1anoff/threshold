@@ -133,6 +133,7 @@ a { color: inherit; text-decoration: none; }
 @media (max-width: 720px) {
   .container, .container-narrow, .container-wide { padding: 0 16px; }
   .hide-mobile { display: none !important; }
+  .show-mobile-flex { display: flex !important; }
   .stack-mobile { grid-template-columns: 1fr !important; gap: 24px !important; }
   .stack-mobile-x { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
   .warroom-grid { grid-template-columns: 1fr !important; height: auto !important; }

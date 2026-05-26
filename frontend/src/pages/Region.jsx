@@ -144,12 +144,12 @@ export default function RegionPage() {
         </section>
 
         {/* ─── ESCALATION CHART ─────────────────────── */}
-        {history.length > 1 && (
+        {history.length > 0 && (
           <section className="container-wide" style={{ paddingBottom:56 }}>
             <div className="section-bar">
               <span className="tick"/>
               <span className="micro micro-strong">§ 01b · ESCALATION INDEX HISTORY</span>
-              <span className="micro" style={{ color:"var(--ink-40)" }}>{history.length} data points</span>
+              <span className="micro" style={{ color:"var(--ink-40)" }}>{history.length} data point{history.length !== 1 ? "s" : " — more will appear as the pipeline runs"}</span>
             </div>
             <div style={{ borderTop:"1px solid var(--ink)", paddingTop:24, paddingBottom:8 }}>
               <ResponsiveContainer width="100%" height={180}>

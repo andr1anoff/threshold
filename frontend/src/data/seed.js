@@ -24,12 +24,17 @@ export const REGIONS = [
 export const DI_HISTORY = {};
 
 export const SPARKLINES = (() => {
+  // Deterministic pseudo-random using region EI as seed — stable across hot reloads
+  const seededRand = (seed, i) => {
+    const x = Math.sin(seed * 9301 + i * 49297 + 233) * 1000;
+    return x - Math.floor(x);
+  };
   const out = {};
   for (const r of REGIONS) {
     const arr = [];
-    let v = r.ei - r.trend * 1.2 - (Math.random() * 6 - 3);
+    let v = r.ei - r.trend * 1.2 - (seededRand(r.ei, 0) * 6 - 3);
     for (let i = 0; i < 30; i++) {
-      const noise = (Math.sin(i * 0.7 + r.ei) * 1.4) + (Math.random() * 2.4 - 1.2);
+      const noise = (Math.sin(i * 0.7 + r.ei) * 1.4) + (seededRand(r.ei, i + 1) * 2.4 - 1.2);
       v = Math.max(2, Math.min(95, v + noise + (r.trend * 0.08)));
       arr.push(Math.round(v * 10) / 10);
     }

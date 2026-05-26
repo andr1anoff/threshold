@@ -1,4 +1,4 @@
-import { CRIMSON } from "../data/seed";
+const CRIMSON = "#6B1A2A";
 const CAT = {
   cyber:    ["rgba(220,38,38,0.08)","rgba(220,38,38,0.7)"],
   airspace: ["rgba(234,88,12,0.08)","rgba(234,88,12,0.7)"],

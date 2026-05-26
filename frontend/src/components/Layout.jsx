@@ -2,6 +2,18 @@ import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Logo from "./Logo";
 
+function useDarkMode() {
+  const [dark, setDark] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("threshold-dark") === "1";
+  });
+  useEffect(() => {
+    document.body.classList.toggle("dark-mode", dark);
+    localStorage.setItem("threshold-dark", dark ? "1" : "0");
+  }, [dark]);
+  return [dark, setDark];
+}
+
 function UtcClock() {
   const [now, setNow] = useState(new Date());
   useEffect(() => {
@@ -22,6 +34,7 @@ function UtcClock() {
 const NAV = [
   { label:"Overview",  path:"/" },
   { label:"Incidents", path:"/incidents" },
+  { label:"Exercises", path:"/exercises" },
   { label:"War Room",  path:"/warroom" },
   { label:"Briefs",    path:"/briefs" },
 ];
@@ -32,6 +45,7 @@ export default function Layout({ children }) {
   const loc = useLocation();
   const isWarRoom = loc.pathname === "/warroom";
   const [menuOpen, setMenuOpen] = useState(false);
+  const [dark, setDark] = useDarkMode();
 
   return (
     <div style={{ display:"flex", flexDirection:"column", minHeight:"100dvh", background:"var(--cream)", maxWidth:"100vw", overflowX:"hidden" }}>
@@ -84,6 +98,22 @@ export default function Layout({ children }) {
 
         {/* About link */}
         <Link to="/about" className="btn-ghost hide-mobile" style={{ flexShrink:0, fontSize:12, padding:"6px 12px" }}>About →</Link>
+
+        {/* Dark mode toggle */}
+        <button
+          onClick={() => setDark(d => !d)}
+          title={dark ? "Switch to light mode" : "Switch to dark mode"}
+          aria-label={dark ? "Light mode" : "Dark mode"}
+          style={{
+            background:"none", border:"1px solid var(--ink-faint)", borderRadius:6,
+            padding:"6px 8px", cursor:"pointer", flexShrink:0,
+            fontSize:13, lineHeight:1, color:"var(--ink-55)",
+            transition:"all 0.15s",
+          }}
+          className="hide-mobile"
+        >
+          {dark ? "☀" : "◑"}
+        </button>
 
         {/* Hamburger */}
         <button

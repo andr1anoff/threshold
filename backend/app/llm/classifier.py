@@ -15,8 +15,17 @@ VALID_CATEGORIES = frozenset({
 
 logger = logging.getLogger(__name__)
 
-FAST_MODEL = "llama-3.1-8b-instant"
+FAST_MODEL  = "llama-3.1-8b-instant"
 SMART_MODEL = "llama-3.3-70b-versatile"
+
+# Singleton — avoid reinitializing on every API call
+_groq_client: Groq | None = None
+
+def _get_client() -> Groq:
+    global _groq_client
+    if _groq_client is None:
+        _groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+    return _groq_client
 
 CLASSIFY_PROMPT = """Classify this gray zone incident. Return ONLY valid JSON, no explanation.
 
@@ -61,7 +70,7 @@ class DailyLimitError(Exception):
 def _call_groq(prompt: str, model: str = FAST_MODEL, max_tokens: int = 200) -> str | None:
     """Single Groq API call with error handling."""
     try:
-        client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+        client = _get_client()
         r = client.chat.completions.create(
             model=model,
             messages=[{"role": "user", "content": prompt}],

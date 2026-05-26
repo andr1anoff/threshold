@@ -34,7 +34,7 @@ export default function IncidentsPage() {
   const filtered = useMemo(() => incidents.filter(inc => {
     if (cat !== "all" && (inc.category || inc.cat) !== cat) return false;
     if (elMin > 0 && (inc.escalation_level || 1) < elMin) return false;
-    if (search && !inc.title?.toLowerCase().includes(search.toLowerCase()) && !inc.description?.toLowerCase().includes(search.toLowerCase())) return false;
+    if (search && !inc.title?.toLowerCase().includes(search.toLowerCase()) && !inc.description?.toLowerCase().includes(search.toLowerCase()) && !inc.region?.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   }), [incidents, cat, search, elMin]);
 
