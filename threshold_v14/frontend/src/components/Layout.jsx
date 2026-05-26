@@ -62,12 +62,9 @@ export default function Layout({ children }) {
                 style={{
                   fontSize:12, fontWeight:isActive?600:400,
                   color: isActive ? "var(--ink)" : "var(--ink-muted)",
-                  padding:"5px 10px", textDecoration:"none",
-                  background:"transparent",
-                  border:"none",
+                  padding:"5px 10px", borderRadius:6, textDecoration:"none",
                   borderBottom: isActive ? "2px solid var(--accent)" : "2px solid transparent",
                   whiteSpace:"nowrap", display:"none",
-                  marginBottom:-1,
                 }}
                 className="desktop-nav-link"
               >{n.label}</Link>
@@ -75,15 +72,17 @@ export default function Layout({ children }) {
           })}
         </nav>
 
-        {/* Live indicator + UTC clock — desktop only */}
-        <div className="hide-mobile" style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
-          <span className="pulse"/>
-          <span className="micro" style={{ fontSize:10, color:"var(--ink-55)" }}>LIVE</span>
+        {/* Right side: LIVE indicator + clock + About */}
+        <div className="hide-mobile" style={{ display:"flex", alignItems:"center", gap:10, flexShrink:0 }}>
+          <span className="pulse" style={{ width:6, height:6 }}/>
+          <span style={{ fontSize:10, fontWeight:600, letterSpacing:"2px", color:"var(--lo)" }}>LIVE</span>
           <UtcClock />
         </div>
 
-        {/* About link */}
-        <Link to="/about" className="btn-ghost hide-mobile" style={{ flexShrink:0, fontSize:12, padding:"6px 12px" }}>About →</Link>
+        <Link to="/about"
+          className="btn-ghost hide-mobile"
+          style={{ fontSize:12, padding:"6px 12px", flexShrink:0 }}
+        >About →</Link>
 
         {/* Hamburger */}
         <button
@@ -106,7 +105,7 @@ export default function Layout({ children }) {
         </button>
       </header>
 
-      {/* Mobile drawer — above everything including map */}
+      {/* Mobile drawer */}
       {menuOpen && (
         <div style={{
           position:"fixed", top:60, left:0, right:0, bottom:0,
@@ -115,7 +114,7 @@ export default function Layout({ children }) {
           borderTop:"1px solid var(--ink-faint)",
           overflowY:"auto",
         }}>
-          {NAV.map(n => {
+          {[...NAV, { label:"About", path:"/about" }].map(n => {
             const isActive = n.path==="/" ? loc.pathname==="/" : loc.pathname===n.path;
             return (
               <Link key={n.path} to={n.path} onClick={()=>setMenuOpen(false)}
@@ -130,15 +129,6 @@ export default function Layout({ children }) {
               </Link>
             );
           })}
-          <Link to="/about" onClick={()=>setMenuOpen(false)}
-            style={{
-              fontSize:16, fontWeight:400, color:"var(--ink-muted)",
-              padding:"14px 24px", textDecoration:"none",
-              borderBottom:"1px solid var(--ink-faint)",
-              borderLeft:"3px solid transparent",
-            }}>
-            About
-          </Link>
         </div>
       )}
 
@@ -164,18 +154,10 @@ export default function Layout({ children }) {
             </div>
             <div>
               <div style={{ fontSize:10, letterSpacing:"2px", fontWeight:600, color:"rgba(245,240,232,0.25)", marginBottom:8 }}>DATA SOURCES</div>
-              <div style={{ display:"flex", flexWrap:"wrap", justifyContent:"flex-start", gap:6 }}>
+              <div style={{ display:"flex", flexWrap:"wrap", gap:"5px 14px" }}>
                 {SOURCES.map(s=>(
-                  <span key={s} style={{
-                    display:"inline-block",
-                    borderRadius:999,
-                    background:"rgba(245,240,232,0.07)",
-                    border:"1px solid rgba(245,240,232,0.12)",
-                    padding:"3px 10px",
-                    fontSize:11,
-                    color:"rgba(245,240,232,0.5)",
-                    letterSpacing:"0.04em",
-                  }}>
+                  <span key={s} style={{ display:"flex", alignItems:"center", gap:4, fontSize:11, color:"rgba(245,240,232,0.4)" }}>
+                    <span style={{ width:4, height:4, borderRadius:"50%", background:"#2D7A4F", flexShrink:0 }}/>
                     {s}
                   </span>
                 ))}

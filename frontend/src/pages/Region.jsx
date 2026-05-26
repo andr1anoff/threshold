@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import Layout from "../components/Layout";
 import Sparkline from "../components/Sparkline";
 import AnimatedNumber from "../components/AnimatedNumber";
@@ -15,6 +16,7 @@ export default function RegionPage() {
   const [incidents, setIncidents] = useState([]);
   const [exercises, setExercises] = useState([]);
   const [ei, setEi]               = useState(null);
+  const [history, setHistory]     = useState([]);
   const [loading, setLoading]     = useState(true);
   const [tab, setTab]             = useState("incidents");
 
@@ -26,9 +28,11 @@ export default function RegionPage() {
       fetch(`${API}/api/incidents/?region=${encodeURIComponent(rid)}`).then(r=>r.json()).catch(()=>({data:[]})),
       fetch(`${API}/api/di/region/${encodeURIComponent(rid)}`).then(r=>r.json()).catch(()=>({})),
       fetch(`${API}/api/exercises/`).then(r=>r.json()).catch(()=>({data:[]})),
-    ]).then(([inc, eiData, exData]) => {
+      fetch(`${API}/api/di/history/${encodeURIComponent(rid)}`).then(r=>r.json()).catch(()=>({data:[]})),
+    ]).then(([inc, eiData, exData, hist]) => {
       setIncidents(inc.data || []);
       setEi(eiData.ei_score ?? eiData.di_score ?? null);
+      setHistory((hist.data || []).map(h => ({ date: h.date?.slice(5), ei: Math.round(h.ei_score ?? 0) })));
       const all = exData.data || exData.exercises || [];
       setExercises(all.filter(e => {
         const name = (e.name||e.exercise_name||"").toLowerCase();
@@ -138,6 +142,46 @@ export default function RegionPage() {
             <Component kicker="BASE · STRUCTURAL" value={components.base} weight={0.25} contrib={Math.round(components.base*0.25)} note={region.category==="conflict"?"Active conflict baseline.":"Strategic-tension baseline."} borderLeft />
           </div>
         </section>
+
+        {/* ─── ESCALATION CHART ─────────────────────── */}
+        {history.length > 1 && (
+          <section className="container-wide" style={{ paddingBottom:56 }}>
+            <div className="section-bar">
+              <span className="tick"/>
+              <span className="micro micro-strong">§ 01b · ESCALATION INDEX HISTORY</span>
+              <span className="micro" style={{ color:"var(--ink-40)" }}>{history.length} data points</span>
+            </div>
+            <div style={{ borderTop:"1px solid var(--ink)", paddingTop:24, paddingBottom:8 }}>
+              <ResponsiveContainer width="100%" height={180}>
+                <LineChart data={history} margin={{ top:8, right:16, left:0, bottom:8 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" vertical={false} />
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize:10, fontFamily:"var(--mono)", fill:"rgba(26,16,8,0.4)" }}
+                    axisLine={false}
+                    tickLine={false}
+                    label={{ value:"Date", position:"insideBottom", offset:-4, fontSize:9, fill:"rgba(26,16,8,0.3)", fontFamily:"var(--mono)" }}
+                  />
+                  <YAxis
+                    domain={[0, 100]}
+                    tick={{ fontSize:10, fontFamily:"var(--mono)", fill:"rgba(26,16,8,0.4)" }}
+                    axisLine={false}
+                    tickLine={false}
+                    width={32}
+                    label={{ value:"Escalation Index", angle:-90, position:"insideLeft", offset:10, fontSize:9, fill:"rgba(26,16,8,0.3)", fontFamily:"var(--mono)" }}
+                  />
+                  <Tooltip
+                    contentStyle={{ fontFamily:"var(--mono)", fontSize:11, border:"1px solid var(--rule)", background:"var(--cream)", borderRadius:4 }}
+                    labelStyle={{ color:"var(--ink-55)", marginBottom:4 }}
+                    itemStyle={{ color }}
+                    formatter={(v) => [v, "EI"]}
+                  />
+                  <Line type="monotone" dataKey="ei" stroke={color} strokeWidth={1.5} dot={false} activeDot={{ r:3, fill:color }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </section>
+        )}
 
         {/* ─── ACTIVITY TABS ─────────────────────── */}
         <section className="container-wide" style={{ paddingBottom:72 }}>

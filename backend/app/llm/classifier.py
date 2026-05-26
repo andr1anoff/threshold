@@ -135,12 +135,19 @@ Active exercises:
 
 Focus on: observable patterns, actor intent, escalation trajectory.
 Be precise. Do not speculate beyond the evidence. Academic tone."""
-    try:
-        raw = _call_groq(prompt, model=SMART_MODEL, max_tokens=400)
-        return raw or ""
-    except Exception as e:
-        logger.error(f"[narrative] {e}")
-        return ""
+    # 3.1: retry on 429 with exponential backoff
+    for attempt in range(3):
+        try:
+            raw = _call_groq(prompt, model=SMART_MODEL, max_tokens=400)
+            return raw or ""
+        except RateLimitError:
+            wait = 2000 * (attempt + 1) / 1000  # 2s, 4s, 6s
+            logger.warning(f"[narrative] 429 rate limit, retry {attempt+1}/3 after {wait}s")
+            time.sleep(wait)
+        except Exception as e:
+            logger.error(f"[narrative] {e}")
+            return ""
+    return ""
 
 
 def cross_verify_incidents(db) -> dict:
@@ -213,8 +220,16 @@ def run_classification_pipeline(db) -> dict:
             update = {"category": category, "escalation_level": esc_level}
             if result.get("actors"):
                 update["actors"] = [a for a in result["actors"] if a]
-            if result.get("region") and result["region"] not in ("Other", "none", None):
+            if result.get("region") and result["region"] not in ("Other", "none", None, "null", ""):
                 update["region"] = result["region"]
+
+            # If region is still null in DB, set Unknown so filtering doesn't break
+            try:
+                current = db.table("incidents").select("region").eq("id", inc["id"]).execute().data
+                if current and not current[0].get("region"):
+                    update["region"] = update.get("region") or "Unknown"
+            except Exception:
+                pass
             if result.get("summary"):
                 update["description"] = result["summary"]
 

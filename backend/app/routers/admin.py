@@ -108,6 +108,11 @@ async def full_pipeline():
 
 @router.get("/narrative/{region}")
 def get_narrative(region: str):
+    from app.cache.brief_cache import get_cached, set_cached
+    # 3.2: Check cache first — saves Groq API calls (1h TTL per region)
+    cached = get_cached(region)
+    if cached:
+        return {"region": region, "narrative": cached, "cached": True}
     db = get_client()
     incidents = db.table("incidents").select("title,category,escalation_level,date").eq("region",region).order("date",desc=True).limit(10).execute().data
     exercises = db.table("exercises").select("name,scale,lead_nation,signal_target,exercise_type,domain").eq("region",region).limit(4).execute().data
@@ -116,7 +121,8 @@ def get_narrative(region: str):
     narrative = generate_narrative(region, incidents, exercises)
     if not narrative:
         raise HTTPException(status_code=502, detail="LLM returned empty response. Check GROQ_API_KEY.")
-    return {"region":region,"narrative":narrative}
+    set_cached(region, narrative)
+    return {"region": region, "narrative": narrative, "cached": False}
 
 @router.get("/exercise-brief/{exercise_id}")
 def get_exercise_brief(exercise_id: str):

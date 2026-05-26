@@ -24,6 +24,7 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
     "leaflet": "^1.9.4",
+    "react-is": "^19.2.6",
     "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.15.0",
     "recharts": "^3.8.1",

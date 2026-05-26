@@ -7,15 +7,15 @@ import { REGIONS, SPARKLINES, CATS, EI_COLOR, EI_LABEL, getConf, INCIDENTS } fro
 
 const API = import.meta.env.VITE_API_URL || "https://threshold-production-d13c.up.railway.app";
 
+const MEDIAN_SPARK = [26,28,27,29,31,30,28,32,33,31,30,32,34,33,35,33,32,31,32,33,34,33,32,33,34];
+
 export default function Home() {
   const navigate = useNavigate();
   const [sort, setSort]     = useState("ei");
   const [filter, setFilter] = useState("all");
   const [view, setView]     = useState("grid");
-  const [incidents, setIncidents] = useState(INCIDENTS.slice(0,6));
+  const [incidents, setIncidents] = useState(INCIDENTS.slice(0, 6));
   const [totalIndexed, setTotalIndexed] = useState(1247);
-  // Live EI scores from API — merged with seed so Overview and Dossier use the same source
-  const [liveEI, setLiveEI] = useState({});
 
   useEffect(() => {
     fetch(`${API}/api/incidents/?limit=6`)
@@ -26,31 +26,17 @@ export default function Home() {
       .then(r => r.json())
       .then(d => { if (d.data?.length) setTotalIndexed(d.data.length); })
       .catch(() => {});
-    // Fetch live EI scores for all regions (same endpoint Region.jsx uses)
-    fetch(`${API}/api/di/global`)
-      .then(r => r.json())
-      .then(d => {
-        if (d.data?.length) {
-          const map = {};
-          d.data.forEach(row => {
-            if (row.region && row.ei_score != null) map[row.region] = row.ei_score;
-          });
-          setLiveEI(map);
-        }
-      })
-      .catch(() => {});
   }, []);
 
-  // Merge live EI into regions — same data source as Region Dossier
-  const regions = useMemo(() => REGIONS.map(r => ({
-    ...r,
-    ei: liveEI[r.id] != null ? Math.round(liveEI[r.id]) : r.ei,
-  })), [liveEI]);
+  const medianEI = useMemo(() => {
+    const v = [...REGIONS].map(r => r.ei).sort((a, b) => a - b);
+    return v[Math.floor(v.length / 2)];
+  }, []);
 
-  const critical = regions.filter(r => r.ei >= 50);
-  const rising   = regions.filter(r => r.trend > 0).length;
+  const critical = REGIONS.filter(r => r.ei >= 50);
+  const rising   = REGIONS.filter(r => r.trend > 0).length;
 
-  const filtered = useMemo(() => regions.filter(r => {
+  const filtered = useMemo(() => REGIONS.filter(r => {
     if (filter === "all")      return true;
     if (filter === "high")     return r.ei >= 50;
     if (filter === "moderate") return r.ei >= 25 && r.ei < 50;
@@ -59,7 +45,7 @@ export default function Home() {
     if (filter === "tension")  return r.cat === "tension";
     if (filter === "rising")   return r.trend > 0;
     return true;
-  }), [filter, regions]);
+  }), [filter]);
 
   const sorted = useMemo(() => [...filtered].sort((a, b) => {
     if (sort === "ei")     return b.ei - a.ei;
@@ -68,32 +54,80 @@ export default function Home() {
     return 0;
   }), [filtered, sort]);
 
+  const today = new Date();
+  const weekAgo = new Date(today - 7 * 86400000);
+  const windowLabel = `${weekAgo.getDate()} ${weekAgo.toLocaleString("en-GB",{month:"long"})} → ${today.getDate()} ${today.toLocaleString("en-GB",{month:"long",year:"numeric"})}`;
+
   return (
     <Layout>
       <div className="route-in">
 
-        {/* ─── HERO ─────────────────────── */}
-        <section style={{ paddingTop:72, paddingBottom:56 }}>
+        {/* ─── EDITORIAL HERO ─────────────────────── */}
+        <section style={{ paddingTop:72, paddingBottom:56, position:"relative" }}>
           <div className="container-wide">
-            <div className="stack-mobile" style={{ display:"grid", gridTemplateColumns:"1.4fr 1fr", gap:80, alignItems:"end" }}>
+            <div style={{ display:"grid", gridTemplateColumns:"1.4fr 1fr", gap:64, alignItems:"end" }} className="stack-mobile">
+
               <div>
-                <div className="micro micro-accent" style={{ marginBottom:24 }}>ESCALATION MONITOR</div>
-                <h1 className="h1" style={{ fontSize:"clamp(40px, 4.6vw, 64px)", marginBottom:24, maxWidth:720 }}>
-                  Twenty regions. One index. Observed daily through open sources.
+                <div className="micro micro-accent" style={{ marginBottom:28, display:"flex", alignItems:"center", gap:10 }}>
+                  <span className="tick"/>
+                  GEOPOLITICAL ESCALATION MONITOR · ISSUE 14
+                </div>
+                <h1 className="display" style={{ marginBottom:28 }}>
+                  Twenty<br/>
+                  <span className="serif" style={{ fontWeight:300, fontStyle:"italic" }}>threshold</span>
+                  <span style={{ color:"var(--accent)" }}>.</span><br/>
+                  <span style={{ color:"var(--ink-55)" }}>The crossings, indexed.</span>
                 </h1>
-                <p className="body-lg" style={{ maxWidth:520, marginBottom:32, color:"var(--ink-55)" }}>
-                  A research indicator covering active conflict and strategic-tension theatres. Not an official intelligence assessment.
+                <p className="body-lg" style={{ maxWidth:540, marginBottom:32 }}>
+                  A research instrument. Twenty conflict and strategic-tension regions, observed daily through open sources, indexed against a logarithmic escalation function.
                 </p>
-                <button className="btn-ghost" onClick={() => navigate("/incidents")}>View incidents</button>
+                <div style={{ display:"flex", gap:12 }}>
+                  <button className="btn-primary" onClick={() => navigate(`/region/${encodeURIComponent(REGIONS[0].id)}`)}>
+                    Open dossier →
+                  </button>
+                  <button className="btn-ghost" onClick={() => navigate("/about")}>Read methodology</button>
+                </div>
               </div>
-              <div className="hide-mobile">
-                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:32 }}>
+
+              <div style={{ borderLeft:"1px solid var(--ink)", paddingLeft:28 }} className="hide-mobile">
+                <div className="micro" style={{ marginBottom:14, color:"var(--ink)" }}>
+                  WINDOW · {windowLabel.toUpperCase()}
+                </div>
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:28 }}>
                   <StatBlock n={totalIndexed} label="incidents indexed" />
                   <StatBlock n={20} label="regions monitored" />
                   <StatBlock n={critical.length} label="at high escalation" emphasis />
-                  <StatBlock n={rising} label="rising · 7-day" />
+                  <StatBlock n={rising} label="rising 7-day" />
+                </div>
+                <div style={{ marginTop:28, padding:"16px 0", borderTop:"1px solid var(--rule)" }}>
+                  <div className="micro" style={{ marginBottom:10 }}>ESCALATION INDEX · MEDIAN</div>
+                  <div style={{ display:"flex", alignItems:"baseline", gap:14 }}>
+                    <span className="tab-num" style={{ fontSize:64, fontWeight:800, letterSpacing:"-0.04em", lineHeight:1, color:EI_COLOR(medianEI) }}>
+                      <AnimatedNumber value={medianEI} duration={1500} />
+                    </span>
+                    <span className="small mono" style={{ color:EI_COLOR(medianEI) }}>{EI_LABEL(medianEI)}</span>
+                    <span className="small mono" style={{ color:"var(--ink-40)", marginLeft:"auto" }}>+1.2 vs prev.</span>
+                  </div>
+                  <div style={{ marginTop:14 }}>
+                    <Sparkline data={MEDIAN_SPARK} color="var(--ink)" width={300} height={36} showArea strokeWidth={1.5} />
+                  </div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Measurement marks */}
+          <div className="container-wide hide-mobile" style={{ marginTop:56 }}>
+            <div style={{ display:"flex", alignItems:"center", fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.15em", color:"var(--ink-40)" }}>
+              {Array.from({ length:21 }, (_, i) => (
+                <div key={i} style={{ flex:1, position:"relative", height:18, borderLeft:"1px solid var(--ink-15)" }}>
+                  {i % 5 === 0 && (
+                    <span style={{ position:"absolute", top:-16, left:4, color:"var(--ink-40)" }}>
+                      {String(i).padStart(2,"0")}
+                    </span>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </section>
@@ -101,15 +135,12 @@ export default function Home() {
         {/* ─── REGION INDEX ─────────────────────── */}
         <section className="container-wide" style={{ paddingTop:32, paddingBottom:60 }}>
           <div className="section-bar">
-            <span className="micro micro-strong">Regions</span>
-            <span className="micro" style={{ color:"var(--ink-40)" }}>
-              {sort==="ei" && "sorted by escalation index"}
-              {sort==="alpha" && "sorted A–Z"}
-              {sort==="rising" && "sorted by 7-day rise"}
-            </span>
+            <span className="tick"/>
+            <span className="micro micro-strong">§ 01 · INDEX OF REGIONS</span>
+            <span className="micro hide-mobile" style={{ color:"var(--ink-40)" }}>20 entries · sorted by escalation index</span>
             <div className="meta" style={{ display:"flex", gap:8 }}>
-              <button className={`chip ${view==="grid"?"is-active":""}`} onClick={()=>setView("grid")}>Grid</button>
               <button className={`chip ${view==="index"?"is-active":""}`} onClick={()=>setView("index")}>Table</button>
+              <button className={`chip ${view==="grid"?"is-active":""}`}  onClick={()=>setView("grid")}>Grid</button>
             </div>
           </div>
 
@@ -136,6 +167,7 @@ export default function Home() {
         {incidents.length > 0 && (
           <section className="container-wide" style={{ paddingTop:24, paddingBottom:72 }}>
             <div className="section-bar">
+              <span className="tick"/>
               <span className="micro micro-strong">§ 02 · LATEST DISPATCHES</span>
               <span className="micro hide-mobile" style={{ color:"var(--ink-40)" }}>recent · {incidents.length} entries</span>
               <button className="micro" style={{ cursor:"pointer", textDecoration:"underline", textUnderlineOffset:4, marginLeft:"auto", color:"var(--ink-55)" }} onClick={()=>navigate("/incidents")}>
@@ -155,16 +187,11 @@ export default function Home() {
 
 function StatBlock({ n, label, emphasis }) {
   return (
-    <div style={{
-      padding:"16px 20px",
-      background:"linear-gradient(135deg, #1a1a1a 0%, #2a2220 100%)",
-      borderLeft:`4px solid ${emphasis ? "#DC143C" : "rgba(220,20,60,0.45)"}`,
-      borderRadius:2,
-    }}>
-      <div className="tab-num" style={{ fontSize:48, fontWeight:800, letterSpacing:"-0.035em", lineHeight:1, color:emphasis?"#DC143C":"#e8e0d4", marginBottom:6 }}>
+    <div>
+      <div className="tab-num" style={{ fontSize:56, fontWeight:800, letterSpacing:"-0.035em", lineHeight:1, color:emphasis?"var(--accent)":"var(--ink)", marginBottom:6 }}>
         <AnimatedNumber value={n} duration={emphasis ? 1800 : 1200} />
       </div>
-      <div className="micro" style={{ color:"rgba(232,224,212,0.55)", letterSpacing:"0.12em" }}>{label}</div>
+      <div className="micro">{label}</div>
     </div>
   );
 }
@@ -307,16 +334,7 @@ function DispatchTile({ inc, idx }) {
       <div style={{ fontSize:14, fontWeight:500, lineHeight:1.4, color:"var(--ink)", marginBottom:8 }}>{inc.title||"—"}</div>
       <div className="mono small" style={{ color:"var(--ink-40)", display:"flex", justifyContent:"space-between" }}>
         <span>{inc.region||""}</span>
-        {inc.source_url ? (
-          <a href={inc.source_url} target="_blank" rel="noopener noreferrer"
-            style={{ color:"var(--ink-40)", textDecoration:"underline", textUnderlineOffset:3 }}
-            onClick={e => e.stopPropagation()}
-          >
-            {(inc.source_name||inc.src||"src").split(" ")[0]} ↗
-          </a>
-        ) : (inc.source_name||inc.src) ? (
-          <span>{(inc.source_name||inc.src)} ↗</span>
-        ) : null}
+        {(inc.source_name||inc.src) && <span>{(inc.source_name||inc.src)} ↗</span>}
       </div>
     </div>
   );

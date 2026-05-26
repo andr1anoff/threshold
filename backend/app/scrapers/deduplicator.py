@@ -18,10 +18,22 @@ def is_duplicate(title: str, url: str, db) -> bool:
 def insert_with_dedup(record: dict, db) -> bool:
     h = make_hash(record.get("title",""), record.get("source_url",""))
     record["content_hash"] = h
+    # 1.5: Ensure region is never null — unknown is better than broken filters
+    if not record.get("region"):
+        record["region"] = "Unknown"
     try:
+        # Primary dedup: content_hash (url+title)
         existing = db.table("incidents").select("id").eq("content_hash", h).execute()
         if existing.data:
             return False
+        # Secondary dedup: same title + same date (catches duplicate scrapes with different URLs)
+        title = (record.get("title") or "").strip()
+        date  = (record.get("date") or "")
+        if title and date:
+            title_check = db.table("incidents").select("id").eq("title", title).eq("date", date).execute()
+            if title_check.data:
+                logger.debug(f"[dedup] skipped title+date duplicate: {title[:60]}")
+                return False
         db.table("incidents").insert(record).execute()
         return True
     except Exception as e:

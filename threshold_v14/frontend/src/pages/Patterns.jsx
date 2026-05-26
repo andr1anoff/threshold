@@ -6,7 +6,7 @@ import { REGIONS, EI_COLOR, EI_LABEL } from "../data/seed";
 
 const API = import.meta.env.VITE_API_URL || "https://threshold-production-d13c.up.railway.app";
 
-// BRIEF_SECTIONS removed (v14-fix: visual artifact deleted per 1.4)
+const BRIEF_SECTIONS = ["Situation overview","Recent signals (gray zone)","Exercise activity","Rhetoric assessment","Source confidence","Limitations & caveats"];
 
 const LOADING_STAGES = [
   "Loading incident corpus…",
@@ -52,18 +52,7 @@ export default function BriefsPage() {
 
     try {
       const res = await fetch(`${API}/api/admin/narrative/${encodeURIComponent(rid)}`);
-      if (!res.ok) {
-        const d = await res.json().catch(()=>({}));
-        const detail = d.detail || `HTTP ${res.status}`;
-        // 404 = no incidents indexed for this region
-        if (res.status === 404) {
-          clearInterval(ticker);
-          setError(`No recent open-source data for "${rid}". Run the scraper pipeline to index incidents for this region.`);
-          setLoading(false);
-          return;
-        }
-        throw new Error(detail);
-      }
+      if (!res.ok) { const d = await res.json().catch(()=>({})); throw new Error(d.detail || `HTTP ${res.status}`); }
       const d = await res.json();
       clearInterval(ticker);
       setStage(LOADING_STAGES.length - 1);
@@ -112,7 +101,17 @@ export default function BriefsPage() {
                 Structured narrative covering escalation dynamics, recent gray-zone incidents, exercise signals, rhetoric, and source confidence. Not an independent intelligence judgement.
               </p>
             </div>
-            <div className="hide-mobile" />
+            <div style={{ borderTop:"1px solid var(--ink)", paddingTop:18 }} className="hide-mobile">
+              <div className="micro" style={{ marginBottom:12 }}>BRIEF SECTIONS</div>
+              <ol style={{ listStyle:"none", padding:0, fontSize:13, color:"var(--ink-70)" }}>
+                {BRIEF_SECTIONS.map((s, i) => (
+                  <li key={s} style={{ display:"flex", gap:12, padding:"8px 0", borderBottom:i<BRIEF_SECTIONS.length-1?"1px solid var(--rule)":"none", lineHeight:1.4 }}>
+                    <span className="mono" style={{ color:"var(--ink-40)", width:24, flexShrink:0 }}>0{i+1}</span>
+                    <span>{s}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
           </div>
         </section>
 
@@ -154,14 +153,12 @@ export default function BriefsPage() {
 
 function BriefEmpty() {
   return (
-    <div style={{ flex:"1 1 auto", display:"flex", flexDirection:"column" }}>
-      <div style={{ borderTop:"1px solid var(--ink)", flex:"1 1 auto", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"80px 24px", textAlign:"center" }}>
-        <div className="display-serif" style={{ fontSize:80, color:"var(--ink-15)", margin:"0 0 24px" }}>◎</div>
-        <h2 className="h2" style={{ marginBottom:12 }}>Select a region above</h2>
-        <p className="body" style={{ maxWidth:480, margin:"0 auto" }}>
-          Briefs summarise escalation dynamics, recent incidents, signal patterns, and source confidence for the selected region.
-        </p>
-      </div>
+    <div style={{ borderTop:"1px solid var(--ink)", flex:"1 1 auto", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"80px 24px", textAlign:"center" }}>
+      <div className="display-serif" style={{ fontSize:80, color:"var(--ink-15)", margin:"0 0 24px" }}>◎</div>
+      <h2 className="h2" style={{ marginBottom:12 }}>Select a region above</h2>
+      <p className="body" style={{ maxWidth:480, margin:"0 auto" }}>
+        Briefs summarise escalation dynamics, recent incidents, signal patterns, and source confidence for the selected region.
+      </p>
     </div>
   );
 }
