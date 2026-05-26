@@ -81,7 +81,7 @@ export default function BriefsPage() {
 
   return (
     <Layout>
-      <div className="route-in">
+      <div className="route-in" style={{ display:"flex", flexDirection:"column", flex:"1 0 auto", minHeight:"calc(100vh - 60px)" }}>
 
         {/* ─── MASTHEAD ─────────────────────── */}
         <section className="container-wide" style={{ paddingTop:60, paddingBottom:36 }}>
@@ -139,7 +139,7 @@ export default function BriefsPage() {
         </section>
 
         {/* ─── OUTPUT ─────────────────────── */}
-        <section className="container-wide" style={{ paddingBottom:80 }}>
+        <section className="container-wide" style={{ paddingBottom:80, flex:"1 1 auto", display:"flex", flexDirection:"column" }}>
           {!regionId && <BriefEmpty />}
           {loading && <BriefLoading region={currentRegion} stage={stage} />}
           {!loading && error && <BriefError error={error} onClear={()=>setError("")} />}
@@ -153,8 +153,8 @@ export default function BriefsPage() {
 
 function BriefEmpty() {
   return (
-    <div style={{ borderTop:"1px solid var(--ink)", padding:"80px 24px", textAlign:"center" }}>
-      <div className="display-serif" style={{ fontSize:80, color:"var(--ink-15)", marginBottom:16 }}>◎</div>
+    <div style={{ borderTop:"1px solid var(--ink)", flex:"1 1 auto", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"80px 24px", textAlign:"center" }}>
+      <div className="display-serif" style={{ fontSize:80, color:"var(--ink-15)", margin:"0 0 24px" }}>◎</div>
       <h2 className="h2" style={{ marginBottom:12 }}>Select a region above</h2>
       <p className="body" style={{ maxWidth:480, margin:"0 auto" }}>
         Briefs summarise escalation dynamics, recent incidents, signal patterns, and source confidence for the selected region.

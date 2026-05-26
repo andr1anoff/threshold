@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Logo from "./Logo";
 
 function UtcClock() {
@@ -22,10 +22,8 @@ function UtcClock() {
 const NAV = [
   { label:"Overview",  path:"/" },
   { label:"Incidents", path:"/incidents" },
-  { label:"Exercises", path:"/exercises" },
   { label:"War Room",  path:"/warroom" },
   { label:"Briefs",    path:"/briefs" },
-  { label:"About",     path:"/about" },
 ];
 
 const SOURCES = ["ReliefWeb/OCHA","UCDP Uppsala","Wikipedia","UN News","GDELT","DeepState","CIT Leviev","SHAPE NATO"];
@@ -34,13 +32,6 @@ export default function Layout({ children }) {
   const loc = useLocation();
   const isWarRoom = loc.pathname === "/warroom";
   const [menuOpen, setMenuOpen] = useState(false);
-  const [dark, setDark] = useState(() => document.body.classList.contains("dark-mode"));
-
-  function toggleDark() {
-    const next = !dark;
-    setDark(next);
-    document.body.classList.toggle("dark-mode", next);
-  }
 
   return (
     <div style={{ display:"flex", flexDirection:"column", minHeight:"100dvh", background:"var(--cream)", maxWidth:"100vw", overflowX:"hidden" }}>
@@ -48,10 +39,12 @@ export default function Layout({ children }) {
       {/* HEADER */}
       <header role="banner" style={{
         position:"sticky", top:0, zIndex:100,
-        background:"var(--cream)",
+        background:"color-mix(in oklab, var(--cream) 92%, transparent)",
+        backdropFilter:"blur(8px)",
+        WebkitBackdropFilter:"blur(8px)",
         borderBottom:"1px solid var(--ink-faint)",
         display:"flex", alignItems:"center",
-        padding:"0 16px", height:56, gap:12, flexShrink:0,
+        padding:"0 16px", height:60, gap:12, flexShrink:0,
         maxWidth:"100vw",
       }}>
         <Link to="/" style={{ display:"flex", alignItems:"center", gap:8, textDecoration:"none", flexShrink:0 }} aria-label="Threshold home">
@@ -63,16 +56,14 @@ export default function Layout({ children }) {
         <nav aria-label="Main navigation" style={{ display:"flex", gap:2, flex:1 }}>
           {NAV.map(n => {
             const isActive = n.path==="/" ? loc.pathname==="/" : loc.pathname===n.path;
-            const isWR = n.path==="/warroom";
             return (
               <Link key={n.path} to={n.path}
                 aria-current={isActive?"page":undefined}
                 style={{
                   fontSize:12, fontWeight:isActive?600:400,
-                  color: isActive ? (isWR?"#fff":"var(--ink)") : "var(--ink-muted)",
+                  color: isActive ? "var(--ink)" : "var(--ink-muted)",
                   padding:"5px 10px", borderRadius:6, textDecoration:"none",
-                  background: isActive ? (isWR?"var(--crimson)":"rgba(26,16,8,0.07)") : "transparent",
-                  border: isWR&&!isActive ? "1px solid rgba(107,26,42,0.2)" : "1px solid transparent",
+                  borderBottom: isActive ? "2px solid var(--accent)" : "2px solid transparent",
                   whiteSpace:"nowrap", display:"none",
                 }}
                 className="desktop-nav-link"
@@ -81,32 +72,17 @@ export default function Layout({ children }) {
           })}
         </nav>
 
-        {/* UTC clock — desktop only */}
+        {/* Right side: LIVE indicator + clock + About */}
         <div className="hide-mobile" style={{ display:"flex", alignItems:"center", gap:10, flexShrink:0 }}>
-          <span style={{ width:5, height:5, borderRadius:"50%", background:"var(--lo)", flexShrink:0, animation:"pulse-dot 2.2s ease-in-out infinite" }}/>
+          <span className="pulse" style={{ width:6, height:6 }}/>
+          <span style={{ fontSize:10, fontWeight:600, letterSpacing:"2px", color:"var(--lo)" }}>LIVE</span>
           <UtcClock />
         </div>
 
-        {/* Dark mode toggle */}
-        <button
-          onClick={toggleDark}
-          title={dark ? "Light mode" : "Dark mode"}
-          style={{
-            background:"none", border:"1px solid var(--ink-faint)", borderRadius:6,
-            padding:"5px 8px", cursor:"pointer", fontSize:13, flexShrink:0, color:"var(--ink-55)",
-          }}
-        >{dark ? "☀" : "◑"}</button>
-
-        <a href="mailto:ivaa03@zedat.fu-berlin.de"
-          style={{
-            fontSize:12, fontWeight:600,
-            background:"var(--ink)", color:"var(--cream)",
-            padding:"7px 14px", borderRadius:999, textDecoration:"none",
-            flexShrink:0, marginLeft:"auto",
-          }}
-          onMouseEnter={e=>e.currentTarget.style.background="var(--crimson)"}
-          onMouseLeave={e=>e.currentTarget.style.background="var(--ink)"}
-        >Contact</a>
+        <Link to="/about"
+          className="btn-ghost hide-mobile"
+          style={{ fontSize:12, padding:"6px 12px", flexShrink:0 }}
+        >About →</Link>
 
         {/* Hamburger */}
         <button
@@ -129,16 +105,16 @@ export default function Layout({ children }) {
         </button>
       </header>
 
-      {/* Mobile drawer — above everything including map */}
+      {/* Mobile drawer */}
       {menuOpen && (
         <div style={{
-          position:"fixed", top:56, left:0, right:0, bottom:0,
+          position:"fixed", top:60, left:0, right:0, bottom:0,
           background:"var(--cream)", zIndex:200,
           padding:"8px 0", display:"flex", flexDirection:"column",
           borderTop:"1px solid var(--ink-faint)",
           overflowY:"auto",
         }}>
-          {NAV.map(n => {
+          {[...NAV, { label:"About", path:"/about" }].map(n => {
             const isActive = n.path==="/" ? loc.pathname==="/" : loc.pathname===n.path;
             return (
               <Link key={n.path} to={n.path} onClick={()=>setMenuOpen(false)}
@@ -164,7 +140,6 @@ export default function Layout({ children }) {
         <footer role="contentinfo" style={{
           background:"var(--ink)", color:"rgba(245,240,232,0.5)",
           padding:"28px 20px 20px", flexShrink:0,
-          /* iOS safe area */
           paddingBottom:"calc(20px + env(safe-area-inset-bottom))",
         }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:20, marginBottom:20 }}>

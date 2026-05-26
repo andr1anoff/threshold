@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
 import Sparkline from "../components/Sparkline";
 import AnimatedNumber from "../components/AnimatedNumber";
-import { REGIONS, SPARKLINES, CATS, EI_COLOR, EI_LABEL, getConf } from "../data/seed";
+import { REGIONS, SPARKLINES, CATS, EI_COLOR, EI_LABEL, getConf, INCIDENTS } from "../data/seed";
 
 const API = import.meta.env.VITE_API_URL || "https://threshold-production-d13c.up.railway.app";
 
@@ -13,8 +13,8 @@ export default function Home() {
   const navigate = useNavigate();
   const [sort, setSort]     = useState("ei");
   const [filter, setFilter] = useState("all");
-  const [view, setView]     = useState("index");
-  const [incidents, setIncidents] = useState([]);
+  const [view, setView]     = useState("grid");
+  const [incidents, setIncidents] = useState(INCIDENTS.slice(0, 6));
   const [totalIndexed, setTotalIndexed] = useState(1247);
 
   useEffect(() => {
@@ -41,8 +41,8 @@ export default function Home() {
     if (filter === "high")     return r.ei >= 50;
     if (filter === "moderate") return r.ei >= 25 && r.ei < 50;
     if (filter === "low")      return r.ei < 25;
-    if (filter === "conflict") return r.category === "conflict";
-    if (filter === "tension")  return r.category === "tension";
+    if (filter === "conflict") return r.cat === "conflict";
+    if (filter === "tension")  return r.cat === "tension";
     if (filter === "rising")   return r.trend > 0;
     return true;
   }), [filter]);
@@ -241,7 +241,7 @@ function RegionTable({ regions, onSelect }) {
               <Coord lat={r.lat} lng={r.lng} />
             </div>
             <span className="mono small" style={{ color:"var(--ink-55)", letterSpacing:"0.06em", textTransform:"uppercase" }}>
-              {r.category === "conflict" ? "Active conflict" : "Strategic tension"}
+              {r.cat === "conflict" ? "Active conflict" : "Strategic tension"}
             </span>
             <span style={{ fontSize:28, fontWeight:700, fontVariantNumeric:"tabular-nums", color, textAlign:"right", letterSpacing:"-0.02em" }}>
               {r.ei}
@@ -300,7 +300,7 @@ function RegionGrid({ regions, onSelect }) {
               <div style={{ height:"100%", width:`${r.ei}%`, background:color, opacity:0.7 }}/>
             </div>
             <div style={{ display:"flex", justifyContent:"space-between", fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.12em", textTransform:"uppercase", color:"var(--ink-40)" }}>
-              <span>{r.category === "conflict" ? "Active" : "Tension"}</span>
+              <span>{r.cat === "conflict" ? "Active" : "Tension"}</span>
               <span style={{ color: r.trend > 0 ? "var(--hi)" : r.trend < 0 ? "var(--lo)" : "var(--ink-40)" }}>
                 {r.trend > 0 ? `↑ +${r.trend}` : r.trend < 0 ? `↓ ${r.trend}` : "→ stable"}
               </span>
