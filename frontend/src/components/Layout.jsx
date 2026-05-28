@@ -99,14 +99,15 @@ export default function Layout({ children }) {
   const warRoomClicks = React.useRef(0);
   const warRoomTimer = React.useRef(null);
 
-  function handleWarRoomClick() {
+  function handleWarRoomClick(e) {
     warRoomClicks.current += 1;
     clearTimeout(warRoomTimer.current);
     if (warRoomClicks.current >= 3) {
       warRoomClicks.current = 0;
+      e.preventDefault();
       setStrangelove(true);
     } else {
-      warRoomTimer.current = setTimeout(() => { warRoomClicks.current = 0; }, 3500);
+      warRoomTimer.current = setTimeout(() => { warRoomClicks.current = 0; }, 6000);
     }
   }
 
