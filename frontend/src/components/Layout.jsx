@@ -3,6 +3,10 @@ import { Link, useLocation } from "react-router-dom";
 import Logo from "./Logo";
 const STRANGELOVE_IMG = "/strangelove.png";
 
+// Module-level: persists across Layout remounts when navigating between pages
+let _warRoomClicks = 0;
+let _warRoomTimer = null;
+
 function StrangeloveModal({ onClose }) {
   return (
     <div onClick={onClose} style={{
@@ -96,18 +100,16 @@ export default function Layout({ children }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [dark, setDark] = useDarkMode();
   const [strangelove, setStrangelove] = useState(false);
-  const warRoomClicks = React.useRef(0);
-  const warRoomTimer = React.useRef(null);
 
   function handleWarRoomClick(e) {
-    warRoomClicks.current += 1;
-    clearTimeout(warRoomTimer.current);
-    if (warRoomClicks.current >= 3) {
-      warRoomClicks.current = 0;
+    _warRoomClicks += 1;
+    clearTimeout(_warRoomTimer);
+    if (_warRoomClicks >= 3) {
+      _warRoomClicks = 0;
       e.preventDefault();
       setStrangelove(true);
     } else {
-      warRoomTimer.current = setTimeout(() => { warRoomClicks.current = 0; }, 6000);
+      _warRoomTimer = setTimeout(() => { _warRoomClicks = 0; }, 6000);
     }
   }
 
