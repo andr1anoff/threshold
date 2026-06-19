@@ -14,14 +14,18 @@ def get_incidents(
 ):
     db = get_client()
     query = db.table("incidents").select("*").order("date", desc=True).limit(limit)
+    count_query = db.table("incidents").select("id", count="exact")
 
     if region:
         query = query.eq("region", region)
+        count_query = count_query.eq("region", region)
     if category:
         query = query.eq("category", category)
+        count_query = count_query.eq("category", category)
 
     result = query.execute()
-    return {"data": result.data, "count": len(result.data)}
+    total = count_query.execute().count
+    return {"data": result.data, "count": len(result.data), "total": total}
 
 
 @router.get("/{incident_id}")
