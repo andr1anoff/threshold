@@ -138,7 +138,16 @@ export default function ExercisesPage() {
             EXERCISES
           </div>
           <h1 style={{ fontSize:30, fontWeight:800, letterSpacing:"-0.5px", marginBottom:6 }}>Military Exercises</h1>
-          <p style={{ fontSize:14, color:"var(--ink-muted)" }}>Active and upcoming exercises · ±14 day scoring window · Last updated: May 2026</p>
+          <p style={{ fontSize:14, color:"var(--ink-muted)" }}>
+            {(() => {
+              const dates = exercises.flatMap(e => [e.start_date, e.end_date].filter(Boolean));
+              const latest = dates.length ? dates.sort().at(-1) : null;
+              const suffix = latest
+                ? ` · Last updated: ${new Date(latest).toLocaleDateString("en-GB", { month: "short", year: "numeric" })}`
+                : "";
+              return `Active and upcoming exercises · ±14 day scoring window${suffix}`;
+            })()}
+          </p>
         </div>
 
         {/* Stats */}

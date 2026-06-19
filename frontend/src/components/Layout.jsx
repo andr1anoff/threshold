@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
 import Logo from "./Logo";
 const STRANGELOVE_IMG = "/strangelove.png";
@@ -116,6 +117,11 @@ export default function Layout({ children }) {
   return (
     <div style={{ display:"flex", flexDirection:"column", minHeight:"100dvh", background:"var(--cream)", maxWidth:"100vw", overflowX:"hidden" }}>
 
+      {strangelove && createPortal(
+        <StrangeloveModal onClose={() => setStrangelove(false)} />,
+        document.body
+      )}
+
       {/* HEADER */}
       <header role="banner" style={{
         position:"sticky", top:0, zIndex:100,
@@ -127,7 +133,6 @@ export default function Layout({ children }) {
         padding:"0 16px", height:60, gap:12, flexShrink:0,
         maxWidth:"100vw",
       }}>
-        {strangelove && <StrangeloveModal onClose={() => setStrangelove(false)} />}
         <Link to="/" style={{ display:"flex", alignItems:"center", gap:8, textDecoration:"none", flexShrink:0 }} aria-label="Threshold home">
           <Logo size={20}/>
           <span style={{ fontSize:13, fontWeight:700, letterSpacing:"3px", color:"var(--ink)" }}>THRESHOLD<sup style={{ fontSize:8, fontWeight:500, letterSpacing:"0px", color:"var(--crimson)", marginLeft:3, verticalAlign:"super" }}>β</sup></span>

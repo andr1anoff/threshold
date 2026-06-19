@@ -204,9 +204,6 @@ export default function WarRoom() {
     });
     L.control.zoom({position:'bottomright'}).addTo(map);
     const isDark = document.body.classList.contains('dark-mode');
-    const labelColor = isDark ? '#ffffff' : null; // null = use marker color
-    const labelShadow = isDark ? 'none' : `0 0 6px ${CREAM},0 0 3px ${CREAM}`;
-
     if (isDark) {
       // Dark/night map tile
       L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',{maxZoom:7,subdomains:'abcd'}).addTo(map);
@@ -229,6 +226,19 @@ export default function WarRoom() {
       setTimeout(()=>mapRef.current?.invalidateSize(), 200);
     }
   }, [mobileTab]);
+
+  // When viewport crosses the mobile breakpoint, the map div swaps between
+  // desktop and mobile layouts. Destroy the old Leaflet instance so initMap()
+  // can re-attach to whichever div is now mounted.
+  useEffect(() => {
+    if (mapRef.current) {
+      mapRef.current.remove();
+      mapRef.current = null;
+      setMapLoaded(false);
+    }
+    const t = setTimeout(() => { if (window.L) initMap(); }, 100);
+    return () => clearTimeout(t);
+  }, [isMobile]);
 
   useEffect(() => {
     const onVisible = () => {
@@ -269,6 +279,9 @@ export default function WarRoom() {
   function addMarkers() {
     const L = window.L; const map = mapRef.current;
     if (!L||!map) return;
+    const isDark = document.body.classList.contains('dark-mode');
+    const labelColor = isDark ? '#ffffff' : null;
+    const labelShadow = isDark ? 'none' : `0 0 6px ${CREAM},0 0 3px ${CREAM}`;
     map.eachLayer(l=>{ if(l._em) map.removeLayer(l); });
     exercises.forEach(ex=>{
       const [lat,lng] = getPos(ex.name);
@@ -410,8 +423,8 @@ export default function WarRoom() {
           </div>
         </section>
 
-        {/* MAP + SIDEBAR */}
-        <section>
+        {/* MAP + SIDEBAR — desktop only; mobile uses the fixed overlay below */}
+        {!isMobile && <section>
           <div className="warroom-grid" style={{ display:"grid", gridTemplateColumns:"1fr 380px", minHeight:560, borderBottom:"1px solid var(--rule)", height:"calc(100vh - 60px - 180px)" }}>
             {/* Map */}
             <div style={{ position:"relative", background:"var(--paper)", borderRight:"1px solid var(--rule)" }}>
@@ -492,7 +505,7 @@ export default function WarRoom() {
               )}
             </div>
           </div>
-        </section>
+        </section>}
 
         {/* Mobile layout */}
         {isMobile && (

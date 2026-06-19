@@ -13,7 +13,7 @@ export default function Home() {
   const [filter, setFilter] = useState("all");
   const [view, setView]     = useState("grid");
   const [incidents, setIncidents] = useState(INCIDENTS.slice(0,6));
-  const [totalIndexed, setTotalIndexed] = useState(1247);
+  const [totalIndexed, setTotalIndexed] = useState(null);
   // Live EI scores from API — merged with seed so Overview and Dossier use the same source
   const [liveEI, setLiveEI] = useState({});
 
@@ -24,7 +24,13 @@ export default function Home() {
       .catch(() => {});
     fetch(`${API}/api/incidents/`)
       .then(r => r.json())
-      .then(d => { if (d.data?.length) setTotalIndexed(d.data.length); })
+      .then(d => {
+        // Prefer a server-side total/count field; fall back to data array length.
+        // TODO: if /api/incidents/ is paginated and d.data.length is capped,
+        // a dedicated count endpoint (e.g. /api/incidents/count) is needed for accuracy.
+        const count = d.total ?? d.count ?? (d.data?.length ?? null);
+        if (count != null) setTotalIndexed(count);
+      })
       .catch(() => {});
     // Fetch live EI scores for all regions (same endpoint Region.jsx uses)
     fetch(`${API}/api/di/global`)
@@ -49,6 +55,11 @@ export default function Home() {
 
   const critical = regions.filter(r => r.ei >= 50);
   const rising   = regions.filter(r => r.trend > 0).length;
+
+  const formatIndexed = (n) =>
+    n == null ? "—" :
+    n < 1000 ? n.toLocaleString() :
+    `${Math.floor(n / 1000) * 1000}+`;
 
   const filtered = useMemo(() => regions.filter(r => {
     if (filter === "all")      return true;
@@ -88,7 +99,7 @@ export default function Home() {
               </div>
               <div className="hide-mobile">
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
-                  <StatBlock n={totalIndexed} label="incidents indexed" />
+                  <StatBlock n={totalIndexed} label="incidents indexed" format={formatIndexed} />
                   <StatBlock n={20} label="regions monitored" />
                   <StatBlock n={critical.length} label="at high escalation" emphasis />
                   <StatBlock n={rising} label="rising · 7-day" />
@@ -98,12 +109,14 @@ export default function Home() {
               <div style={{ display:"none" }} className="show-mobile-flex">
                 <div style={{ display:"flex", gap:16, flexWrap:"wrap", marginTop:8 }}>
                   {[
-                    [totalIndexed, "incidents"],
-                    [critical.length, "high EI", true],
-                    [rising, "rising"],
-                  ].map(([n, label, emph]) => (
+                    [totalIndexed, "incidents", false, formatIndexed],
+                    [critical.length, "high EI", true, null],
+                    [rising, "rising", false, null],
+                  ].map(([n, label, emph, fmt]) => (
                     <div key={label} style={{ display:"flex", alignItems:"baseline", gap:6 }}>
-                      <span style={{ fontSize:24, fontWeight:800, letterSpacing:"-0.03em", color: emph ? "var(--accent)" : "var(--ink)" }}>{n}</span>
+                      <span style={{ fontSize:24, fontWeight:800, letterSpacing:"-0.03em", color: emph ? "var(--accent)" : "var(--ink)" }}>
+                        {fmt ? fmt(n) : (n ?? "—")}
+                      </span>
                       <span className="micro" style={{ color:"var(--ink-40)" }}>{label}</span>
                     </div>
                   ))}
@@ -168,7 +181,7 @@ export default function Home() {
   );
 }
 
-function StatBlock({ n, label, emphasis }) {
+function StatBlock({ n, label, emphasis, format }) {
   return (
     <div style={{
       padding:"16px 20px",
@@ -177,7 +190,10 @@ function StatBlock({ n, label, emphasis }) {
       borderRadius:2,
     }}>
       <div className="tab-num" style={{ fontSize:48, fontWeight:800, letterSpacing:"-0.035em", lineHeight:1, color:emphasis?"#DC143C":"#e8e0d4", marginBottom:6 }}>
-        <AnimatedNumber value={n} duration={emphasis ? 1800 : 1200} />
+        {n == null
+          ? "—"
+          : <AnimatedNumber value={n} duration={emphasis ? 1800 : 1200} format={format} />
+        }
       </div>
       <div className="micro" style={{ color:"rgba(232,224,212,0.55)", letterSpacing:"0.12em" }}>{label}</div>
     </div>
