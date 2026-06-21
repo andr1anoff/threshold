@@ -312,6 +312,10 @@ export default function Layout({ children }) {
           </div>
           <div style={{ borderTop:"1px solid rgba(245,240,232,0.08)", paddingTop:16, display:"flex", justifyContent:"space-between", flexWrap:"wrap", gap:8, fontSize:10, color:"rgba(245,240,232,0.2)" }}>
             <span>© 2026 Threshold · Research indicator — not an official intelligence assessment.</span>
+            <span style={{ display:"flex", gap:14 }}>
+              <Link to="/impressum" style={{ color:"rgba(245,240,232,0.45)", textDecoration:"none" }}>Impressum</Link>
+              <Link to="/datenschutz" style={{ color:"rgba(245,240,232,0.45)", textDecoration:"none" }}>Datenschutz</Link>
+            </span>
             <span style={{ fontFamily:"var(--mono)" }}>v15.3β · threshold-lyart.vercel.app</span>
           </div>
         </footer>
