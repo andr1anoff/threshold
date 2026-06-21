@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Analytics } from "@vercel/analytics/react";
 import Home from "./pages/Home";
 import RegionPage from "./pages/Region";
 import IncidentsPage from "./pages/Incidents";
@@ -21,6 +22,7 @@ export default function App() {
         <Route path="/patterns" element={<Navigate to="/briefs" replace />} />
         <Route path="/about" element={<AboutPage />} />
       </Routes>
+      <Analytics />
     </BrowserRouter>
   );
 }
