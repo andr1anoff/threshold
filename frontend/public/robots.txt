@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Legal pages — keep out of search index (contain personal Impressum data)
+Disallow: /impressum
+Disallow: /datenschutz
+
+Sitemap: https://threshold-osint.com/sitemap.xml
