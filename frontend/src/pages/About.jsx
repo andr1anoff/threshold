@@ -262,7 +262,7 @@ export default function AboutPage() {
             <p style={{ fontSize:13, color:"rgba(245,240,232,0.6)", marginBottom:18, lineHeight:1.6 }}>
               For methodological inquiries, data access, or academic collaboration:
             </p>
-            <a href="mailto:ivaa03@zedat.fu-berlin.de" style={{ display:"inline-block", background:"rgba(245,240,232,0.15)", color:"#fff", fontSize:13, fontWeight:700, padding:"10px 22px", borderRadius:999, textDecoration:"none" }}>
+            <a href="mailto:contact@threshold-osint.com" style={{ display:"inline-block", background:"rgba(245,240,232,0.15)", color:"#fff", fontSize:13, fontWeight:700, padding:"10px 22px", borderRadius:999, textDecoration:"none" }}>
               Email us
             </a>
           </div>
