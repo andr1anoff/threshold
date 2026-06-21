@@ -7,6 +7,8 @@ import ExercisesPage from "./pages/Exercises";
 import PatternsPage from "./pages/Patterns";
 import AboutPage from "./pages/About";
 import WarRoom from "./pages/WarRoom";
+import Impressum from "./pages/Impressum";
+import Datenschutz from "./pages/Datenschutz";
 import "./index.css";
 
 export default function App() {
@@ -21,6 +23,8 @@ export default function App() {
         <Route path="/briefs" element={<PatternsPage />} />
         <Route path="/patterns" element={<Navigate to="/briefs" replace />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/impressum" element={<Impressum />} />
+        <Route path="/datenschutz" element={<Datenschutz />} />
       </Routes>
       <Analytics />
     </BrowserRouter>
