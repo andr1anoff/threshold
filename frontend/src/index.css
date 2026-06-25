@@ -64,6 +64,9 @@ body {
   min-height: 100dvh;
   overflow-x: hidden;
   max-width: 100vw;
+  /* Ship the site one zoom-step larger by default (≈ one Cmd++ in Chrome).
+     Safari steps to ~115% — change to 1.15 to match Safari exactly. */
+  zoom: 1.1;
 }
 
 button, input, select, textarea { font-family: inherit; color: inherit; border: none; background: none; }
