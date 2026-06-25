@@ -17,7 +17,6 @@
   --ink-10:       rgba(26,16,8,0.10);
   --ink-06:       rgba(26,16,8,0.06);
   --ink-03:       rgba(26,16,8,0.03);
-  --ink-03:       rgba(26,16,8,0.03);
   --ink-muted:    rgba(26,16,8,0.45);
   --ink-faint:    rgba(26,16,8,0.10);
   --crimson:      #6B1A2A;
@@ -120,6 +119,10 @@ a { color: inherit; text-decoration: none; }
 .tab-num  { font-variant-numeric: tabular-nums; }
 .serif    { font-family: var(--serif); }
 
+/* Text wrapping — balance titles, pretty body (avoid orphan words) */
+.display, .display-serif, .h1, .h2, .h3 { text-wrap: balance; }
+.body, .body-lg, p { text-wrap: pretty; }
+
 /* ─── Layout ─────────────────────── */
 .container        { max-width: 1320px; margin: 0 auto; padding: 0 32px; width: 100%; }
 .container-narrow { max-width: 880px;  margin: 0 auto; padding: 0 32px; width: 100%; }
@@ -208,11 +211,12 @@ a { color: inherit; text-decoration: none; }
   border: 1px solid var(--ink-15);
   border-radius: 2px;
   background: transparent;
-  transition: all 0.12s ease;
+  transition: border-color 0.12s ease, color 0.12s ease, background 0.12s ease, scale 0.1s ease;
   white-space: nowrap;
   cursor: pointer;
 }
 .chip:hover { border-color: var(--ink-40); color: var(--ink); }
+.chip:active { scale: 0.96; }
 .chip.is-active { background: var(--ink); color: var(--cream); border-color: var(--ink); }
 .chip.is-accent.is-active { background: var(--accent); color: var(--cream); border-color: var(--accent); }
 
@@ -225,10 +229,11 @@ a { color: inherit; text-decoration: none; }
   padding: 10px 18px;
   border-radius: 2px;
   border: none;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, scale 0.1s ease;
   cursor: pointer;
 }
 .btn-primary:hover { background: var(--accent); }
+.btn-primary:active { scale: 0.96; }
 
 .btn-ghost {
   display: inline-flex; align-items: center; gap: 6px;
@@ -239,10 +244,15 @@ a { color: inherit; text-decoration: none; }
   border: 1px solid var(--ink-15);
   border-radius: 2px;
   white-space: nowrap;
-  transition: all 0.12s ease;
+  transition: border-color 0.12s ease, color 0.12s ease, scale 0.1s ease;
   cursor: pointer;
 }
 .btn-ghost:hover { border-color: var(--ink); color: var(--ink); }
+.btn-ghost:active { scale: 0.96; }
+
+/* War Room list rows — subtle press feedback (rows are large, so 0.99) */
+.wr-row { transition: scale 0.1s ease, background 0.12s ease; }
+.wr-row:active { scale: 0.99; }
 
 /* ─── Section bar ─────────────────────── */
 .section-bar {
@@ -408,7 +418,6 @@ body.dark-mode {
   --ink-15:       rgba(241,234,216,0.15);
   --ink-10:       rgba(241,234,216,0.10);
   --ink-06:       rgba(241,234,216,0.06);
-  --ink-03:       rgba(241,234,216,0.04);
   --ink-03:       rgba(241,234,216,0.04);
   --ink-muted:    rgba(241,234,216,0.45);
   --ink-faint:    rgba(241,234,216,0.10);
