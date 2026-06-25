@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import Layout from "../components/Layout";
 import Logo from "../components/Logo";
 
@@ -177,13 +177,13 @@ export default function AboutPage() {
               <div style={{ fontSize:10, fontWeight:700, letterSpacing:"1.5px", color:"var(--ink-muted)", marginBottom:8 }}>BASELINE SCALE</div>
               <div style={{ display:"grid", gridTemplateColumns:"80px 1fr", gap:"4px 12px" }}>
                 {BASELINE_SCALE.map(b => (
-                  <>
-                    <span key={b.val+"v"} style={{ fontFamily:"var(--mono)", color:"var(--crimson)", fontSize:12, paddingTop:2 }}>{b.val}</span>
-                    <span key={b.val+"l"} style={{ fontSize:12, color:"var(--ink)", lineHeight:1.5 }}>
+                  <Fragment key={b.val}>
+                    <span style={{ fontFamily:"var(--mono)", color:"var(--crimson)", fontSize:12, paddingTop:2 }}>{b.val}</span>
+                    <span style={{ fontSize:12, color:"var(--ink)", lineHeight:1.5 }}>
                       <strong style={{ fontWeight:500 }}>{b.label}</strong>
                       <span style={{ color:"var(--ink-muted)", display:"block", fontSize:11 }}>{b.ex}</span>
                     </span>
-                  </>
+                  </Fragment>
                 ))}
               </div>
             </div>
@@ -262,7 +262,7 @@ export default function AboutPage() {
             <p style={{ fontSize:13, color:"rgba(245,240,232,0.6)", marginBottom:18, lineHeight:1.6 }}>
               For methodological inquiries, data access, or academic collaboration:
             </p>
-            <a href="mailto:contact@threshold-osint.com" style={{ display:"inline-block", background:"rgba(245,240,232,0.15)", color:"#fff", fontSize:13, fontWeight:700, padding:"10px 22px", borderRadius:999, textDecoration:"none" }}>
+            <a href="mailto:contact@threshold-osint.com" style={{ display:"inline-block", background:"rgba(245,240,232,0.15)", color:"#fff", fontSize:13, fontWeight:700, padding:"10px 22px", borderRadius:"var(--r-md)", textDecoration:"none" }}>
               Email us
             </a>
           </div>

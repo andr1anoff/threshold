@@ -223,11 +223,14 @@ function BriefOutput({ brief, region, generatedAt, onCopy, copied, onRegenerate,
 
 function BriefMasthead({ region, color, generatedAt }) {
   if (!region) return null;
+  // Stable ref derived from region id — no longer regenerates on every render.
+  const ref = (region.id || "").split("").reduce((a,c)=>((a*33 + c.charCodeAt(0))>>>0), 5381)
+    .toString(36).toUpperCase().slice(-6).padStart(6,"0");
   return (
     <div style={{ display:"grid", gridTemplateColumns:"1.4fr 1fr", gap:64, paddingBottom:36, borderBottom:"1px solid var(--rule)" }} className="stack-mobile">
       <div>
         <div className="micro" style={{ marginBottom:18, color:"var(--accent)" }}>
-          ANALYTICAL BRIEF · OPEN-SOURCE · REF #{Math.random().toString(36).slice(2,8).toUpperCase()}
+          ANALYTICAL BRIEF · OPEN-SOURCE · REF #{ref}
         </div>
         <h2 className="display" style={{ fontSize:"clamp(40px,6vw,72px)", marginBottom:18 }}>{region.label}</h2>
         <div className="mono small" style={{ color:"var(--ink-40)" }}>generated {generatedAt}</div>

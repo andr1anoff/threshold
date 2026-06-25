@@ -170,8 +170,8 @@ export default function Home() {
                 All incidents →
               </button>
             </div>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:0 }} className="stack-mobile">
-              {incidents.slice(0,6).map((inc, i) => <DispatchTile key={inc.id||i} inc={inc} idx={i} />)}
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:14 }} className="stack-mobile">
+              {incidents.slice(0,6).map((inc, i) => <DispatchTile key={inc.id||i} inc={inc} />)}
             </div>
           </section>
         )}
@@ -183,19 +183,19 @@ export default function Home() {
 
 function StatBlock({ n, label, emphasis, format }) {
   return (
-    <div style={{
-      padding:"16px 20px",
-      background:"linear-gradient(135deg, #1a1a1a 0%, #2a2220 100%)",
-      borderLeft:`4px solid ${emphasis ? "#DC143C" : "rgba(220,20,60,0.45)"}`,
-      borderRadius:2,
+    <div className="panel" style={{
+      position:"relative", overflow:"hidden", padding:"18px 20px",
+      background: emphasis ? "linear-gradient(145deg, var(--card) 0%, rgba(107,26,42,0.07) 100%)" : "var(--card)",
+      borderColor: emphasis ? "rgba(107,26,42,0.18)" : "var(--card-border)",
     }}>
-      <div className="tab-num" style={{ fontSize:48, fontWeight:800, letterSpacing:"-0.035em", lineHeight:1, color:emphasis?"#DC143C":"#e8e0d4", marginBottom:6 }}>
+      {emphasis && <span style={{ position:"absolute", left:0, top:14, bottom:14, width:3, background:"var(--crimson)", borderRadius:"0 2px 2px 0", opacity:0.85 }}/>}
+      <div className="tab-num" style={{ fontSize:44, fontWeight:800, letterSpacing:"-0.035em", lineHeight:1, color:emphasis?"var(--crimson)":"var(--ink)", marginBottom:6 }}>
         {n == null
           ? "—"
           : <AnimatedNumber value={n} duration={emphasis ? 1800 : 1200} format={format} />
         }
       </div>
-      <div className="micro" style={{ color:"rgba(232,224,212,0.55)", letterSpacing:"0.12em" }}>{label}</div>
+      <div className="micro" style={{ color:"var(--ink-40)", letterSpacing:"0.12em" }}>{label}</div>
     </div>
   );
 }
@@ -269,27 +269,15 @@ function RegionTable({ regions, onSelect }) {
 
 function RegionGrid({ regions, onSelect }) {
   return (
-    <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(min(240px, 100%), 1fr))", gap:0, borderTop:"1px solid var(--ink)", borderLeft:"1px solid var(--rule)" }}>
+    <div className="card-grid">
       {regions.map((r, i) => {
         const color = EI_COLOR(r.ei);
         const spark = SPARKLINES[r.id];
         return (
-          <div key={r.id}
-            onClick={() => onSelect(r)}
-            style={{
-              padding:"20px 20px 18px",
-              borderBottom:"1px solid var(--rule)",
-              borderRight:"1px solid var(--rule)",
-              cursor:"pointer",
-              background:"var(--paper)",
-              transition:"all 0.15s",
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background="var(--cream)"; e.currentTarget.style.transform="translateY(-2px)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background="var(--paper)"; e.currentTarget.style.transform=""; }}
-          >
+          <div key={r.id} className="tile" onClick={() => onSelect(r)}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14 }}>
               <div>
-                <div className="mono small" style={{ color:"var(--ink-40)", marginBottom:4 }}>№ {String(i+1).padStart(2,"0")} · {r.short||r.id.slice(0,3).toUpperCase()}</div>
+                <div className="filing" style={{ marginBottom:4 }}>№ {String(i+1).padStart(2,"0")} · {r.short||r.id.slice(0,3).toUpperCase()}</div>
                 <div style={{ fontSize:17, fontWeight:600 }}>{r.label}</div>
               </div>
               <span className="micro" style={{ color }}>{EI_LABEL(r.ei)}</span>
@@ -316,20 +304,11 @@ function RegionGrid({ regions, onSelect }) {
   );
 }
 
-function DispatchTile({ inc, idx }) {
+function DispatchTile({ inc }) {
   const catKey = inc.category || inc.cat || "unknown";
   const cat = CATS[catKey] || CATS.unknown;
   return (
-    <div style={{
-      borderTop: idx >= 3 ? "1px solid var(--rule)" : "none",
-      borderRight: (idx % 3) < 2 ? "1px solid var(--rule)" : "none",
-      borderBottom: "1px solid var(--rule)",
-      borderLeft: idx % 3 === 0 ? "1px solid var(--rule)" : "none",
-      padding:"20px 24px", cursor:"pointer", transition:"background 0.12s",
-    }}
-      onMouseEnter={e => e.currentTarget.style.background="var(--paper)"}
-      onMouseLeave={e => e.currentTarget.style.background="transparent"}
-    >
+    <div className="card-soft" style={{ padding:"18px 20px" }}>
       <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
         <span style={{ fontSize:14, color:cat.color }}>{cat.glyph}</span>
         <span className="micro" style={{ color:cat.color }}>{cat.label}</span>
@@ -341,7 +320,6 @@ function DispatchTile({ inc, idx }) {
         {inc.source_url ? (
           <a href={inc.source_url} target="_blank" rel="noopener noreferrer"
             style={{ color:"var(--ink-40)", textDecoration:"underline", textUnderlineOffset:3 }}
-            onClick={e => e.stopPropagation()}
           >
             {(inc.source_name||inc.src||"src").split(" ")[0]} ↗
           </a>

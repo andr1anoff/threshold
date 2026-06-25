@@ -127,7 +127,7 @@ export default function IncidentsPage() {
         <section className="container-wide" style={{ paddingTop:24, paddingBottom:80 }}>
           {loading ? (
             <div style={{ padding:"80px 0", textAlign:"center" }}>
-              <div className="display-serif" style={{ fontSize:64, color:"var(--ink-15)", marginBottom:16 }}>◎</div>
+              <div className="display-serif" style={{ fontSize:64, color:"var(--ink-15)", marginBottom:16, animation:"spin 3s linear infinite", display:"inline-block" }}>◎</div>
               <div className="mono small" style={{ color:"var(--ink-40)", letterSpacing:"0.12em" }}>LOADING…</div>
             </div>
           ) : filtered.length === 0 && region !== "all" ? (

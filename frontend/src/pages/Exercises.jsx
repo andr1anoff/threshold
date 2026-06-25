@@ -132,13 +132,13 @@ export default function ExercisesPage() {
   return (
     <Layout>
       <div style={{ padding:"24px 16px 56px", maxWidth:960, margin:"0 auto", width:"100%" }}>
-        <div style={{ marginBottom:24 }}>
-          <div style={{ fontSize:10, fontWeight:700, letterSpacing:"2px", color:"var(--crimson)", marginBottom:10, display:"flex", alignItems:"center", gap:8 }}>
-            <span style={{ display:"inline-block", width:18, height:1.5, background:"var(--crimson)" }}/>
-            EXERCISES
+        <div style={{ marginBottom:28 }}>
+          <div className="micro micro-accent" style={{ marginBottom:14, display:"flex", alignItems:"center", gap:8 }}>
+            <span className="tick"/>
+            EXERCISES · ±14 DAY WINDOW
           </div>
-          <h1 style={{ fontSize:30, fontWeight:800, letterSpacing:"-0.5px", marginBottom:6 }}>Military Exercises</h1>
-          <p style={{ fontSize:14, color:"var(--ink-muted)" }}>
+          <h1 className="h1" style={{ marginBottom:10 }}>Military exercises.</h1>
+          <p className="body" style={{ color:"var(--ink-55)", maxWidth:560 }}>
             {(() => {
               const dates = exercises.flatMap(e => [e.start_date, e.end_date].filter(Boolean));
               const latest = dates.length ? dates.sort().at(-1) : null;
@@ -152,11 +152,11 @@ export default function ExercisesPage() {
 
         {/* Stats */}
         {exercises.length > 0 && (
-          <div style={{ display:"flex", gap:0, marginBottom:24, border:"1px solid var(--card-border)", borderRadius:10, overflow:"hidden", background:"var(--card)", overflowX:"auto" }}>
-            {[["Total",exercises.length,"var(--ink)"],["NATO",nato,"#8B2030"],["Multilateral",multi,"#185FA5"],["National",nat,"#3B6D11"]].map(([l,v,c],i)=>(
-              <div key={l} style={{ flex:1, minWidth:70, padding:"14px 12px", borderRight:i<3?"1px solid var(--card-border)":"none", textAlign:"center" }}>
-                <div style={{ fontSize:26, fontWeight:800, color:c, letterSpacing:"-0.5px", fontVariantNumeric:"tabular-nums" }}>{v}</div>
-                <div style={{ fontSize:10, letterSpacing:"1.5px", color:"var(--ink-muted)", marginTop:3, fontWeight:500 }}>{l.toUpperCase()}</div>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:12, marginBottom:28 }} className="stack-mobile">
+            {[["Total",exercises.length,"var(--ink)"],["NATO",nato,"#8B2030"],["Multilateral",multi,"#185FA5"],["National",nat,"#3B6D11"]].map(([l,v,c])=>(
+              <div key={l} className="panel" style={{ padding:"16px 18px", textAlign:"center" }}>
+                <div className="tab-num" style={{ fontSize:28, fontWeight:800, color:c, letterSpacing:"-0.02em" }}>{v}</div>
+                <div className="micro" style={{ color:"var(--ink-40)", marginTop:4 }}>{l.toUpperCase()}</div>
               </div>
             ))}
           </div>
@@ -165,20 +165,20 @@ export default function ExercisesPage() {
         {/* Controls */}
         <div style={{ display:"flex", gap:8, alignItems:"flex-start", flexWrap:"wrap", marginBottom:24 }}>
           <div style={{ display:"flex", gap:6, alignItems:"center" }}>
-            <span style={{ fontSize:10, fontWeight:700, letterSpacing:"1.5px", color:"var(--ink-muted)" }}>FILTER</span>
+            <span className="micro" style={{ marginRight:2 }}>FILTER</span>
             {[["all","All"],["nato","NATO"],["multilateral","Multilateral"],["national","National"]].map(([k,l])=>(
-              <button key={k} onClick={()=>setFilter(k)} style={{ fontSize:11, padding:"4px 11px", borderRadius:999, border:"1px solid", borderColor:filter===k?"var(--ink)":"rgba(26,16,8,0.15)", background:filter===k?"var(--ink)":"transparent", color:filter===k?"var(--cream)":"var(--ink-muted)", cursor:"pointer", fontWeight:filter===k?600:400 }}>{l}</button>
+              <button key={k} onClick={()=>setFilter(k)} className={`chip ${filter===k?"is-active":""}`}>{l}</button>
             ))}
           </div>
           <div style={{ display:"flex", gap:6, alignItems:"center" }}>
-            <span style={{ fontSize:10, fontWeight:700, letterSpacing:"1.5px", color:"var(--ink-muted)" }}>SORT</span>
+            <span className="micro" style={{ marginRight:2 }}>SORT</span>
             {[["latest","Latest"],["oldest","Oldest"],["troops","Troops"],["signal","Signal"]].map(([k,l])=>(
-              <button key={k} onClick={()=>setSort(k)} style={{ fontSize:11, padding:"4px 11px", borderRadius:999, border:"1px solid", borderColor:sort===k?"var(--crimson)":"rgba(26,16,8,0.15)", background:sort===k?"rgba(107,26,42,0.08)":"transparent", color:sort===k?"var(--crimson)":"var(--ink-muted)", cursor:"pointer", fontWeight:sort===k?600:400 }}>{l}</button>
+              <button key={k} onClick={()=>setSort(k)} className={`chip is-accent ${sort===k?"is-active":""}`}>{l}</button>
             ))}
           </div>
           <div style={{ marginLeft:"auto", display:"flex", gap:6 }}>
             {[["cards","Cards"],["timeline","Timeline"]].map(([k,l])=>(
-              <button key={k} onClick={()=>setView(k)} aria-pressed={view===k} style={{ fontSize:11, padding:"4px 11px", borderRadius:999, border:"1px solid", borderColor:view===k?"var(--ink)":"rgba(26,16,8,0.15)", background:view===k?"var(--ink)":"transparent", color:view===k?"var(--cream)":"var(--ink-muted)", cursor:"pointer", fontWeight:view===k?600:400 }}>{l}</button>
+              <button key={k} onClick={()=>setView(k)} aria-pressed={view===k} className={`chip ${view===k?"is-active":""}`}>{l}</button>
             ))}
           </div>
         </div>
@@ -215,7 +215,7 @@ export default function ExercisesPage() {
               const badge = getBadgeStyle(ex);
               const rhColor = getRhetColor(ex.rhetoric_score);
               return (
-                <div key={ex.id||i} style={{ background:"var(--card)", border:"1px solid var(--card-border)", borderRadius:12, padding:"18px 20px" }}>
+                <div key={ex.id||i} className="panel" style={{ padding:"18px 20px" }}>
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10 }}>
                     <div style={{ flex:1 }}>
                       <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>

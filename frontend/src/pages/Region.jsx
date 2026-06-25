@@ -136,10 +136,10 @@ export default function RegionPage() {
             <span className="micro micro-strong">§ 01 · INDEX COMPONENTS</span>
             <span className="micro" style={{ color:"var(--ink-40)" }}>weights · GZ 45% · EX 30% · BASE 25%</span>
           </div>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:0, borderTop:"1px solid var(--ink)" }} className="stack-mobile">
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:14, marginTop:16 }} className="stack-mobile">
             <Component kicker="GZ · GRAY-ZONE INCIDENTS" value={components.gz} weight={0.45} contrib={Math.round(components.gz*0.45)} note="Weighted incident escalation, log-normalised. Last 7 days double-weighted." />
-            <Component kicker="EX · EXERCISE SIGNAL" value={components.ex} weight={0.30} contrib={Math.round(components.ex*0.30)} note="Exercise scale + rhetoric score. ±14 day window." borderLeft />
-            <Component kicker="BASE · STRUCTURAL" value={components.base} weight={0.25} contrib={Math.round(components.base*0.25)} note={region.category==="conflict"?"Active conflict baseline.":"Strategic-tension baseline."} borderLeft />
+            <Component kicker="EX · EXERCISE SIGNAL" value={components.ex} weight={0.30} contrib={Math.round(components.ex*0.30)} note="Exercise scale + rhetoric score. ±14 day window." />
+            <Component kicker="BASE · STRUCTURAL" value={components.base} weight={0.25} contrib={Math.round(components.base*0.25)} note={region.category==="conflict"?"Active conflict baseline.":"Strategic-tension baseline."} />
           </div>
         </section>
 
@@ -230,9 +230,9 @@ function clamp(min, max) {
   return `clamp(${min}px, 10vw, ${max}px)`;
 }
 
-function Component({ kicker, value, weight, contrib, note, borderLeft }) {
+function Component({ kicker, value, weight, contrib, note }) {
   return (
-    <div style={{ padding:"24px 28px", borderBottom:"1px solid var(--rule)", borderLeft:borderLeft?"1px solid var(--rule)":"none" }}>
+    <div className="panel" style={{ padding:"24px 28px" }}>
       <div className="micro" style={{ marginBottom:14 }}>{kicker}</div>
       <div style={{ display:"flex", alignItems:"baseline", gap:12, marginBottom:8 }}>
         <span className="tab-num" style={{ fontSize:56, fontWeight:700, letterSpacing:"-0.03em", lineHeight:1 }}>
@@ -307,7 +307,7 @@ function ExerciseList({ items, loading }) {
   if (loading) return <Empty msg="Loading…" />;
   if (items.length === 0) return <Empty msg="No concurrent exercises in current window." />;
   return (
-    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:0, borderTop:"1px solid var(--ink)" }} className="stack-mobile">
+    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14, marginTop:16 }} className="stack-mobile">
       {items.map((ex, i) => {
         const name = ex.name || ex.exercise_name || "—";
         const type = ex.exercise_type || ex.type || "LIVEX";
@@ -316,9 +316,9 @@ function ExerciseList({ items, loading }) {
         const end   = ex.end_date   || ex.end   || "";
         const scale = ex.scale || ex.personnel_count || 0;
         return (
-          <div key={ex.id||i} style={{ padding:24, borderBottom:"1px solid var(--rule)", borderRight:i%2===0?"1px solid var(--rule)":"none" }}>
+          <div key={ex.id||i} className="panel" style={{ padding:24 }}>
             <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
-              <span className="mono" style={{ fontSize:10, padding:"2px 7px", background:"var(--ink)", color:"var(--cream)", letterSpacing:"0.12em" }}>{type}</span>
+              <span className="mono" style={{ fontSize:10, padding:"2px 7px", background:"var(--ink)", color:"var(--cream)", letterSpacing:"0.12em", borderRadius:"var(--r-sm)" }}>{type}</span>
               {lead && <span className="micro micro-accent">{lead}</span>}
             </div>
             <div style={{ fontSize:20, fontWeight:600, marginBottom:6 }}>{name}</div>
