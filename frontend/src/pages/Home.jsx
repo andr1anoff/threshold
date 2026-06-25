@@ -86,7 +86,7 @@ export default function Home() {
         {/* ─── HERO ─────────────────────── */}
         <section style={{ paddingTop:72, paddingBottom:56 }}>
           <div className="container-wide">
-            <div className="stack-mobile" style={{ display:"grid", gridTemplateColumns:"1.4fr 1fr", gap:80, alignItems:"end" }}>
+            <div className="stack-mobile" style={{ display:"grid", gridTemplateColumns:"1.1fr 1fr", gap:56, alignItems:"end" }}>
               <div>
                 <div className="micro micro-accent" style={{ marginBottom:24 }}>ESCALATION MONITOR</div>
                 <h1 className="h1" style={{ fontSize:"clamp(40px, 4.6vw, 64px)", marginBottom:24, maxWidth:720 }}>
@@ -98,7 +98,7 @@ export default function Home() {
                 <button className="btn-ghost" onClick={() => navigate("/incidents")}>View incidents</button>
               </div>
               <div className="hide-mobile">
-                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:18 }}>
                   <StatBlock n={totalIndexed} label="incidents indexed" format={formatIndexed} />
                   <StatBlock n={20} label="regions monitored" />
                   <StatBlock n={critical.length} label="at high escalation" emphasis />
@@ -184,12 +184,12 @@ export default function Home() {
 function StatBlock({ n, label, emphasis, format }) {
   return (
     <div className="panel" style={{
-      position:"relative", overflow:"hidden", padding:"18px 20px",
+      position:"relative", overflow:"hidden", padding:"26px 28px",
       background: emphasis ? "linear-gradient(145deg, var(--card) 0%, rgba(107,26,42,0.07) 100%)" : "var(--card)",
       borderColor: emphasis ? "rgba(107,26,42,0.18)" : "var(--card-border)",
     }}>
       {emphasis && <span style={{ position:"absolute", left:0, top:14, bottom:14, width:3, background:"var(--crimson)", borderRadius:"0 2px 2px 0", opacity:0.85 }}/>}
-      <div className="tab-num" style={{ fontSize:44, fontWeight:800, letterSpacing:"-0.035em", lineHeight:1, color:emphasis?"var(--crimson)":"var(--ink)", marginBottom:6 }}>
+      <div className="tab-num" style={{ fontSize:64, fontWeight:800, letterSpacing:"-0.035em", lineHeight:1, color:emphasis?"var(--crimson)":"var(--ink)", marginBottom:6 }}>
         {n == null
           ? "—"
           : <AnimatedNumber value={n} duration={emphasis ? 1800 : 1200} format={format} />
