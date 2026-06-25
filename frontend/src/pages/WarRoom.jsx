@@ -89,7 +89,9 @@ function getRhetColor(score, target) {
   return "rgba(26,16,8,0.45)";
 }
 
-const CREAM="#F5F0E8", INK="#1A1008", MUTED="rgba(26,16,8,0.45)", FAINT="rgba(26,16,8,0.10)", CRIMSON="#6B1A2A";
+// UI chrome reads from theme variables (so the page flips correctly in dark mode).
+// Map geometry colours (markers/theatres) stay as concrete hex — Leaflet needs real colours.
+const CREAM="var(--cream)", INK="var(--ink)", MUTED="var(--ink-muted)", FAINT="var(--ink-faint)", CRIMSON="var(--crimson)";
 
 function ExerciseDetail({ ex, color, onClose }) {
   if (!ex) return null;
@@ -138,7 +140,7 @@ function ExerciseDetail({ ex, color, onClose }) {
 function BigStat({ n, label, emphasis, format }) {
   return (
     <div style={{ textAlign:"right" }}>
-      <div className="tab-num" style={{ fontSize:40, fontWeight:700, letterSpacing:"-0.035em", lineHeight:1, color:emphasis?"var(--accent)":"var(--ink)" }}>
+      <div className="tab-num" style={{ fontSize:30, fontWeight:700, letterSpacing:"-0.03em", lineHeight:1, color:emphasis?"var(--accent)":"var(--ink)" }}>
         <AnimatedNumber value={n} duration={1300} format={format||(v=>v.toLocaleString())} />
       </div>
       <div className="micro" style={{ marginTop:6 }}>{label}</div>
@@ -319,15 +321,21 @@ export default function WarRoom() {
     return true;
   }), [exercises, filter, domain]);
 
-  const activeCount = useMemo(() => exercises.filter(inWindow).length, [exercises]);
-  const upcomingCount = useMemo(() => exercises.filter(e => !inWindow(e) && (e.start_date||"") > WINDOW_END).length, [exercises]);
+  // Domain-scoped base: masthead stats reflect the active domain (but not the window chip,
+  // since active/upcoming ARE the window categories).
+  const domainScoped = useMemo(() => exercises.filter(ex =>
+    domain === "all" || (ex.domain||"").toLowerCase().includes(domain.toLowerCase())
+  ), [exercises, domain]);
+
+  const activeCount = useMemo(() => domainScoped.filter(inWindow).length, [domainScoped]);
+  const upcomingCount = useMemo(() => domainScoped.filter(e => !inWindow(e) && (e.start_date||"") > WINDOW_END).length, [domainScoped]);
   const totalPersonnel = useMemo(() => filteredEx.reduce((s,e) => s + (e.scale||0), 0), [filteredEx]);
 
   const activeExercises = exercises.filter(inWindow);
   const allExercises = exercises;
 
-  // Mobile exercise list
-  const ExListMobile = () => (
+  // Mobile exercise list — render helper (NOT a component) so it doesn't remount each render
+  const renderMobileList = () => (
     <div style={{flex:1,overflowY:"auto",background:CREAM}}>
       {activeExercises.length > 0 && (
         <div style={{padding:"8px 16px 4px",fontSize:9,letterSpacing:"2px",color:MUTED,fontWeight:700}}>ACTIVE (±14 DAYS)</div>
@@ -335,7 +343,7 @@ export default function WarRoom() {
       {activeExercises.map((e,i)=>{
         const c=getColor(e); const isSel=sel?.id===e.id;
         return (
-          <div key={e.id||i} onClick={()=>selectEx(e)}
+          <div key={e.id||i} className="wr-row" onClick={()=>selectEx(e)}
             style={{padding:"12px 16px",borderBottom:`1px solid ${FAINT}`,borderLeft:`2.5px solid ${isSel?c.marker:'transparent'}`,background:isSel?c.bg:"transparent",cursor:"pointer"}}>
             <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:5}}>
               <span style={{fontSize:9,letterSpacing:"1.5px",padding:"2px 7px",borderRadius:3,fontWeight:700,background:c.bg,color:c.text,border:`1px solid ${c.border}`}}>{getBadge(e)}</span>
@@ -351,7 +359,7 @@ export default function WarRoom() {
         {allExercises.filter(e=>!inWindow(e)).map((e,i)=>{
           const c=getColor(e);
           return (
-            <div key={e.id||i} onClick={()=>selectEx(e)}
+            <div key={e.id||i} className="wr-row" onClick={()=>selectEx(e)}
               style={{padding:"12px 16px",borderBottom:`1px solid ${FAINT}`,cursor:"pointer",opacity:0.5}}>
               <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
                 <span style={{fontSize:9,letterSpacing:"1.5px",padding:"2px 7px",borderRadius:3,fontWeight:700,background:c.bg,color:c.text,border:`1px solid ${c.border}`}}>{getBadge(e)}</span>
@@ -390,15 +398,15 @@ export default function WarRoom() {
 
   return (
     <Layout>
-      <div className="route-in">
+      <div className="route-in" style={{ display:"flex", flexDirection:"column", flex:"1 1 0", minHeight:0 }}>
         {/* MASTHEAD */}
-        <section style={{ borderBottom:"1px solid var(--rule)" }}>
-          <div className="container-wide" style={{ paddingTop:36, paddingBottom:20 }}>
+        <section style={{ borderBottom:"1px solid var(--rule)", flexShrink:0 }}>
+          <div className="container-wide" style={{ paddingTop:20, paddingBottom:14 }}>
             <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", gap:32, flexWrap:"wrap" }}>
               <div>
-                <div className="micro micro-accent" style={{ marginBottom:14 }}>JOINT MILITARY EXERCISES · ±14 DAY WINDOW</div>
-                <h1 className="h1" style={{ fontSize:"clamp(36px,4vw,56px)", marginBottom:10 }}>War room.</h1>
-                <p className="body" style={{ maxWidth:540, color:"var(--ink-55)" }}>
+                <div className="micro micro-accent" style={{ marginBottom:10 }}>JOINT MILITARY EXERCISES · ±14 DAY WINDOW</div>
+                <h1 className="h1" style={{ fontSize:"clamp(26px,2.6vw,38px)", marginBottom:6 }}>War room.</h1>
+                <p className="body hide-mobile" style={{ maxWidth:540, color:"var(--ink-55)", fontSize:13 }}>
                   Live and upcoming exercise activity across NATO, US-led, multilateral, and national theatres.
                 </p>
               </div>
@@ -409,7 +417,7 @@ export default function WarRoom() {
               </div>
             </div>
             {/* Filter strip */}
-            <div style={{ display:"flex", gap:8, marginTop:24, alignItems:"center", flexWrap:"wrap" }}>
+            <div style={{ display:"flex", gap:8, marginTop:14, alignItems:"center", flexWrap:"wrap" }}>
               <span className="micro" style={{ marginRight:4 }}>WINDOW</span>
               {[["active","Active"],["upcoming","Upcoming"],["all","All"]].map(([k,l])=>(
                 <button key={k} className={`chip ${filter===k?"is-active":""}`} onClick={()=>setFilter(k)}>{l}</button>
@@ -424,17 +432,14 @@ export default function WarRoom() {
         </section>
 
         {/* MAP + SIDEBAR — desktop only; mobile uses the fixed overlay below */}
-        {!isMobile && <section>
-          <div className="warroom-grid" style={{ display:"grid", gridTemplateColumns:"1fr 380px", minHeight:560, borderBottom:"1px solid var(--rule)", height:"calc(100vh - 60px - 180px)" }}>
+        {!isMobile && <section style={{ flex:"1 1 0", minHeight:0, display:"flex" }}>
+          <div className="warroom-grid" style={{ display:"grid", gridTemplateColumns:"1fr minmax(360px,420px)", minHeight:0, flex:"1 1 0", height:"100%" }}>
             {/* Map */}
             <div style={{ position:"relative", background:"var(--paper)", borderRight:"1px solid var(--rule)" }}>
               <div ref={mapDiv} style={{ position:"absolute", inset:0 }}/>
               {/* overlays */}
               <div style={{ position:"absolute", left:20, top:18, zIndex:500, pointerEvents:"none" }}>
                 <div className="micro" style={{ color:"var(--ink)" }}>EXERCISE THEATRE OVERVIEW</div>
-                <div className="mono small" style={{ color:"var(--ink-40)", marginTop:4 }}>
-                  {filteredEx.length} {filter==="active"?"active":filter==="upcoming"?"upcoming":"total"}
-                </div>
               </div>
               <div style={{ position:"absolute", left:20, bottom:20, zIndex:500, display:"flex", gap:14, alignItems:"center", padding:"8px 14px", background:"color-mix(in oklab, var(--cream) 92%, transparent)", backdropFilter:"blur(4px)", border:"1px solid var(--rule)", fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.12em", textTransform:"uppercase" }}>
                 {[["#8B2030","NATO"],["#185FA5","US-led"],["#3D1219","RUS/CHN"],["#3B6D11","National"]].map(([c,l])=>(
@@ -447,7 +452,7 @@ export default function WarRoom() {
             </div>
 
             {/* Sidebar */}
-            <div style={{ display:"flex", flexDirection:"column", background:"var(--cream)", minHeight:0 }}>
+            <div style={{ display:"flex", flexDirection:"column", background:"var(--cream)", minHeight:0, position:"relative" }}>
               <div style={{ overflowY:"auto", flex:"1 1 0", minHeight:0 }}>
                 <div className="micro micro-strong" style={{ padding:"14px 22px 10px", borderBottom:"1px solid var(--rule)", letterSpacing:"0.2em", position:"sticky", top:0, background:"var(--cream)", zIndex:1 }}>
                   Exercises · {filteredEx.length}
@@ -461,7 +466,7 @@ export default function WarRoom() {
                   const isSel = sel?.id === ex.id;
                   const active = inWindow(ex);
                   return (
-                    <div key={ex.id}
+                    <div key={ex.id} className="wr-row"
                       onClick={()=>setSel(prev=>prev?.id===ex.id?null:ex)}
                       onMouseEnter={()=>setHovered(ex)}
                       onMouseLeave={()=>setHovered(null)}
@@ -470,7 +475,6 @@ export default function WarRoom() {
                         borderLeft: isSel ? `3px solid ${c.marker}` : "3px solid transparent",
                         background: isSel ? "var(--paper)" : "transparent",
                         cursor:"pointer", opacity:active?1:0.55,
-                        transition:"background 0.12s",
                       }}>
                       <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
                         <span className="mono" style={{ fontSize:9, padding:"2px 7px", background:c.marker, color:"#fff", letterSpacing:"0.12em" }}>
@@ -499,7 +503,7 @@ export default function WarRoom() {
               </div>
 
               {sel && (
-                <div style={{ flexShrink:0, borderTop:"1px solid var(--ink)", background:"var(--paper)", maxHeight:260, overflowY:"auto", animation:"slide-up 0.18s ease-out" }}>
+                <div style={{ position:"absolute", inset:0, background:"var(--paper)", overflowY:"auto", zIndex:3, borderLeft:`3px solid ${getColor(sel).marker}`, animation:"wr-detail-in 0.2s cubic-bezier(0.2,0.7,0.2,1)" }}>
                   <ExerciseDetail ex={sel} color={getColor(sel).marker} onClose={()=>setSel(null)} />
                 </div>
               )}
@@ -522,7 +526,7 @@ export default function WarRoom() {
               {mapContainer}
               {mobileTab==="exercises" && (
                 <div style={{position:"absolute",inset:0,background:CREAM,overflowY:"auto",zIndex:2}}>
-                  <ExListMobile/>
+                  {renderMobileList()}
                 </div>
               )}
             </div>
@@ -548,7 +552,7 @@ export default function WarRoom() {
         .leaflet-control-zoom{border:1px solid rgba(26,16,8,0.15)!important;border-radius:6px!important;overflow:hidden;box-shadow:none!important}
         .leaflet-control-zoom a{background:${CREAM}!important;color:${CRIMSON}!important;border-color:rgba(26,16,8,0.12)!important;font-weight:700!important;width:28px!important;height:28px!important;line-height:28px!important;font-size:16px!important;box-shadow:none!important}
         .leaflet-control-zoom a:hover{background:rgba(107,26,42,0.08)!important}
-        @keyframes slide-up { from { transform: translateY(16px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+        @keyframes wr-detail-in { from { transform: translateY(10px); opacity:0; } to { transform: translateY(0); opacity:1; } }
       `}</style>
     </Layout>
   );
