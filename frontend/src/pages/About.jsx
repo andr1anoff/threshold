@@ -267,7 +267,7 @@ export default function AboutPage() {
                 Email us
               </a>
               <a href="https://evandrianov.pro" target="_blank" rel="noopener noreferrer" style={{ display:"inline-block", border:"1px solid rgba(245,240,232,0.35)", color:"#fff", fontSize:13, fontWeight:700, padding:"10px 22px", borderRadius:"var(--r-md)", textDecoration:"none" }}>
-                Ivan Andrianov ↗
+                Founder's Page ↗
               </a>
             </div>
           </div>
