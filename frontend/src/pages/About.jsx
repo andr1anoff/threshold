@@ -262,9 +262,14 @@ export default function AboutPage() {
             <p style={{ fontSize:13, color:"rgba(245,240,232,0.6)", marginBottom:18, lineHeight:1.6 }}>
               For methodological inquiries, data access, or academic collaboration:
             </p>
-            <a href="mailto:contact@threshold-osint.com" style={{ display:"inline-block", background:"rgba(245,240,232,0.15)", color:"#fff", fontSize:13, fontWeight:700, padding:"10px 22px", borderRadius:"var(--r-md)", textDecoration:"none" }}>
-              Email us
-            </a>
+            <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+              <a href="mailto:contact@threshold-osint.com" style={{ display:"inline-block", background:"rgba(245,240,232,0.15)", color:"#fff", fontSize:13, fontWeight:700, padding:"10px 22px", borderRadius:"var(--r-md)", textDecoration:"none" }}>
+                Email us
+              </a>
+              <a href="https://evandrianov.pro" target="_blank" rel="noopener noreferrer" style={{ display:"inline-block", border:"1px solid rgba(245,240,232,0.35)", color:"#fff", fontSize:13, fontWeight:700, padding:"10px 22px", borderRadius:"var(--r-md)", textDecoration:"none" }}>
+                Ivan Andrianov ↗
+              </a>
+            </div>
           </div>
         </section>
 
