@@ -398,7 +398,7 @@ export default function WarRoom() {
 
   return (
     <Layout>
-      <div className="route-in" style={{ display:"flex", flexDirection:"column", flex:"1 1 0", minHeight:0 }}>
+      <div className="route-in" style={{ display:"flex", flexDirection:"column", height:"calc(100dvh - 60px)", minHeight:0 }}>
         {/* MASTHEAD */}
         <section style={{ borderBottom:"1px solid var(--rule)", flexShrink:0 }}>
           <div className="container-wide" style={{ paddingTop:20, paddingBottom:14 }}>
