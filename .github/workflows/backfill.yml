@@ -1,0 +1,36 @@
+name: Threshold Backfill (one-off)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+
+      - name: Recanonicalize regions + recalculate index
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GUARDIAN_API_KEY: ${{ secrets.GUARDIAN_API_KEY }}
+        run: |
+          cd backend
+          python scripts/recanonicalize_regions.py
+          python -c "from app.di.calculator import calculate_all_regions; [print(f\"{r['region']}: EI={r['ei_score']} ({r['event_count_30d']} ev / {r['incident_count_30d']} raw)\") for r in calculate_all_regions()]"
