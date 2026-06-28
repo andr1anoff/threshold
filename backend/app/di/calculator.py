@@ -99,7 +99,7 @@ def calculate_ei(region: str, target_date: date = None) -> dict:
             "gz_score": result["gz_score"],
             "ex_score": result["ex_score"],
             "rh_score": result["rh_score"],
-        }).execute()
+        }, on_conflict="region,date").execute()
     except Exception as e:
         logger.warning(f"[ei] upsert {region}: {e}")
     return result
