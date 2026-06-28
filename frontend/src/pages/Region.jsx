@@ -16,6 +16,7 @@ export default function RegionPage() {
   const [incidents, setIncidents] = useState([]);
   const [exercises, setExercises] = useState([]);
   const [ei, setEi]               = useState(null);
+  const [comp, setComp]           = useState(null);
   const [history, setHistory]     = useState([]);
   const [loading, setLoading]     = useState(true);
   const [tab, setTab]             = useState("incidents");
@@ -32,6 +33,11 @@ export default function RegionPage() {
     ]).then(([inc, eiData, exData, hist]) => {
       setIncidents(inc.data || []);
       setEi(eiData.ei_score ?? eiData.di_score ?? null);
+      setComp({
+        gz:   Math.round(eiData.gz_score ?? 0),
+        ex:   Math.round(eiData.ex_score ?? 0),
+        base: Math.round(eiData.base_score ?? 0),
+      });
       setHistory((hist.data || []).map(h => ({ date: h.date?.slice(5), ei: Math.round(h.ei_score ?? 0) })));
       const all = exData.data || exData.exercises || [];
       setExercises(all.filter(e => {
@@ -56,12 +62,9 @@ export default function RegionPage() {
   const score = ei ?? region.ei;
   const color = EI_COLOR(score);
 
-  const components = useMemo(() => {
-    const gz   = Math.round(Math.log(Math.max(1, score * 1.3)) * 12.4);
-    const ex   = Math.round(score * 0.32);
-    const base = Math.round(score * 0.18 + 4);
-    return { gz, ex, base };
-  }, [score]);
+  // Real component scores from the API (deterrence_index gz_score/ex_score +
+  // baseline exposed by /api/di/region). No more reverse-engineering from EI.
+  const components = comp ?? { gz: 0, ex: 0, base: 0 };
 
   const spark = SPARKLINES[region.id];
   const rank  = [...REGIONS].sort((a,b)=>b.ei-a.ei).findIndex(r=>r.id===region.id)+1;
@@ -134,12 +137,12 @@ export default function RegionPage() {
           <div className="section-bar">
             <span className="tick"/>
             <span className="micro micro-strong">§ 01 · INDEX COMPONENTS</span>
-            <span className="micro" style={{ color:"var(--ink-40)" }}>weights · GZ 45% · EX 30% · BASE 25%</span>
+            <span className="micro" style={{ color:"var(--ink-40)" }}>weights · GZ 45% · EX 35% · BASE 20%</span>
           </div>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:14, marginTop:16 }} className="stack-mobile">
-            <Component kicker="GZ · GRAY-ZONE INCIDENTS" value={components.gz} weight={0.45} contrib={Math.round(components.gz*0.45)} note="Weighted incident escalation, log-normalised. Last 7 days double-weighted." />
-            <Component kicker="EX · EXERCISE SIGNAL" value={components.ex} weight={0.30} contrib={Math.round(components.ex*0.30)} note="Exercise scale + rhetoric score. ±14 day window." />
-            <Component kicker="BASE · STRUCTURAL" value={components.base} weight={0.25} contrib={Math.round(components.base*0.25)} note={region.category==="conflict"?"Active conflict baseline.":"Strategic-tension baseline."} />
+            <Component kicker="GZ · GRAY-ZONE INCIDENTS" value={components.gz} weight={0.45} contrib={Math.round(components.gz*0.45)} note="Event-based severity, deduplicated. Recent events weighted higher; saturating." />
+            <Component kicker="EX · EXERCISE SIGNAL" value={components.ex} weight={0.35} contrib={Math.round(components.ex*0.35)} note="Exercise scale + rhetoric score. ±14 day window." />
+            <Component kicker="BASE · STRUCTURAL" value={components.base} weight={0.20} contrib={Math.round(components.base*0.20)} note={region.category==="conflict"?"Active conflict baseline.":"Strategic-tension baseline."} />
           </div>
         </section>
 
@@ -189,7 +192,7 @@ export default function RegionPage() {
             <span className="tick"/>
             <span className="micro micro-strong">§ 02 · ACTIVITY</span>
             <div style={{ display:"flex", gap:20, marginLeft:24 }}>
-              <TabBtn active={tab==="incidents"} onClick={()=>setTab("incidents")} label={`Incidents · ${loading?"…":incidents.length}`} />
+              <TabBtn active={tab==="incidents"} onClick={()=>setTab("incidents")} label={`Signals · ${loading?"…":incidents.length}`} />
               <TabBtn active={tab==="exercises"} onClick={()=>setTab("exercises")} label={`Exercises · ${loading?"…":exercises.length}`} />
               <TabBtn active={tab==="narrative"} onClick={()=>setTab("narrative")} label="AI Narrative" />
             </div>
@@ -354,7 +357,7 @@ function NarrativePreview({ region, score, incidents, navigate }) {
       </p>
       {incidents.length > 0 && (
         <p className="body" style={{ marginBottom:20 }}>
-          {incidents.length} incidents indexed for this region in the current window. The most recent entry: "{incidents[0]?.title?.slice(0,90)}…"
+          {incidents.length} signals indexed for this region in the current window. The most recent entry: "{incidents[0]?.title?.slice(0,90)}…"
         </p>
       )}
       <button className="btn-primary" onClick={() => navigate(`/briefs`)}>

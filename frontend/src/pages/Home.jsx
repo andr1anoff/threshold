@@ -99,7 +99,7 @@ export default function Home() {
               </div>
               <div className="hide-mobile">
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:18 }}>
-                  <StatBlock n={totalIndexed} label="incidents indexed" format={formatIndexed} />
+                  <StatBlock n={totalIndexed} label="signals indexed" format={formatIndexed} />
                   <StatBlock n={20} label="regions monitored" />
                   <StatBlock n={critical.length} label="at high escalation" emphasis />
                   <StatBlock n={rising} label="rising · 7-day" />
@@ -109,7 +109,7 @@ export default function Home() {
               <div style={{ display:"none" }} className="show-mobile-flex">
                 <div style={{ display:"flex", gap:16, flexWrap:"wrap", marginTop:8 }}>
                   {[
-                    [totalIndexed, "incidents", false, formatIndexed],
+                    [totalIndexed, "signals", false, formatIndexed],
                     [critical.length, "high EI", true, null],
                     [rising, "rising", false, null],
                   ].map(([n, label, emph, fmt]) => (

@@ -33,4 +33,5 @@ jobs:
         run: |
           cd backend
           python scripts/recanonicalize_regions.py
+          python scripts/rebuild_history.py 45
           python -c "from app.di.calculator import calculate_all_regions; [print(f\"{r['region']}: EI={r['ei_score']} ({r['event_count_30d']} ev / {r['incident_count_30d']} raw)\") for r in calculate_all_regions()]"

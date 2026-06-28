@@ -62,7 +62,7 @@ def calculate_ei(region: str, target_date: date = None) -> dict:
     w30 = (target_date - timedelta(days=30)).isoformat()
 
     rows = db.table("incidents").select("id,date,title,escalation_level") \
-        .eq("region", region).gte("date", w30).execute().data
+        .eq("region", region).gte("date", w30).lte("date", target_date.isoformat()).execute().data
 
     events = group_into_events(rows)
     gz_raw = _gz_from_events(events, target_date)

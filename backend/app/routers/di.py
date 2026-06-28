@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from app.db.supabase import get_client
+from app.di.calculator import CONFLICT_BASELINE
 
 router = APIRouter()
 
@@ -29,6 +30,9 @@ def region_ei(region: str):
         if data.data:
             row = data.data[0]
             row["ei_score"] = row.pop("di_score", None)
+            # baseline is a per-region constant (not stored per-row); expose it
+            # so the frontend can show the real BASE component, not a guess.
+            row["base_score"] = round(CONFLICT_BASELINE.get(region, 0.05) * 100, 1)
             return row
         return {}
     except Exception as e:
