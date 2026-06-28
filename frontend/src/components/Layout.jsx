@@ -316,7 +316,7 @@ export default function Layout({ children }) {
               <Link to="/impressum" style={{ color:"rgba(245,240,232,0.45)", textDecoration:"none" }}>Impressum</Link>
               <Link to="/datenschutz" style={{ color:"rgba(245,240,232,0.45)", textDecoration:"none" }}>Datenschutz</Link>
             </span>
-            <span style={{ fontFamily:"var(--mono)" }}>v15.3β · threshold-osint.com</span>
+            <span style={{ fontFamily:"var(--mono)" }}>v16β · threshold-osint.com</span>
           </div>
         </footer>
       )}

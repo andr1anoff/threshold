@@ -1,6 +1,7 @@
 import math, logging
 from datetime import date, timedelta
 from app.db.supabase import get_client
+from app.scrapers.event_grouper import group_into_events
 
 logger = logging.getLogger(__name__)
 
@@ -17,40 +18,70 @@ CONFLICT_BASELINE = {
     "South Caucasus":0.05,"Libya":0.10,"Kosovo":0.04,"Arctic":0.03,
 }
 
-def _log_score(count: int, max_ref: int = 60) -> float:
-    """log(1+x) — standard for sparse event data, avoids log(0)"""
-    if count <= 0: return 0.0
-    return min(math.log(1 + count) / math.log(1 + max_ref), 1.0)
+# Severity model: convex weights so tragedy beats noise. Level 5 = 40x level 1
+# (not 5x as a raw sum makes it). Theory-driven, interpretable.
+SEVERITY_WEIGHT = {1: 0.10, 2: 0.30, 3: 0.80, 4: 2.00, 5: 4.00}
+
+RECENT_DAYS = 7
+RECENT_BOOST = 1.6
+
+def _corroboration_bonus(c: int) -> float:
+    # sub-linear, capped: 1 src->1.00, 5->1.24, 20->1.45
+    return 1.0 + 0.15 * math.log(max(c, 1))
+
+# GZ* = 1 - exp(-sum / KAPPA), bounded [0,1]. KAPPA calibrated so an
+# Ukraine-class theatre lands ~0.85, leaving headroom below 1.0.
+KAPPA = 15.0
+
+
+def _gz_from_events(events: list, target_date: date) -> float:
+    if not events:
+        return 0.0
+    cutoff_recent = target_date - timedelta(days=RECENT_DAYS)
+    total = 0.0
+    for ev in events:
+        s = max(1, min(5, int(ev.get("severity") or 1)))
+        w = SEVERITY_WEIGHT[s]
+        d = ev.get("date")
+        recent = False
+        if d:
+            try:
+                recent = date.fromisoformat(str(d)[:10]) >= cutoff_recent
+            except Exception:
+                recent = False
+        w *= RECENT_BOOST if recent else 1.0
+        w *= _corroboration_bonus(int(ev.get("corroboration") or 1))
+        total += w
+    return min(1.0 - math.exp(-total / KAPPA), 1.0)
+
 
 def calculate_ei(region: str, target_date: date = None) -> dict:
-    if target_date is None: target_date = date.today()
+    if target_date is None:
+        target_date = date.today()
     db = get_client()
-    w7  = (target_date - timedelta(days=7)).isoformat()
     w30 = (target_date - timedelta(days=30)).isoformat()
 
-    inc_30 = db.table("incidents").select("date,escalation_level").eq("region",region).gte("date",w30).execute().data
-    inc_7  = [i for i in inc_30 if i.get("date","") >= w7]
+    rows = db.table("incidents").select("id,date,title,escalation_level") \
+        .eq("region", region).gte("date", w30).execute().data
 
-    score_30 = sum(int(e.get("escalation_level") or 1) for e in inc_30)
-    score_7  = sum(int(e.get("escalation_level") or 1) for e in inc_7) * 2
-    gz_raw   = _log_score(score_30 + score_7, max_ref=60)
+    events = group_into_events(rows)
+    gz_raw = _gz_from_events(events, target_date)
 
     future = (target_date + timedelta(days=14)).isoformat()
-    exercises = db.table("exercises").select("scale,rhetoric_score").eq("region",region).gte("end_date",target_date.isoformat()).lte("start_date",future).execute().data
+    exercises = db.table("exercises").select("scale,rhetoric_score") \
+        .eq("region", region).gte("end_date", target_date.isoformat()) \
+        .lte("start_date", future).execute().data
 
     if exercises:
-        ex_raw = min(sum(min((e.get("scale") or 5000)/80000.0,1.0) for e in exercises)/max(len(exercises),1),1.0)
+        ex_raw = min(sum(min((e.get("scale") or 5000)/80000.0, 1.0) for e in exercises)/max(len(exercises),1), 1.0)
         rh_vals = [float(e["rhetoric_score"]) for e in exercises if e.get("rhetoric_score") is not None]
-        rh_raw  = (sum(rh_vals)/len(rh_vals)+1)/2 if rh_vals else 0.5
+        rh_raw = (sum(rh_vals)/len(rh_vals)+1)/2 if rh_vals else 0.5
     else:
         ex_raw = 0.0; rh_raw = 0.5
 
-    # Weights: GZ 45%, EX 35%, BASELINE 20%
     baseline = CONFLICT_BASELINE.get(region, 0.05)
     ei = (gz_raw*0.45 + ex_raw*0.35 + baseline*0.20) * 100
-
-    if len(inc_30) >= 5:   ei = min(ei*1.15, 100)
-    elif len(inc_30) >= 2: ei = min(ei*1.05, 100)
+    # removed old "*1.15 if >=5 incidents" multiplier — it re-added count bias.
 
     result = {
         "region": region, "date": target_date.isoformat(),
@@ -58,12 +89,13 @@ def calculate_ei(region: str, target_date: date = None) -> dict:
         "gz_score": round(gz_raw*100, 1),
         "ex_score": round(ex_raw*100, 1),
         "rh_score": round(rh_raw*100, 1),
-        "incident_count_30d": len(inc_30),
+        "incident_count_30d": len(rows),
+        "event_count_30d": len(events),
     }
     try:
         db.table("deterrence_index").upsert({
             "region": region, "date": target_date.isoformat(),
-            "di_score": result["ei_score"],  # column stays di_score in DB for compatibility
+            "di_score": result["ei_score"],
             "gz_score": result["gz_score"],
             "ex_score": result["ex_score"],
             "rh_score": result["rh_score"],
@@ -72,8 +104,10 @@ def calculate_ei(region: str, target_date: date = None) -> dict:
         logger.warning(f"[ei] upsert {region}: {e}")
     return result
 
-# Alias for backward compat
-def calculate_di(region, target_date=None): return calculate_ei(region, target_date)
+
+def calculate_di(region, target_date=None):
+    return calculate_ei(region, target_date)
+
 
 def calculate_all_regions() -> list:
     results = []
@@ -81,7 +115,8 @@ def calculate_all_regions() -> list:
         try:
             r = calculate_ei(region)
             results.append(r)
-            logger.info(f"[ei] {region}: {r['ei_score']} ({r['incident_count_30d']} events)")
+            logger.info(f"[ei] {region}: {r['ei_score']} "
+                        f"({r['event_count_30d']} events / {r['incident_count_30d']} raw)")
         except Exception as e:
             logger.error(f"[ei] {region}: {e}")
     return results

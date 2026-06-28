@@ -5,6 +5,7 @@ Rate limit: 30 RPM / 1000 RPD on free tier → 2.5s delay between requests.
 """
 import os, json, logging, time
 from groq import Groq
+from app.regions import canonicalize, resolve
 
 # Must match incidents_category_check constraint in Supabase exactly
 VALID_CATEGORIES = frozenset({
@@ -229,8 +230,12 @@ def run_classification_pipeline(db) -> dict:
             update = {"category": category, "escalation_level": esc_level}
             if result.get("actors"):
                 update["actors"] = [a for a in result["actors"] if a]
-            if result.get("region") and result["region"] not in ("Other", "none", None, "null", ""):
-                update["region"] = result["region"]
+            # Canonicalize the LLM's free-text region. "Lebanon", "Middle East",
+            # "Iran" etc. -> a canonical region, else fall back to text detection.
+            llm_region = canonicalize(result.get("region")) \
+                or resolve(inc.get("title",""), raw)
+            if llm_region:
+                update["region"] = llm_region
 
             # If region is still null in DB, set Unknown so filtering doesn't break
             try:

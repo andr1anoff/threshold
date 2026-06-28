@@ -1,5 +1,6 @@
 import hashlib
 import logging
+from app.regions import resolve, canonicalize
 
 logger = logging.getLogger(__name__)
 
@@ -18,15 +19,20 @@ def is_duplicate(title: str, url: str, db) -> bool:
 def insert_with_dedup(record: dict, db) -> bool:
     h = make_hash(record.get("title",""), record.get("source_url",""))
     record["content_hash"] = h
-    # 1.5: Ensure region is never null — unknown is better than broken filters
-    if not record.get("region"):
-        record["region"] = "Unknown"
+
+    # Region canonicalization — every incident must land on one of the 20
+    # canonical regions, else it vanishes from the index.
+    region = canonicalize(record.get("region"))
+    if not region:
+        # scraper didn't set a canonical region — try to detect from text
+        region = resolve(record.get("title",""), record.get("raw_text",""),
+                         record.get("description",""))
+    record["region"] = region or "Unknown"
+
     try:
-        # Primary dedup: content_hash (url+title)
         existing = db.table("incidents").select("id").eq("content_hash", h).execute()
         if existing.data:
             return False
-        # Secondary dedup: same title + same date (catches duplicate scrapes with different URLs)
         title = (record.get("title") or "").strip()
         date  = (record.get("date") or "")
         if title and date:

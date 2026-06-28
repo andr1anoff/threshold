@@ -137,7 +137,7 @@ export default function AboutPage() {
             </p>
             {/* Formula */}
             <div style={{ padding:"14px 18px", background:"rgba(107,26,42,0.04)", border:"1px solid rgba(107,26,42,0.1)", borderRadius:10, fontFamily:"var(--mono)", fontSize:13, color:"var(--ink)", marginBottom:16 }}>
-              EI = log(1 + GZ) × 0.45 + EX × 0.35 + BASELINE × 0.20
+              EI = (GZ × 0.45 + EX × 0.35 + BASELINE × 0.20) × 100
             </div>
             {/* Weight bars */}
             <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:16 }}>
@@ -156,9 +156,23 @@ export default function AboutPage() {
             </p>
           </div>
 
+          <div style={{ background:"rgba(107,26,42,0.04)", border:"1px solid rgba(107,26,42,0.12)", borderRadius:12, padding:"16px 20px", marginBottom:10 }}>
+            <div style={{ fontSize:10, fontWeight:700, letterSpacing:"1.5px", color:"var(--crimson)", marginBottom:8 }}>METHODOLOGICAL NOTE · v16</div>
+            <p style={{ fontSize:12.5, color:"var(--ink-muted)", lineHeight:1.7, margin:0 }}>
+              Earlier versions summed raw incident counts, which made scores sensitive to media-coverage volume rather than escalation intensity, and under-weighted severe but sparsely reported events. From v16, the Gray-Zone Score is computed over deduplicated <strong style={{ color:"var(--ink)" }}>events</strong> with a convex severity weighting, so a region's score reflects what is happening rather than how many outlets report it.
+            </p>
+          </div>
+
           <Accordion title="Gray Zone Score (45%)">
-            Logarithmic normalization of incident frequency and severity over 30 days. Incidents from the last 7 days are double-weighted for recency. Normalized against a 60-point reference scale using <code>log(1+x)</code> — standard for sparse event data, avoids undefined log(0).
+            Computed over <strong>deduplicated events</strong>, not raw articles: multiple reports of the same incident are clustered into a single event, so the score is invariant to how many outlets cover a region. Each event contributes by severity, recency, and corroboration, over a 30-day window.
             <ul style={{ marginTop:8, paddingLeft:18, lineHeight:2 }}>
+              <li><strong>Severity</strong> — a convex weight on the 1–5 escalation level. A single high-severity event outweighs many low-severity signals; severity dominates volume by design.</li>
+              <li><strong>Recency</strong> — events in the last 7 days are weighted more heavily.</li>
+              <li><strong>Corroboration</strong> — independent source count raises confidence sub-linearly (capped), never escalation magnitude.</li>
+            </ul>
+            Event contributions are passed through a saturating transform bounded to [0, 1], so additional minor activity cannot inflate the score without limit.
+            <div style={{ marginTop:10, fontSize:11, color:"var(--ink-muted)" }}>Escalation levels:</div>
+            <ul style={{ marginTop:4, paddingLeft:18, lineHeight:2 }}>
               <li>1 — rhetoric, threats, diplomatic escalation</li>
               <li>2 — troop movements, military buildup</li>
               <li>3 — airspace violations, cyberattacks, naval incidents</li>
