@@ -405,7 +405,7 @@ export default function WarRoom() {
             <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", gap:32, flexWrap:"wrap" }}>
               <div>
                 <div className="micro micro-accent" style={{ marginBottom:10 }}>JOINT MILITARY EXERCISES · ±14 DAY WINDOW</div>
-                <h1 className="h1" style={{ fontSize:"clamp(26px,2.6vw,38px)", marginBottom:6 }}>War room.</h1>
+                <h1 className="h1" style={{ fontSize:"clamp(26px,2.6vw,38px)", marginBottom:6 }}>War Room</h1>
                 <p className="body hide-mobile" style={{ maxWidth:540, color:"var(--ink-55)", fontSize:13 }}>
                   Live and upcoming exercise activity across NATO, US-led, multilateral, and national theatres.
                 </p>
