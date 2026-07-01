@@ -4,7 +4,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianG
 import Layout from "../components/Layout";
 import Sparkline from "../components/Sparkline";
 import AnimatedNumber from "../components/AnimatedNumber";
-import { REGIONS, SPARKLINES, CATS, EI_COLOR, EI_LABEL, getConf } from "../data/seed";
+import { REGIONS, CATS, EI_COLOR, EI_LABEL, getConf } from "../data/seed";
 
 const API = import.meta.env.VITE_API_URL || "https://threshold-production-d13c.up.railway.app";
 
@@ -59,15 +59,14 @@ export default function RegionPage() {
     </Layout>
   );
 
-  const score = ei ?? region.ei;
+  const score = ei;
   const color = EI_COLOR(score);
 
   // Real component scores from the API (deterrence_index gz_score/ex_score +
   // baseline exposed by /api/di/region). No more reverse-engineering from EI.
   const components = comp ?? { gz: 0, ex: 0, base: 0 };
 
-  const spark = SPARKLINES[region.id];
-  const rank  = [...REGIONS].sort((a,b)=>b.ei-a.ei).findIndex(r=>r.id===region.id)+1;
+  const spark = history.length >= 2 ? history.map(h => h.ei) : null;
 
   return (
     <Layout>
@@ -116,7 +115,7 @@ export default function RegionPage() {
                   <div className="mono small tab-num" style={{ color: region.trend > 0 ? "var(--hi)" : region.trend < 0 ? "var(--lo)" : "var(--ink-40)" }}>
                     {region.trend > 0 ? `↑ +${region.trend}` : region.trend < 0 ? `↓ ${region.trend}` : "→ stable"} vs prev.
                   </div>
-                  <div className="mono small" style={{ color:"var(--ink-40)", marginTop:4 }}>ranked {rank}/20</div>
+                  
                 </div>
               </div>
               {spark && (

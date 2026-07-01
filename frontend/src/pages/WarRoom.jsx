@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import Layout from "../components/Layout";
 import AnimatedNumber from "../components/AnimatedNumber";
-import { EXERCISES } from "../data/seed";
 
 const API = import.meta.env.VITE_API_URL || "https://threshold-production-d13c.up.railway.app";
 
@@ -153,7 +152,7 @@ export default function WarRoom() {
   const mapRef   = useRef(null);
   const [sel, setSel]           = useState(null);
   const [hovered, setHovered]   = useState(null);
-  const [exercises, setExercises] = useState(EXERCISES);
+  const [exercises, setExercises] = useState([]);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapMoved, setMapMoved] = useState(false);
   const [mobileTab, setMobileTab] = useState("map");

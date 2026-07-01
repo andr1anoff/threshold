@@ -35,12 +35,12 @@ CREATE TABLE IF NOT EXISTS exercises (
 );
 
 -- DETERRENCE INDEX (calculated daily per region)
-CREATE TABLE IF NOT EXISTS deterrence_index (
+CREATE TABLE IF NOT EXISTS escalation_index (
   id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   region     TEXT NOT NULL,
   actor_pair TEXT,
   date       DATE NOT NULL,
-  di_score   FLOAT NOT NULL CHECK (di_score BETWEEN 0 AND 100),
+  ei_score   FLOAT NOT NULL CHECK (ei_score BETWEEN 0 AND 100),
   gz_score   FLOAT,
   ex_score   FLOAT,
   rh_score   FLOAT,
@@ -67,17 +67,17 @@ CREATE INDEX IF NOT EXISTS idx_incidents_region ON incidents(region);
 CREATE INDEX IF NOT EXISTS idx_incidents_date ON incidents(date DESC);
 CREATE INDEX IF NOT EXISTS idx_exercises_region ON exercises(region);
 CREATE INDEX IF NOT EXISTS idx_exercises_start ON exercises(start_date);
-CREATE INDEX IF NOT EXISTS idx_di_region_date ON deterrence_index(region, date DESC);
+CREATE INDEX IF NOT EXISTS idx_ei_region_date ON escalation_index(region, date DESC);
 
 -- Enable Row Level Security (all data is public read)
 ALTER TABLE incidents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE exercises ENABLE ROW LEVEL SECURITY;
-ALTER TABLE deterrence_index ENABLE ROW LEVEL SECURITY;
+ALTER TABLE escalation_index ENABLE ROW LEVEL SECURITY;
 ALTER TABLE correlations ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Public read" ON incidents FOR SELECT USING (true);
 CREATE POLICY "Public read" ON exercises FOR SELECT USING (true);
-CREATE POLICY "Public read" ON deterrence_index FOR SELECT USING (true);
+CREATE POLICY "Public read" ON escalation_index FOR SELECT USING (true);
 CREATE POLICY "Public read" ON correlations FOR SELECT USING (true);
 
 -- v7: content deduplication

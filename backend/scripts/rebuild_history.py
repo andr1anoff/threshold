@@ -2,7 +2,7 @@
 rebuild_history.py — recompute the full daily index history with the v16 formula.
 
 Why:
-  deterrence_index stores one row per region per day. Those historical rows were
+  escalation_index stores one row per region per day. Those historical rows were
   written by older formula versions, so the history chart is a mix of old and new
   math (flat steps, a jump at the last point). This recomputes every day in the
   window with the current event-based, severity-dominant formula, using each

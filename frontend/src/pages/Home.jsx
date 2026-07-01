@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
 import Sparkline from "../components/Sparkline";
 import AnimatedNumber from "../components/AnimatedNumber";
-import { REGIONS, SPARKLINES, CATS, EI_COLOR, EI_LABEL, getConf, INCIDENTS } from "../data/seed";
+import { REGIONS, CATS, EI_COLOR, EI_LABEL, getConf } from "../data/seed";
 
 const API = import.meta.env.VITE_API_URL || "https://threshold-production-d13c.up.railway.app";
 
@@ -12,7 +12,7 @@ export default function Home() {
   const [sort, setSort]     = useState("ei");
   const [filter, setFilter] = useState("all");
   const [view, setView]     = useState("grid");
-  const [incidents, setIncidents] = useState(INCIDENTS.slice(0,6));
+  const [incidents, setIncidents] = useState([]);
   const [totalIndexed, setTotalIndexed] = useState(null);
   // Live EI scores from API — merged with seed so Overview and Dossier use the same source
   const [liveEI, setLiveEI] = useState({});
@@ -32,29 +32,27 @@ export default function Home() {
         if (count != null) setTotalIndexed(count);
       })
       .catch(() => {});
-    // Fetch live EI scores for all regions (same endpoint Region.jsx uses)
-    fetch(`${API}/api/di/global`)
+    // Real EI + 7d delta + 30d history per region — one call, no synthetic data
+    fetch(`${API}/api/di/overview`)
       .then(r => r.json())
-      .then(d => {
-        if (d.data?.length) {
-          const map = {};
-          d.data.forEach(row => {
-            if (row.region && row.ei_score != null) map[row.region] = row.ei_score;
-          });
-          setLiveEI(map);
-        }
-      })
+      .then(d => { if (d.data && Object.keys(d.data).length) setLiveEI(d.data); })
       .catch(() => {});
   }, []);
 
-  // Merge live EI into regions — same data source as Region Dossier
-  const regions = useMemo(() => REGIONS.map(r => ({
-    ...r,
-    ei: liveEI[r.id] != null ? Math.round(liveEI[r.id]) : r.ei,
-  })), [liveEI]);
+  // Merge live data into static region config. No API data -> ei/trend/spark
+  // stay null and the UI shows "no data" instead of inventing numbers.
+  const regions = useMemo(() => REGIONS.map(r => {
+    const live = liveEI[r.id];
+    return {
+      ...r,
+      ei:    live?.ei_score != null ? Math.round(live.ei_score) : null,
+      trend: live?.delta_7d != null ? Math.round(live.delta_7d) : null,
+      spark: live?.history?.length >= 2 ? live.history.map(p => p.ei_score) : null,
+    };
+  }), [liveEI]);
 
-  const critical = regions.filter(r => r.ei >= 50);
-  const rising   = regions.filter(r => r.trend > 0).length;
+  const critical = regions.filter(r => r.ei != null && r.ei >= 50);
+  const rising   = regions.filter(r => (r.trend ?? 0) > 0).length;
 
   const formatIndexed = (n) =>
     n == null ? "—" :
@@ -63,19 +61,19 @@ export default function Home() {
 
   const filtered = useMemo(() => regions.filter(r => {
     if (filter === "all")      return true;
-    if (filter === "high")     return r.ei >= 50;
-    if (filter === "moderate") return r.ei >= 25 && r.ei < 50;
-    if (filter === "low")      return r.ei < 25;
+    if (filter === "high")     return r.ei != null && r.ei >= 50;
+    if (filter === "moderate") return r.ei != null && r.ei >= 25 && r.ei < 50;
+    if (filter === "low")      return r.ei != null && r.ei < 25;
     if (filter === "conflict") return r.cat === "conflict";
     if (filter === "tension")  return r.cat === "tension";
-    if (filter === "rising")   return r.trend > 0;
+    if (filter === "rising")   return (r.trend ?? 0) > 0;
     return true;
   }), [filter, regions]);
 
   const sorted = useMemo(() => [...filtered].sort((a, b) => {
-    if (sort === "ei")     return b.ei - a.ei;
+    if (sort === "ei")     return (b.ei ?? -1) - (a.ei ?? -1);
     if (sort === "alpha")  return a.label.localeCompare(b.label);
-    if (sort === "rising") return b.trend - a.trend;
+    if (sort === "rising") return (b.trend ?? 0) - (a.trend ?? 0);
     return 0;
   }), [filtered, sort]);
 
@@ -224,7 +222,7 @@ function RegionTable({ regions, onSelect }) {
 
       {regions.map((r, i) => {
         const color = EI_COLOR(r.ei);
-        const spark = SPARKLINES[r.id];
+        const spark = r.spark;
         return (
           <div key={r.id}
             onClick={() => onSelect(r)}
@@ -248,7 +246,7 @@ function RegionTable({ regions, onSelect }) {
               {r.cat === "conflict" ? "Active conflict" : "Strategic tension"}
             </span>
             <span style={{ fontSize:28, fontWeight:700, fontVariantNumeric:"tabular-nums", color, textAlign:"right", letterSpacing:"-0.02em" }}>
-              {r.ei}
+              {r.ei ?? "—"}
             </span>
             <span className="mono small tab-num" style={{ textAlign:"right", color: r.trend > 0 ? "var(--hi)" : r.trend < 0 ? "var(--lo)" : "var(--ink-40)" }}>
               {r.trend > 0 ? `+${r.trend}` : r.trend < 0 ? r.trend : "·"}
@@ -272,7 +270,7 @@ function RegionGrid({ regions, onSelect }) {
     <div className="card-grid">
       {regions.map((r, i) => {
         const color = EI_COLOR(r.ei);
-        const spark = SPARKLINES[r.id];
+        const spark = r.spark;
         return (
           <div key={r.id} className="tile" onClick={() => onSelect(r)}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14 }}>
@@ -283,18 +281,18 @@ function RegionGrid({ regions, onSelect }) {
               <span className="micro" style={{ color }}>{EI_LABEL(r.ei)}</span>
             </div>
             <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", marginBottom:12 }}>
-              <span className="tab-num" style={{ fontSize:56, fontWeight:800, letterSpacing:"-0.035em", color, lineHeight:1 }}>{r.ei}</span>
+              <span className="tab-num" style={{ fontSize:56, fontWeight:800, letterSpacing:"-0.035em", color, lineHeight:1 }}>{r.ei ?? "—"}</span>
               <span style={{ paddingBottom:6 }}>
                 {spark && <Sparkline data={spark} color={color} width={88} height={28} />}
               </span>
             </div>
             <div style={{ height:2, background:"var(--ink-06)", marginBottom:12 }}>
-              <div style={{ height:"100%", width:`${r.ei}%`, background:color, opacity:0.7 }}/>
+              <div style={{ height:"100%", width:`${r.ei ?? 0}%`, background:color, opacity:0.7 }}/>
             </div>
             <div style={{ display:"flex", justifyContent:"space-between", fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.12em", textTransform:"uppercase", color:"var(--ink-40)" }}>
               <span>{r.cat === "conflict" ? "Active" : "Tension"}</span>
               <span style={{ color: r.trend > 0 ? "var(--hi)" : r.trend < 0 ? "var(--lo)" : "var(--ink-40)" }}>
-                {r.trend > 0 ? `↑ +${r.trend}` : r.trend < 0 ? `↓ ${r.trend}` : "→ stable"}
+                {r.trend == null ? "·" : r.trend > 0 ? `↑ +${r.trend}` : r.trend < 0 ? `↓ ${r.trend}` : "→ stable"}
               </span>
             </div>
           </div>

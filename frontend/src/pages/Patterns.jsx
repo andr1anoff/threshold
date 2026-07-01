@@ -238,7 +238,7 @@ function BriefMasthead({ region, color, generatedAt }) {
       <div>
         <div className="micro" style={{ marginBottom:12 }}>HEADLINE INDICATORS</div>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:18 }}>
-          <KV k="EI" v={region.ei} color={color} big />
+          <KV k="EI" v={region.ei ?? "—"} color={color} big />
           <KV k="LABEL" v={EI_LABEL(region.ei)} color={color} />
           <KV k="TREND" v={region.trend>0?`+${region.trend}`:region.trend<0?region.trend:"0"} />
           <KV k="CATEGORY" v={region.category==="conflict"?"Active conflict":"Strategic tension"} />
@@ -281,7 +281,7 @@ function buildLocalBrief(rid) {
       {
         heading: "Situation overview",
         body: [
-          `${r.label} registers an Escalation Index of ${r.ei} over the 14-day analytical window, classifying the theatre as ${EI_LABEL(r.ei).toLowerCase()}. ${r.trend > 0 ? `The score has risen by ${r.trend} points against the prior cycle, with the gray-zone component accounting for the majority of the increase.` : r.trend < 0 ? `The score has declined by ${Math.abs(r.trend)} points against the prior cycle, suggesting a transient de-escalation rather than structural change.` : "The score is stable against the prior cycle, with intra-cycle volatility well within historical bounds for this theatre."}`,
+          `Live Escalation Index data for ${r.label} is currently unavailable — the backend index service could not be reached. No score is shown rather than an estimated one.`,
           `${r.category === "conflict" ? `${r.label} carries an active-conflict structural baseline. Incident density remains high, and the rolling 7-day component continues to apply upward pressure to the index.` : `${r.label} carries a strategic-tension structural baseline. Exercise activity and rhetoric scoring continue to drive the index above the structural floor.`}`,
         ],
       },
@@ -295,8 +295,7 @@ function buildLocalBrief(rid) {
       {
         heading: "Exercise activity",
         body: [
-          `Adjacent exercise activity for ${r.label} is consistent with general-deterrence framing. No exercises in the current window register rhetoric scores in the escalatory range (>0.85).`,
-          "Cross-theatre signalling from NATO STEADFAST-series and US-Pacific exercises applies background pressure but does not directly index against this theatre's EX component.",
+          `Exercise activity for ${r.label} could not be retrieved in the current window. Consult the Exercises page once backend connectivity is restored.`,
         ],
       },
       {

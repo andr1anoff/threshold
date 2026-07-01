@@ -7,11 +7,11 @@ JME taxonomy based on:
 - Academic literature on military signaling
 """
 import os, json, logging
-from groq import Groq
+from app.llm.providers import call_llm
 
 logger = logging.getLogger(__name__)
 
-MODEL = "llama-3.1-8b-instant"
+MODEL = "fast"
 
 # NATO/Academic JME classification taxonomy
 JME_TAXONOMY = {
@@ -68,13 +68,11 @@ Return:
 
 def classify_exercise(name: str, context: str = "") -> dict | None:
     try:
-        client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-        r = client.chat.completions.create(
-            model=MODEL,
-            messages=[{"role":"user","content":PROMPT_TEMPLATE.format(name=name, context=context[:400])}],
-            max_tokens=200, temperature=0.1,
-        )
-        txt = r.choices[0].message.content.strip().replace("```json","").replace("```","").strip()
+        raw = call_llm(PROMPT_TEMPLATE.format(name=name, context=context[:400]),
+                       tier="fast", max_tokens=200)
+        if not raw:
+            return None
+        txt = raw.replace("```json","").replace("```","").strip()
         return json.loads(txt)
     except Exception as e:
         logger.exception(f"[exercise_classifier] {name}: {e}")
@@ -120,13 +118,8 @@ Scale: {exercise.get('scale','')} | Signal type: {exercise.get('signal_type','')
 Signal target: {exercise.get('signal_target','')} | Rhetoric score: {exercise.get('rhetoric_score','')}
 Context: {str(exercise.get('statements',{}))[:300]}"""
     try:
-        client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-        r = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[{"role":"user","content":prompt}],
-            max_tokens=300, temperature=0.6,
-        )
-        return r.choices[0].message.content.strip()
+        raw = call_llm(prompt, tier="smart", max_tokens=300, temperature=0.6)
+        return (raw or "").strip()
     except Exception as e:
         logger.exception(f"[exercise_brief] {e}")
         return ""

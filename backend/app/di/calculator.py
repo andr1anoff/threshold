@@ -93,9 +93,9 @@ def calculate_ei(region: str, target_date: date = None) -> dict:
         "event_count_30d": len(events),
     }
     try:
-        db.table("deterrence_index").upsert({
+        db.table("escalation_index").upsert({
             "region": region, "date": target_date.isoformat(),
-            "di_score": result["ei_score"],
+            "ei_score": result["ei_score"],
             "gz_score": result["gz_score"],
             "ex_score": result["ex_score"],
             "rh_score": result["rh_score"],

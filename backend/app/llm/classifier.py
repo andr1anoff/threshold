@@ -4,7 +4,7 @@ Uses Groq llama-3.1-8b-instant for speed and cost efficiency.
 Rate limit: 30 RPM / 1000 RPD on free tier → 2.5s delay between requests.
 """
 import os, json, logging, time
-from groq import Groq
+from app.llm.providers import call_llm, RateLimitError, DailyLimitError
 from app.regions import canonicalize, resolve
 
 # Must match incidents_category_check constraint in Supabase exactly
@@ -16,17 +16,8 @@ VALID_CATEGORIES = frozenset({
 
 logger = logging.getLogger(__name__)
 
-FAST_MODEL  = "llama-3.1-8b-instant"
-SMART_MODEL = "llama-3.3-70b-versatile"
-
-# Singleton — avoid reinitializing on every API call
-_groq_client: Groq | None = None
-
-def _get_client() -> Groq:
-    global _groq_client
-    if _groq_client is None:
-        _groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-    return _groq_client
+FAST_MODEL  = "fast"   # tier names — resolved per provider in providers.py
+SMART_MODEL = "smart"
 
 CLASSIFY_PROMPT = """Classify this gray zone incident. Return ONLY valid JSON, no explanation.
 
@@ -59,37 +50,10 @@ JSON:
 }}"""
 
 
-class RateLimitError(Exception):
-    """RPM limit — retry after backoff."""
-    pass
-
-class DailyLimitError(Exception):
-    """TPD exhausted — stop pipeline entirely for today."""
-    pass
-
-
 def _call_groq(prompt: str, model: str = FAST_MODEL, max_tokens: int = 200) -> str | None:
-    """Single Groq API call with error handling."""
-    try:
-        client = _get_client()
-        r = client.chat.completions.create(
-            model=model,
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=max_tokens,
-            temperature=0.1,
-        )
-        return r.choices[0].message.content.strip()
-    except Exception as e:
-        err = str(e)
-        if "429" in err or "rate_limit" in err.lower():
-            # Distinguish TPD (tokens per day) from RPM
-            if "tokens per day" in err.lower() or "TPD" in err:
-                logger.error("[groq] Daily token limit (TPD) exhausted — aborting pipeline")
-                raise DailyLimitError()
-            logger.warning(f"[groq] Rate limited (RPM): {e}")
-            raise RateLimitError()
-        logger.error(f"[groq] Error: {e}")
-        return None
+    """Kept name for backward compat — routes through provider chain now."""
+    tier = "smart" if model in ("smart", "llama-3.3-70b-versatile") else "fast"
+    return call_llm(prompt, tier=tier, max_tokens=max_tokens)
 
 
 def classify_incident(text: str) -> dict | None:
@@ -188,10 +152,12 @@ def run_classification_pipeline(db) -> dict:
     max_batches = 30
 
     for batch_num in range(max_batches):
+        # Newest first: if quota dies mid-run, today's incidents are already
+        # classified and the EI is computed on fresh data. Old backlog waits.
         unknown_batch = db.table("incidents").select("id,title,raw_text,category") \
-            .eq("category", "unknown").limit(batch_size).execute().data
+            .eq("category", "unknown").order("date", desc=True).limit(batch_size).execute().data
         none_batch = db.table("incidents").select("id,title,raw_text,category") \
-            .eq("category", "none").limit(batch_size).execute().data
+            .eq("category", "none").order("date", desc=True).limit(batch_size).execute().data
         batch = unknown_batch + none_batch
 
         if not batch:
@@ -288,3 +254,30 @@ def run_classification_pipeline(db) -> dict:
 
     logger.info(f"[classifier] Done. incidents={classified_inc} exercises={classified_ex}")
     return {"incidents": classified_inc, "exercises": classified_ex}
+
+
+def resweep_unclassifiable(db, limit: int = 200) -> dict:
+    """
+    Weekly maintenance: give 'unclassifiable' incidents another chance.
+
+    'unclassifiable' is set when (a) raw_text was empty or (b) a DB write
+    failed — often a transient constraint/schema issue that has since been
+    fixed. Without a resweep these rows are a black hole: silently excluded
+    from the index forever. This resets rows that DO have text back to
+    'unknown' so the normal pipeline retries them; textless rows stay dead.
+    """
+    reset = 0
+    kept_dead = 0
+    try:
+        rows = db.table("incidents").select("id,raw_text,title") \
+            .eq("category", "unclassifiable").limit(limit).execute().data
+        for r in rows:
+            if (r.get("raw_text") or r.get("title") or "").strip():
+                db.table("incidents").update({"category": "unknown"}).eq("id", r["id"]).execute()
+                reset += 1
+            else:
+                kept_dead += 1
+        logger.info(f"[resweep] reset={reset} kept_dead={kept_dead}")
+    except Exception as e:
+        logger.error(f"[resweep] {e}")
+    return {"reset": reset, "kept_dead": kept_dead}

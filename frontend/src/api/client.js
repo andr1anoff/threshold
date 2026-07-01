@@ -14,5 +14,6 @@ export const api = {
     global:   ()       => get("/api/di/global"),
     byRegion: (region) => get(`/api/di/region/${encodeURIComponent(region)}`),
     history:  (region) => get(`/api/di/history/${encodeURIComponent(region)}`),
+    overview: ()       => get("/api/di/overview"),
   },
 };

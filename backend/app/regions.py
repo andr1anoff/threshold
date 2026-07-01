@@ -53,6 +53,8 @@ COUNTRY_MAP = {
     "ukraine": "Ukraine", "ukrainian": "Ukraine", "kyiv": "Ukraine",
     "kiev": "Ukraine", "donetsk": "Ukraine", "kharkiv": "Ukraine",
     "zaporizhzhia": "Ukraine", "crimea": "Ukraine", "kherson": "Ukraine",
+    "odesa": "Ukraine", "odessa": "Ukraine", "mykolaiv": "Ukraine",
+    "sumy": "Ukraine", "lviv": "Ukraine", "dnipro": "Ukraine",
 
     # --- Sudan ---
     "sudan": "Sudan", "sudanese": "Sudan", "khartoum": "Sudan",

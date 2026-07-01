@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
 import Layout from "../components/Layout";
-import { REGIONS, CATS, getConf, EI_COLOR, INCIDENTS } from "../data/seed";
+import { REGIONS, CATS, getConf, EI_COLOR } from "../data/seed";
 
 const API = import.meta.env.VITE_API_URL || "https://threshold-production-d13c.up.railway.app";
 
 export default function IncidentsPage() {
-  const [incidents, setIncidents] = useState(INCIDENTS);
+  const [incidents, setIncidents] = useState([]);
   const [lastSync, setLastSync]   = useState(null);
   const [region, setRegion]       = useState("all");
   const [cat, setCat]             = useState("all");
@@ -27,7 +27,7 @@ export default function IncidentsPage() {
         const dates = (d.data || []).map(i => i.date).filter(Boolean).sort().reverse();
         if (dates[0]) setLastSync(dates[0].slice(0,10));
       })
-      .catch(() => { if (region === "all") setIncidents(INCIDENTS); })
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, [region]);
 

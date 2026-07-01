@@ -1,48 +1,32 @@
 export const REGIONS = [
-  { id:"Gaza & Middle East",  label:"Gaza & Middle East", short:"GZ",  ei:58, prev:56, trend:+2,  cat:"conflict", category:"conflict", lat:31.5, lng:34.5,  theatre:"levant"     },
-  { id:"Ukraine",             label:"Ukraine",            short:"UA",  ei:58, prev:58, trend:0,   cat:"conflict", category:"conflict", lat:49,   lng:32,    theatre:"easteuro"   },
-  { id:"Sudan",               label:"Sudan",              short:"SD",  ei:41, prev:40, trend:+1,  cat:"conflict", category:"conflict", lat:15,   lng:30,    theatre:"hornafrica" },
-  { id:"South China Sea",     label:"South China Sea",    short:"SCS", ei:32, prev:31, trend:+1,  cat:"tension",  category:"tension",  lat:13,   lng:114,   theatre:"indo"       },
-  { id:"Taiwan Strait",       label:"Taiwan Strait",      short:"TW",  ei:28, prev:28, trend:0,   cat:"tension",  category:"tension",  lat:24,   lng:121,   theatre:"indo"       },
-  { id:"Yemen",               label:"Yemen",              short:"YE",  ei:38, prev:39, trend:-1,  cat:"conflict", category:"conflict", lat:15.5, lng:48,    theatre:"levant"     },
-  { id:"Sahel",               label:"Sahel",              short:"SH",  ei:40, prev:38, trend:+2,  cat:"conflict", category:"conflict", lat:15,   lng:0,     theatre:"westafrica" },
-  { id:"Korean Peninsula",    label:"Korean Peninsula",   short:"KR",  ei:24, prev:24, trend:0,   cat:"tension",  category:"tension",  lat:38,   lng:127,   theatre:"indo"       },
-  { id:"Myanmar",             label:"Myanmar",            short:"MM",  ei:35, prev:35, trend:0,   cat:"conflict", category:"conflict", lat:21,   lng:96,    theatre:"indo"       },
-  { id:"DRC",                 label:"DRC",                short:"CD",  ei:36, prev:35, trend:+1,  cat:"conflict", category:"conflict", lat:-2,   lng:23,    theatre:"centafrica" },
-  { id:"Syria",               label:"Syria",              short:"SY",  ei:30, prev:31, trend:-1,  cat:"conflict", category:"conflict", lat:35,   lng:38,    theatre:"levant"     },
-  { id:"Somalia",             label:"Somalia",            short:"SO",  ei:34, prev:34, trend:0,   cat:"conflict", category:"conflict", lat:6,    lng:46,    theatre:"hornafrica" },
-  { id:"Baltic",              label:"Baltic",             short:"BLT", ei:22, prev:19, trend:+3,  cat:"tension",  category:"tension",  lat:58,   lng:24,    theatre:"easteuro"   },
-  { id:"Haiti",               label:"Haiti",              short:"HT",  ei:33, prev:33, trend:0,   cat:"conflict", category:"conflict", lat:19,   lng:-72,   theatre:"caribbean"  },
-  { id:"Ethiopia",            label:"Ethiopia",           short:"ET",  ei:31, prev:32, trend:-1,  cat:"conflict", category:"conflict", lat:9,    lng:40,    theatre:"hornafrica" },
-  { id:"South Caucasus",      label:"South Caucasus",     short:"SC",  ei:27, prev:26, trend:+1,  cat:"tension",  category:"tension",  lat:41,   lng:45,    theatre:"easteuro"   },
-  { id:"Libya",               label:"Libya",              short:"LY",  ei:29, prev:29, trend:0,   cat:"conflict", category:"conflict", lat:27,   lng:17,    theatre:"levant"     },
-  { id:"Kosovo",              label:"Kosovo",             short:"KS",  ei:18, prev:18, trend:0,   cat:"tension",  category:"tension",  lat:42.5, lng:21,    theatre:"easteuro"   },
-  { id:"Arctic",              label:"Arctic",             short:"AR",  ei:14, prev:12, trend:+2,  cat:"tension",  category:"tension",  lat:78,   lng:20,    theatre:"arctic"     },
-  { id:"Mozambique",          label:"Mozambique",         short:"MZ",  ei:28, prev:28, trend:0,   cat:"conflict", category:"conflict", lat:-15,  lng:39,    theatre:"centafrica" },
+  { id:"Gaza & Middle East",  label:"Gaza & Middle East", short:"GZ",  ei:null, prev:null, trend:null,  cat:"conflict", category:"conflict", lat:31.5, lng:34.5,  theatre:"levant"     },
+  { id:"Ukraine",             label:"Ukraine",            short:"UA",  ei:null, prev:null, trend:null,   cat:"conflict", category:"conflict", lat:49,   lng:32,    theatre:"easteuro"   },
+  { id:"Sudan",               label:"Sudan",              short:"SD",  ei:null, prev:null, trend:null,  cat:"conflict", category:"conflict", lat:15,   lng:30,    theatre:"hornafrica" },
+  { id:"South China Sea",     label:"South China Sea",    short:"SCS", ei:null, prev:null, trend:null,  cat:"tension",  category:"tension",  lat:13,   lng:114,   theatre:"indo"       },
+  { id:"Taiwan Strait",       label:"Taiwan Strait",      short:"TW",  ei:null, prev:null, trend:null,   cat:"tension",  category:"tension",  lat:24,   lng:121,   theatre:"indo"       },
+  { id:"Yemen",               label:"Yemen",              short:"YE",  ei:null, prev:null, trend:null,  cat:"conflict", category:"conflict", lat:15.5, lng:48,    theatre:"levant"     },
+  { id:"Sahel",               label:"Sahel",              short:"SH",  ei:null, prev:null, trend:null,  cat:"conflict", category:"conflict", lat:15,   lng:0,     theatre:"westafrica" },
+  { id:"Korean Peninsula",    label:"Korean Peninsula",   short:"KR",  ei:null, prev:null, trend:null,   cat:"tension",  category:"tension",  lat:38,   lng:127,   theatre:"indo"       },
+  { id:"Myanmar",             label:"Myanmar",            short:"MM",  ei:null, prev:null, trend:null,   cat:"conflict", category:"conflict", lat:21,   lng:96,    theatre:"indo"       },
+  { id:"DRC",                 label:"DRC",                short:"CD",  ei:null, prev:null, trend:null,  cat:"conflict", category:"conflict", lat:-2,   lng:23,    theatre:"centafrica" },
+  { id:"Syria",               label:"Syria",              short:"SY",  ei:null, prev:null, trend:null,  cat:"conflict", category:"conflict", lat:35,   lng:38,    theatre:"levant"     },
+  { id:"Somalia",             label:"Somalia",            short:"SO",  ei:null, prev:null, trend:null,   cat:"conflict", category:"conflict", lat:6,    lng:46,    theatre:"hornafrica" },
+  { id:"Baltic",              label:"Baltic",             short:"BLT", ei:null, prev:null, trend:null,  cat:"tension",  category:"tension",  lat:58,   lng:24,    theatre:"easteuro"   },
+  { id:"Haiti",               label:"Haiti",              short:"HT",  ei:null, prev:null, trend:null,   cat:"conflict", category:"conflict", lat:19,   lng:-72,   theatre:"caribbean"  },
+  { id:"Ethiopia",            label:"Ethiopia",           short:"ET",  ei:null, prev:null, trend:null,  cat:"conflict", category:"conflict", lat:9,    lng:40,    theatre:"hornafrica" },
+  { id:"South Caucasus",      label:"South Caucasus",     short:"SC",  ei:null, prev:null, trend:null,  cat:"tension",  category:"tension",  lat:41,   lng:45,    theatre:"easteuro"   },
+  { id:"Libya",               label:"Libya",              short:"LY",  ei:null, prev:null, trend:null,   cat:"conflict", category:"conflict", lat:27,   lng:17,    theatre:"levant"     },
+  { id:"Kosovo",              label:"Kosovo",             short:"KS",  ei:null, prev:null, trend:null,   cat:"tension",  category:"tension",  lat:42.5, lng:21,    theatre:"easteuro"   },
+  { id:"Arctic",              label:"Arctic",             short:"AR",  ei:null, prev:null, trend:null,  cat:"tension",  category:"tension",  lat:78,   lng:20,    theatre:"arctic"     },
+  { id:"Mozambique",          label:"Mozambique",         short:"MZ",  ei:null, prev:null, trend:null,   cat:"conflict", category:"conflict", lat:-15,  lng:39,    theatre:"centafrica" },
 ];
 
 export const DI_HISTORY = {};
 
-export const SPARKLINES = (() => {
-  // Deterministic pseudo-random using region EI as seed — stable across hot reloads
-  const seededRand = (seed, i) => {
-    const x = Math.sin(seed * 9301 + i * 49297 + 233) * 1000;
-    return x - Math.floor(x);
-  };
-  const out = {};
-  for (const r of REGIONS) {
-    const arr = [];
-    let v = r.ei - r.trend * 1.2 - (seededRand(r.ei, 0) * 6 - 3);
-    for (let i = 0; i < 30; i++) {
-      const noise = (Math.sin(i * 0.7 + r.ei) * 1.4) + (seededRand(r.ei, i + 1) * 2.4 - 1.2);
-      v = Math.max(2, Math.min(95, v + noise + (r.trend * 0.08)));
-      arr.push(Math.round(v * 10) / 10);
-    }
-    arr[arr.length - 1] = r.ei;
-    out[r.id] = arr;
-  }
-  return out;
-})();
+// v17: fake seed sparklines removed. Sparklines and trends now come from
+// /api/di/overview (real escalation_index history). This stays as an empty
+// object so any stale import renders nothing instead of synthetic data.
+export const SPARKLINES = {};
 
 export const CATS = {
   cyber:      { label:"Cyber",        color:"#8B2030", glyph:"◇" },
