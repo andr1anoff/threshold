@@ -64,3 +64,89 @@ def test_region_lists_in_sync():
 def test_baselines_sane():
     for r, b in CONFLICT_BASELINE.items():
         assert 0.0 <= b <= 0.5, f"{r} baseline out of sane range"
+
+
+# ── v18: per-region κ normalization ──────────────────────────────────
+from app.di.calculator import (_load_from_events, _kappa_for_region, _median,
+                               KAPPA_FLOOR, NORM_C, GZ_AT_NORM)
+
+
+def _steady_events(weight_level=3, per_day=1, days=120, ref=TODAY):
+    """Synthetic steady theatre: `per_day` level-N events daily for `days`."""
+    out = []
+    for d in range(days):
+        for i in range(per_day):
+            out.append({"severity": weight_level, "corroboration": 1,
+                        "date": (ref - timedelta(days=d)).isoformat()})
+    return out
+
+
+def test_median_basic():
+    assert _median([]) == 0.0
+    assert _median([5]) == 5
+    assert _median([1, 3, 100]) == 3
+    assert _median([1, 2, 3, 4]) == 2.5
+
+
+def test_kappa_floor_on_empty_history():
+    assert _kappa_for_region([], TODAY) == KAPPA_FLOOR
+
+
+def test_load_respects_30d_window():
+    evs = _steady_events(per_day=1, days=120)
+    load_now = _load_from_events(evs, TODAY)
+    # only ~30 days of events should be counted, not all 120
+    single = _load_from_events([evs[40]], TODAY - timedelta(days=40))
+    assert load_now < single * 40
+
+
+def test_normalization_steady_state():
+    """A steady theatre must sit at GZ_AT_NORM regardless of its volume."""
+    quiet = _steady_events(weight_level=2, per_day=1)    # low-volume region
+    loud  = _steady_events(weight_level=3, per_day=8)    # 20x the load
+    for evs in (quiet, loud):
+        kappa = _kappa_for_region(evs, TODAY)
+        gz = _gz_from_events(evs, TODAY, kappa=kappa)
+        assert abs(gz - GZ_AT_NORM) < 0.06, f"steady state gz={gz}"
+
+
+def test_spike_detected_against_own_norm():
+    """Same relative spike -> similar GZ response in quiet and loud theatres."""
+    def spiked(base):
+        evs = list(base)
+        for d in range(5):  # 5 recent level-4 events on top of the norm
+            evs.append({"severity": 4, "corroboration": 3,
+                        "date": (TODAY - timedelta(days=d)).isoformat()})
+        return evs
+
+    quiet = _steady_events(weight_level=2, per_day=1)   # genuinely quiet norm
+    loud  = _steady_events(per_day=8)
+    gz_q_base = _gz_from_events(quiet, TODAY, kappa=_kappa_for_region(quiet, TODAY))
+    gz_q_spike = _gz_from_events(spiked(quiet), TODAY, kappa=_kappa_for_region(spiked(quiet), TODAY))
+    gz_l_spike = _gz_from_events(spiked(loud), TODAY, kappa=_kappa_for_region(spiked(loud), TODAY))
+    # spike must move the quiet theatre substantially...
+    assert gz_q_spike - gz_q_base > 0.25
+    # ...and much more than the same absolute spike moves the loud theatre
+    assert gz_q_spike > gz_l_spike + 0.2
+
+
+def test_source_step_decays_via_median():
+    """Doubling observability shifts GZ up, but the trailing median absorbs it
+    once the new volume dominates the baseline window."""
+    old = _steady_events(per_day=2, days=120)
+    # simulate: 100 days at doubled volume (new sources connected 100d ago)
+    absorbed = _steady_events(per_day=4, days=100) + \
+               [e for e in _steady_events(per_day=2, days=120)
+                if e["date"] < (TODAY - timedelta(days=100)).isoformat()]
+    gz_old = _gz_from_events(old, TODAY, kappa=_kappa_for_region(old, TODAY))
+    gz_abs = _gz_from_events(absorbed, TODAY, kappa=_kappa_for_region(absorbed, TODAY))
+    assert abs(gz_abs - gz_old) < 0.08  # step absorbed after recalibration window
+
+
+def test_dead_region_single_event_is_loud():
+    evs = [{"severity": 4, "corroboration": 2,
+            "date": (TODAY - timedelta(days=1)).isoformat()}]
+    kappa = _kappa_for_region(evs, TODAY)
+    assert kappa == KAPPA_FLOOR
+    gz = _gz_from_events(evs, TODAY, kappa=kappa)
+    assert gz > 0.5  # early-warning by design

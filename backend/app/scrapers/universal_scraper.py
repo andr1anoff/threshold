@@ -26,14 +26,14 @@ REGION_KEYWORDS = {
     "Yemen":              ["yemen","houthi","ansar allah","hodeidah","red sea attack"],
     "Sahel":              ["sahel","mali","burkina faso","niger","jnim","aqim","bamako","ouagadougou","niamey"],
     "Korean Peninsula":   ["north korea","dprk","kim jong","pyongyang","icbm"],
-    "Myanmar":            ["myanmar","burma","tatmadaw","junta","arakan army","shan state","kachin"],
+    "Myanmar":            ["myanmar","burma","tatmadaw","junta","arakan army","shan state","kachin","naypyidaw","rakhine","sagaing"],
     "DRC":                ["drc","congo","m23","monusco","goma","kivu","kinshasa"],
     "Syria":              ["syria","idlib","sdf","hts","damascus","aleppo"],
     "Somalia":            ["somalia","al-shabaab","mogadishu","atmis","puntland"],
-    "Baltic":             ["estonia","latvia","lithuania","nato eastern","kaliningrad","suwalki","finland border"],
+    "Baltic":             ["estonia","latvia","lithuania","nato eastern","kaliningrad","suwalki","finland border","tallinn","riga","vilnius","gotland","gulf of finland","baltic sea"],
     "Haiti":              ["haiti","gang","port-au-prince","mss","viv ansanm"],
     "Ethiopia":           ["ethiopia","tigray","amhara","tplf","oromo","addis ababa"],
-    "South Caucasus":     ["nagorno","karabakh","armenia","azerbaijan","south caucasus","yerevan","baku"],
+    "South Caucasus":     ["nagorno","karabakh","armenia","azerbaijan","south caucasus","yerevan","baku","tbilisi","abkhazia","south ossetia","zangezur"],
     "Libya":              ["libya","tripoli","gna","lna","haftar","benghazi"],
     "Kosovo":             ["kosovo","pristina","kfor","northern kosovo","kurti"],
     "Arctic":             ["arctic","svalbard","spitsbergen","greenland military","high north","northern sea route"],
@@ -145,19 +145,63 @@ async def _fetch(client: httpx.AsyncClient, url: str, delay: float = 15.0, **kwa
 # ── RSS Sources ──────────────────────────────────────────────────────
 
 RSS_SOURCES = [
-    ("UN News",           "https://news.un.org/feed/subscribe/en/news/all/rss.xml", 15),
-    ("UN Security Council","https://www.un.org/press/en/feed/sec-consolidated",    15),
-    ("ICRC",              "https://www.icrc.org/en/rss/news",                        15),
-    ("Human Rights Watch","https://www.hrw.org/rss",                                15),
-    ("Amnesty Intl",      "https://www.amnesty.org/en/feed/",                       15),
-    ("Bellingcat",        "https://www.bellingcat.com/feed/",                       15),
-    ("RUSI",              "https://www.rusi.org/rss.xml",                           15),
-    ("War on the Rocks",  "https://warontherocks.com/feed/",                        15),
-    ("The Diplomat",      "https://thediplomat.com/feed/",                          15),
-    ("Sudan Tribune",     "https://sudantribune.com/feed/",                         15),
-    ("Middle East Eye",   "https://www.middleeasteye.net/rss",                      15),
-    ("Kyiv Independent",  "https://kyivindependent.com/feed/",                      10),
-    ("ISW",               "https://www.understandingwar.org/rss.xml",               20),
+    # (name, url, delay_s, default_region)
+    # default_region: fallback when keyword detection fails — critical for
+    # regional outlets whose headlines omit the country name entirely
+    # ("Airspace violation reported over Hiiumaa" contains no "estonia").
+    # None = cross-regional source, keyword detection only.
+
+    # ── Cross-regional (original pool) ──────────────────────────────
+    ("UN News",           "https://news.un.org/feed/subscribe/en/news/all/rss.xml", 15, None),
+    ("UN Security Council","https://www.un.org/press/en/feed/sec-consolidated",    15, None),
+    ("ICRC",              "https://www.icrc.org/en/rss/news",                        15, None),
+    ("Human Rights Watch","https://www.hrw.org/rss",                                15, None),
+    ("Amnesty Intl",      "https://www.amnesty.org/en/feed/",                       15, None),
+    ("Bellingcat",        "https://www.bellingcat.com/feed/",                       15, None),
+    ("RUSI",              "https://www.rusi.org/rss.xml",                           15, None),
+    ("War on the Rocks",  "https://warontherocks.com/feed/",                        15, None),
+    ("The Diplomat",      "https://thediplomat.com/feed/",                          15, None),
+    ("Sudan Tribune",     "https://sudantribune.com/feed/",                         15, "Sudan"),
+    ("Middle East Eye",   "https://www.middleeasteye.net/rss",                      15, None),
+    ("Kyiv Independent",  "https://kyivindependent.com/feed/",                      10, "Ukraine"),
+    ("ISW",               "https://www.understandingwar.org/rss.xml",               20, None),
+
+    # ── Coverage-floor expansion, verified 2026-07-02 ────────────────
+    # Baltic (was ~0 dedicated sources)
+    ("ERR News",          "https://news.err.ee/rss",                                15, "Baltic"),
+    ("LSM",               "https://eng.lsm.lv/rss/",                                15, "Baltic"),
+    ("LRT English",       "https://www.lrt.lt/en/news-in-english?rss",              15, "Baltic"),
+    ("Yle News",          "https://feeds.yle.fi/uutiset/v1/recent.rss?publisherIds=YLE_NEWS", 15, "Baltic"),
+    # Taiwan / SCS
+    ("Taipei Times",      "https://www.taipeitimes.com/xml/index.rss",              15, "Taiwan Strait"),
+    ("Focus Taiwan",      "https://feeds.feedburner.com/rsscna/politics",           15, "Taiwan Strait"),
+    # Korean Peninsula
+    ("38 North",          "https://www.38north.org/feed/",                          20, "Korean Peninsula"),
+    ("NK News",           "https://www.nknews.org/feed/",                           20, "Korean Peninsula"),
+    # South Caucasus (was 0 dedicated sources)
+    ("OC Media",          "https://oc-media.org/feed/",                             15, "South Caucasus"),
+    ("JAMnews",           "https://jam-news.net/feed/",                             15, "South Caucasus"),
+    ("Civil.ge",          "https://civil.ge/feed",                                  15, "South Caucasus"),
+    # Balkans / Kosovo
+    ("Balkan Insight",    "https://balkaninsight.com/feed/",                        15, "Kosovo"),
+    # Arctic
+    ("Eye on the Arctic", "https://www.rcinet.ca/eye-on-the-arctic/feed/",          20, "Arctic"),
+    # Haiti
+    ("Haitian Times",     "https://haitiantimes.com/feed/",                         15, "Haiti"),
+    # Africa cluster
+    ("Radio Dabanga",     "https://www.dabangasudan.org/en/all-news/rss",           15, "Sudan"),
+    ("Libya Herald",      "https://libyaherald.com/feed/",                          15, "Libya"),
+    ("Somali Guardian",   "https://somaliguardian.com/feed/",                       15, "Somalia"),
+    ("Ethiopia Observer", "https://www.ethiopiaobserver.com/feed/",                 15, "Ethiopia"),
+    ("Zitamar News",      "https://zitamar.com/feed/",                              15, "Mozambique"),
+    # Myanmar
+    ("Myanmar Now",       "https://myanmar-now.org/en/feed/",                       15, "Myanmar"),
+    ("DVB English",       "https://english.dvb.no/feed/",                           15, "Myanmar"),
+    # Defence trade press (exercise signal, cross-regional)
+    ("Breaking Defense",  "https://breakingdefense.com/feed/",                      15, None),
+    ("Defense News",      "https://www.defensenews.com/arc/outboundfeeds/rss/?outputType=xml", 15, None),
+    ("Naval News",        "https://www.navalnews.com/feed/",                        15, None),
+    ("Kyiv Post",         "https://www.kyivpost.com/feed",                          15, "Ukraine"),
 ]
 
 async def scrape_rss_all(db) -> int:
@@ -165,7 +209,7 @@ async def scrape_rss_all(db) -> int:
     skipped_non_security = 0
     cutoff = (date.today() - timedelta(days=60)).isoformat()
     async with httpx.AsyncClient(timeout=25) as client:
-        for name, url, delay in RSS_SOURCES:
+        for name, url, delay, default_region in RSS_SOURCES:
             try:
                 resp = await _fetch(client, url, delay=delay)
                 if not resp:
@@ -184,7 +228,9 @@ async def scrape_rss_all(db) -> int:
                         ev_date = date.today().isoformat()
                     if ev_date < cutoff:
                         continue
-                    region = detect_region(f"{title} {summary}")
+                    # Keyword detection first; regional-outlet fallback second.
+                    # Local headlines often omit the country name entirely.
+                    region = detect_region(f"{title} {summary}") or default_region
                     if not region:
                         continue
                     

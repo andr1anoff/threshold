@@ -157,10 +157,18 @@ export default function AboutPage() {
           </div>
 
           <div style={{ background:"rgba(107,26,42,0.04)", border:"1px solid rgba(107,26,42,0.12)", borderRadius:12, padding:"16px 20px", marginBottom:10 }}>
-            <div style={{ fontSize:10, fontWeight:700, letterSpacing:"1.5px", color:"var(--crimson)", marginBottom:8 }}>METHODOLOGICAL NOTE · v16</div>
+            <div style={{ fontSize:10, fontWeight:700, letterSpacing:"1.5px", color:"var(--crimson)", marginBottom:8 }}>METHODOLOGICAL NOTE · v1.8</div>
             <p style={{ fontSize:12.5, color:"var(--ink-muted)", lineHeight:1.7, margin:0 }}>
-              Earlier versions summed raw incident counts, which made scores sensitive to media-coverage volume rather than escalation intensity, and under-weighted severe but sparsely reported events. From v16, the Gray-Zone Score is computed over deduplicated <strong style={{ color:"var(--ink)" }}>events</strong> with a convex severity weighting, so a region's score reflects what is happening rather than how many outlets report it.
+              The Gray-Zone Score is computed over deduplicated <strong style={{ color:"var(--ink)" }}>events</strong> with a convex severity weighting, so a region's score reflects what is happening rather than how many outlets report it. From v1.8, the saturation constant is additionally <strong style={{ color:"var(--ink)" }}>calibrated per region</strong> against that region's own trailing 90-day median load: the score measures deviation from a theatre's observed norm, making regions with very different source coverage comparable by construction. Cross-region structural differences are carried by the conflict baseline.
             </p>
+            <div style={{ marginTop:12, paddingTop:12, borderTop:"1px solid rgba(107,26,42,0.12)" }}>
+              <div style={{ fontSize:10, fontWeight:700, letterSpacing:"1.5px", color:"var(--crimson)", marginBottom:8 }}>RECENT UPDATES</div>
+              <ul style={{ margin:0, paddingLeft:16, fontSize:12, color:"var(--ink-muted)", lineHeight:1.9 }}>
+                <li><strong style={{ color:"var(--ink)" }}>v1.8</strong> — Per-region normalization of the Gray-Zone saturation constant (trailing 90-day median). Methodology version now recorded with every daily index value.</li>
+                <li><strong style={{ color:"var(--ink)" }}>v1.7</strong> — All charts, sparklines and trends now render exclusively from recorded index history; no synthetic placeholder data anywhere in the interface. LLM classification hardened with a multi-provider fallback chain.</li>
+                <li><strong style={{ color:"var(--ink)" }}>v1.6</strong> — Event-based scoring: incident reports are deduplicated into events; severity dominates volume.</li>
+              </ul>
+            </div>
           </div>
 
           <Accordion title="Gray Zone Score (45%)">
