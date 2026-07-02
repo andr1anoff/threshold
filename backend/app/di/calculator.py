@@ -51,6 +51,8 @@ KAPPA_FLOOR = 3.0          # weight units; protects zero-history regions.
                            # One recent level-4 event (2.0×1.6=3.2) in a dead
                            # theatre → GZ≈0.66: loud, and deliberately so.
 BASELINE_WINDOW = 90       # days of history the median is computed over
+COLD_START_MIN_DAYS = 15   # min non-zero-load days for a per-region baseline
+                           # to be meaningful; below this, legacy KAPPA applies
 LOAD_WINDOW = 30           # the load window itself (unchanged from v17)
 
 KAPPA = 15.0               # legacy global κ — kept for reference/tests
@@ -97,12 +99,23 @@ def _kappa_for_region(events_120d: list, target_date: date) -> float:
     κ_region from the trailing median of daily 30-day loads over the past
     BASELINE_WINDOW days (days -90..-1 relative to target; today excluded so
     the current spike is measured against the pre-existing norm).
+
+    Cold-start guard (v1.8.1): the KAPPA_FLOOR early-warning behavior is meant
+    for a spike in a QUIET theatre — one with an established history of low
+    load. A theatre with no meaningful history at all (median = 0 and almost
+    no non-zero days, e.g. right after new sources come online) is a different
+    situation: amplifying it produces observability spikes, not early warning.
+    Such regions fall back to the legacy global KAPPA until they accumulate
+    enough history for a per-region baseline to mean something.
     """
     loads = []
     for d_off in range(1, BASELINE_WINDOW + 1):
         anchor = target_date - timedelta(days=d_off)
         loads.append(_load_from_events(events_120d, anchor))
     med = _median(loads)
+    nonzero_days = sum(1 for l in loads if l > 0)
+    if med <= 0 and nonzero_days < COLD_START_MIN_DAYS:
+        return KAPPA  # cold start: no baseline to deviate from yet
     return max(KAPPA_FLOOR, NORM_C * med)
 
 

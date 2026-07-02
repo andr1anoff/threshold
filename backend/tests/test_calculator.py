@@ -88,8 +88,11 @@ def test_median_basic():
     assert _median([1, 2, 3, 4]) == 2.5
 
 
-def test_kappa_floor_on_empty_history():
-    assert _kappa_for_region([], TODAY) == KAPPA_FLOOR
+def test_empty_history_is_cold_start():
+    # v1.8.1: no history at all = cold start = legacy global kappa,
+    # NOT the sensitive floor (which is reserved for established quiet theatres)
+    from app.di.calculator import KAPPA
+    assert _kappa_for_region([], TODAY) == KAPPA
 
 
 def test_load_respects_30d_window():
@@ -143,10 +146,45 @@ def test_source_step_decays_via_median():
     assert abs(gz_abs - gz_old) < 0.08  # step absorbed after recalibration window
 
 
-def test_dead_region_single_event_is_loud():
+def test_dead_region_single_event_is_muted():
+    # v1.8.1: one event in a region with zero prior history is treated as
+    # cold start, not as an alarm — observability, not escalation.
+    from app.di.calculator import KAPPA
     evs = [{"severity": 4, "corroboration": 2,
             "date": (TODAY - timedelta(days=1)).isoformat()}]
     kappa = _kappa_for_region(evs, TODAY)
-    assert kappa == KAPPA_FLOOR
+    assert kappa == KAPPA
     gz = _gz_from_events(evs, TODAY, kappa=kappa)
-    assert gz > 0.5  # early-warning by design
+    assert gz < 0.4
+
+
+# ── v1.8.1: cold-start guard ─────────────────────────────────────────
+from app.di.calculator import KAPPA, COLD_START_MIN_DAYS
+
+
+def test_cold_start_uses_legacy_kappa():
+    """A region whose entire history is 2 days old (new sources just came
+    online) must NOT be treated as a quiet theatre with a spike."""
+    evs = [{"severity": 3, "corroboration": 1,
+            "date": (TODAY - timedelta(days=d)).isoformat()}
+           for d in range(2) for _ in range(5)]
+    kappa = _kappa_for_region(evs, TODAY)
+    assert kappa == KAPPA  # legacy global, not the floor
+    gz = _gz_from_events(evs, TODAY, kappa=kappa)
+    assert gz < 0.75  # loud-ish, but not pinned at the ceiling
+
+
+def test_established_quiet_theatre_keeps_early_warning():
+    """A theatre with a long history of sparse-but-present activity keeps
+    the sensitive per-region κ — the early-warning behavior is preserved."""
+    evs = [{"severity": 1, "corroboration": 1,
+            "date": (TODAY - timedelta(days=d)).isoformat()}
+           for d in range(0, 120, 3)]  # one minor event every 3 days
+    kappa = _kappa_for_region(evs, TODAY)
+    assert kappa < KAPPA  # per-region baseline in effect, not legacy
+
+    spiked = evs + [{"severity": 4, "corroboration": 2,
+                     "date": (TODAY - timedelta(days=1)).isoformat()}]
+    k2 = _kappa_for_region(spiked, TODAY)
+    gz = _gz_from_events(spiked, TODAY, kappa=k2)
+    assert gz > 0.5  # the spike still registers loudly
