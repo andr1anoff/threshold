@@ -85,11 +85,16 @@ def extract_brief(text: str, max_chars: int = 280) -> str:
 # ── LLM Security Filter ──────────────────────────────────────────────
 
 def _is_security_incident_sync(title: str, description: str) -> bool:
-    """Sync Groq check — run via asyncio.to_thread from async context."""
-    try:
-        from app.llm.classifier import _get_client
-        client = _get_client()
-        prompt = f"""Classify this news as SECURITY_INCIDENT or NOT_SECURITY.
+    """
+    LLM gate for RSS entries. FAIL CLOSED: if the LLM is unreachable, the
+    article is REJECTED, not accepted. A missed real incident costs one news
+    cycle (the next scrape or another source catches it); a flood of accepted
+    garbage poisons the index and takes a manual purge to undo — asymmetric
+    costs, so the gate closes on failure. (Postmortem: 2026-07-01, a broken
+    import made this filter fail open and ~700 non-security articles were
+    ingested in one run.)
+    """
+    prompt = f"""Classify this news as SECURITY_INCIDENT or NOT_SECURITY.
 
 SECURITY_INCIDENT = military attack, airstrike, shelling, drone strike, troop movement,
 naval incident, cyberattack, cross-border firing, armed clash, ceasefire violation,
@@ -97,23 +102,23 @@ missile launch, bombing, occupation activity, infiltration, border incident.
 
 NOT_SECURITY = diplomatic meeting, political statement, economic news, aid delivery,
 refugee report, opinion piece, cultural event, election news, protest (non-violent),
-legislation, trade deal, summit, press conference.
+legislation, trade deal, summit, press conference, crime story, accident,
+sports, business, technology, entertainment.
 
 Title: {title}
 Description: {description[:200]}
 
 Reply with EXACTLY one word: SECURITY_INCIDENT or NOT_SECURITY."""
-        response = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=5,
-            temperature=0
-        )
-        result = response.choices[0].message.content.strip().upper()
-        return "SECURITY_INCIDENT" in result
+    try:
+        from app.llm.providers import call_llm
+        raw = call_llm(prompt, tier="fast", max_tokens=5, temperature=0.0)
+        if not raw:
+            logger.warning("Security filter: empty LLM response — REJECTING article (fail closed)")
+            return False
+        return "SECURITY_INCIDENT" in raw.strip().upper()
     except Exception as e:
-        logger.warning(f"Security filter LLM unavailable, accepting article: {e}")
-        return True
+        logger.warning(f"Security filter unavailable — REJECTING article (fail closed): {e}")
+        return False
 
 
 async def is_security_incident(title: str, description: str) -> bool:
