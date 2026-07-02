@@ -94,6 +94,28 @@ def _is_security_incident_sync(title: str, description: str) -> bool:
     import made this filter fail open and ~700 non-security articles were
     ingested in one run.)
     """
+    # Cheap keyword pre-gate: no security-adjacent term anywhere -> reject
+    # without spending an LLM call. The LLM then only adjudicates candidates.
+    # Recall tradeoff is acceptable: the vocabulary below is deliberately broad,
+    # and an incident phrased entirely without it is rare in security reporting.
+    SECURITY_TERMS = (
+        "attack","strike","airstrike","missile","drone","shell","bomb","explos",
+        "troop","militar","soldier","army","navy","naval","air force","weapon",
+        "clash","fight","combat","offensive","invasion","incursion","infiltrat",
+        "cyberattack","hack","sabotage","kill","casualt","wounded","dead",
+        "ceasefire","border","frontline","artillery","rocket","siege","ambush",
+        "insurgen","militia","rebel","jihadi","terror","hostage","abduct",
+        "warship","fighter jet","air defense","air defence","mobiliz","mobilis",
+        "exercise","drill","deployment","escalat","occupation","annex","coup",
+        "paramilitary","mercenar","wagner","spec ops","special forces","gunmen",
+        "shooting","shot down","intercept","violation","airspace","blockade",
+        "sanction","nuclear","icbm","ballistic","warhead","detonat","ied",
+        "checkpoint","evacuat","martial law","curfew","armed"
+    )
+    text_l = f"{title} {description}".lower()
+    if not any(t in text_l for t in SECURITY_TERMS):
+        return False
+
     prompt = f"""Classify this news as SECURITY_INCIDENT or NOT_SECURITY.
 
 SECURITY_INCIDENT = military attack, airstrike, shelling, drone strike, troop movement,
@@ -157,56 +179,56 @@ RSS_SOURCES = [
     # None = cross-regional source, keyword detection only.
 
     # ── Cross-regional (original pool) ──────────────────────────────
-    ("UN News",           "https://news.un.org/feed/subscribe/en/news/all/rss.xml", 15, None),
-    ("UN Security Council","https://www.un.org/press/en/feed/sec-consolidated",    15, None),
-    ("ICRC",              "https://www.icrc.org/en/rss/news",                        15, None),
-    ("Human Rights Watch","https://www.hrw.org/rss",                                15, None),
-    ("Amnesty Intl",      "https://www.amnesty.org/en/feed/",                       15, None),
-    ("Bellingcat",        "https://www.bellingcat.com/feed/",                       15, None),
-    ("RUSI",              "https://www.rusi.org/rss.xml",                           15, None),
-    ("War on the Rocks",  "https://warontherocks.com/feed/",                        15, None),
-    ("The Diplomat",      "https://thediplomat.com/feed/",                          15, None),
-    ("Sudan Tribune",     "https://sudantribune.com/feed/",                         15, "Sudan"),
-    ("Middle East Eye",   "https://www.middleeasteye.net/rss",                      15, None),
-    ("Kyiv Independent",  "https://kyivindependent.com/feed/",                      10, "Ukraine"),
-    ("ISW",               "https://www.understandingwar.org/rss.xml",               20, None),
+    ("UN News",           "https://news.un.org/feed/subscribe/en/news/all/rss.xml", 4, None),
+    ("UN Security Council","https://www.un.org/press/en/feed/sec-consolidated",    4, None),
+    ("ICRC",              "https://www.icrc.org/en/rss/news",                        4, None),
+    ("Human Rights Watch","https://www.hrw.org/rss",                                4, None),
+    ("Amnesty Intl",      "https://www.amnesty.org/en/feed/",                       4, None),
+    ("Bellingcat",        "https://www.bellingcat.com/feed/",                       4, None),
+    ("RUSI",              "https://www.rusi.org/rss.xml",                           4, None),
+    ("War on the Rocks",  "https://warontherocks.com/feed/",                        4, None),
+    ("The Diplomat",      "https://thediplomat.com/feed/",                          4, None),
+    ("Sudan Tribune",     "https://sudantribune.com/feed/",                         4, "Sudan"),
+    ("Middle East Eye",   "https://www.middleeasteye.net/rss",                      4, None),
+    ("Kyiv Independent",  "https://kyivindependent.com/feed/",                      4, "Ukraine"),
+    ("ISW",               "https://www.understandingwar.org/rss.xml",               4, None),
 
     # ── Coverage-floor expansion, verified 2026-07-02 ────────────────
     # Baltic (was ~0 dedicated sources)
-    ("ERR News",          "https://news.err.ee/rss",                                15, "Baltic"),
-    ("LSM",               "https://eng.lsm.lv/rss/",                                15, "Baltic"),
-    ("LRT English",       "https://www.lrt.lt/en/news-in-english?rss",              15, "Baltic"),
-    ("Yle News",          "https://feeds.yle.fi/uutiset/v1/recent.rss?publisherIds=YLE_NEWS", 15, "Baltic"),
+    ("ERR News",          "https://news.err.ee/rss",                                4, "Baltic"),
+    ("LSM",               "https://eng.lsm.lv/rss/",                                4, "Baltic"),
+    ("LRT English",       "https://www.lrt.lt/en/news-in-english?rss",              4, "Baltic"),
+    ("Yle News",          "https://feeds.yle.fi/uutiset/v1/recent.rss?publisherIds=YLE_NEWS", 4, "Baltic"),
     # Taiwan / SCS
-    ("Taipei Times",      "https://www.taipeitimes.com/xml/index.rss",              15, "Taiwan Strait"),
-    ("Focus Taiwan",      "https://feeds.feedburner.com/rsscna/politics",           15, "Taiwan Strait"),
+    ("Taipei Times",      "https://www.taipeitimes.com/xml/index.rss",              4, "Taiwan Strait"),
+    ("Focus Taiwan",      "https://feeds.feedburner.com/rsscna/politics",           4, "Taiwan Strait"),
     # Korean Peninsula
-    ("38 North",          "https://www.38north.org/feed/",                          20, "Korean Peninsula"),
-    ("NK News",           "https://www.nknews.org/feed/",                           20, "Korean Peninsula"),
+    ("38 North",          "https://www.38north.org/feed/",                          4, "Korean Peninsula"),
+    ("NK News",           "https://www.nknews.org/feed/",                           4, "Korean Peninsula"),
     # South Caucasus (was 0 dedicated sources)
-    ("OC Media",          "https://oc-media.org/feed/",                             15, "South Caucasus"),
-    ("JAMnews",           "https://jam-news.net/feed/",                             15, "South Caucasus"),
-    ("Civil.ge",          "https://civil.ge/feed",                                  15, "South Caucasus"),
+    ("OC Media",          "https://oc-media.org/feed/",                             4, "South Caucasus"),
+    ("JAMnews",           "https://jam-news.net/feed/",                             4, "South Caucasus"),
+    ("Civil.ge",          "https://civil.ge/feed",                                  4, "South Caucasus"),
     # Balkans / Kosovo
-    ("Balkan Insight",    "https://balkaninsight.com/feed/",                        15, "Kosovo"),
+    ("Balkan Insight",    "https://balkaninsight.com/feed/",                        4, "Kosovo"),
     # Arctic
-    ("Eye on the Arctic", "https://www.rcinet.ca/eye-on-the-arctic/feed/",          20, "Arctic"),
+    ("Eye on the Arctic", "https://www.rcinet.ca/eye-on-the-arctic/feed/",          4, "Arctic"),
     # Haiti
-    ("Haitian Times",     "https://haitiantimes.com/feed/",                         15, "Haiti"),
+    ("Haitian Times",     "https://haitiantimes.com/feed/",                         4, "Haiti"),
     # Africa cluster
-    ("Radio Dabanga",     "https://www.dabangasudan.org/en/all-news/rss",           15, "Sudan"),
-    ("Libya Herald",      "https://libyaherald.com/feed/",                          15, "Libya"),
-    ("Somali Guardian",   "https://somaliguardian.com/feed/",                       15, "Somalia"),
-    ("Ethiopia Observer", "https://www.ethiopiaobserver.com/feed/",                 15, "Ethiopia"),
-    ("Zitamar News",      "https://zitamar.com/feed/",                              15, "Mozambique"),
+    ("Radio Dabanga",     "https://www.dabangasudan.org/en/all-news/rss",           4, "Sudan"),
+    ("Libya Herald",      "https://libyaherald.com/feed/",                          4, "Libya"),
+    ("Somali Guardian",   "https://somaliguardian.com/feed/",                       4, "Somalia"),
+    ("Ethiopia Observer", "https://www.ethiopiaobserver.com/feed/",                 4, "Ethiopia"),
+    ("Zitamar News",      "https://zitamar.com/feed/",                              4, "Mozambique"),
     # Myanmar
-    ("Myanmar Now",       "https://myanmar-now.org/en/feed/",                       15, "Myanmar"),
-    ("DVB English",       "https://english.dvb.no/feed/",                           15, "Myanmar"),
+    ("Myanmar Now",       "https://myanmar-now.org/en/feed/",                       4, "Myanmar"),
+    ("DVB English",       "https://english.dvb.no/feed/",                           4, "Myanmar"),
     # Defence trade press (exercise signal, cross-regional)
-    ("Breaking Defense",  "https://breakingdefense.com/feed/",                      15, None),
-    ("Defense News",      "https://www.defensenews.com/arc/outboundfeeds/rss/?outputType=xml", 15, None),
-    ("Naval News",        "https://www.navalnews.com/feed/",                        15, None),
-    ("Kyiv Post",         "https://www.kyivpost.com/feed",                          15, "Ukraine"),
+    ("Breaking Defense",  "https://breakingdefense.com/feed/",                      4, None),
+    ("Defense News",      "https://www.defensenews.com/arc/outboundfeeds/rss/?outputType=xml", 4, None),
+    ("Naval News",        "https://www.navalnews.com/feed/",                        4, None),
+    ("Kyiv Post",         "https://www.kyivpost.com/feed",                          4, "Ukraine"),
 ]
 
 async def scrape_rss_all(db) -> int:
