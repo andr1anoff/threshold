@@ -165,7 +165,7 @@ def get_status():
         "incidents": db.table("incidents").select("id",count="exact").execute().count,
         "exercises": db.table("exercises").select("id",count="exact").execute().count,
         "ei_records": db.table("escalation_index").select("id",count="exact").execute().count if True else 0,
-        "sources": ["RSS×13","ReliefWeb/OCHA","Guardian","Wikipedia","UN News×6","UCDP","GDELT","DeepState","CIT","SHAPE NATO","Defense.gov"],
+        "sources": ["RSS×38","ReliefWeb/OCHA","Guardian","Wikipedia","UN News×6","UCDP","GDELT","DeepState","CIT","SHAPE NATO","Defense.gov"],
     }
 
 @router.post("/resweep", dependencies=ADMIN)

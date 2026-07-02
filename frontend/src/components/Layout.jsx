@@ -93,7 +93,7 @@ const NAV = [
   { label:"Briefs",    path:"/briefs" },
 ];
 
-const SOURCES = ["ReliefWeb/OCHA","UCDP Uppsala","Wikipedia","UN News","GDELT","DeepState","CIT Leviev","SHAPE NATO"];
+const SOURCES = ["ReliefWeb/OCHA","UCDP Uppsala","UN News","38 RSS feeds","Regional press ×14 theatres","GDELT","DeepState","Wikipedia CE"];
 
 export default function Layout({ children }) {
   const loc = useLocation();

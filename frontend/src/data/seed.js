@@ -21,6 +21,15 @@ export const REGIONS = [
   { id:"Mozambique",          label:"Mozambique",         short:"MZ",  ei:null, prev:null, trend:null,   cat:"conflict", category:"conflict", lat:-15,  lng:39,    theatre:"centafrica" },
 ];
 
+// Regions whose source pool was recently expanded. Their per-region baseline
+// (v1.8 kappa normalization) has not yet absorbed the new observation volume,
+// so scores may run high relative to real escalation. Remove entries manually
+// once ~60-90 days of history under the new pool have accumulated.
+export const RECALIBRATING = {
+  "Baltic":        "Source pool expanded July 2026 (ERR, LSM, LRT, Yle). Baseline recalibrating; score may overstate escalation until ~Sep 2026.",
+  "Taiwan Strait": "Source pool expanded July 2026 (Taipei Times, Focus Taiwan). Baseline recalibrating; score may overstate escalation until ~Sep 2026.",
+};
+
 export const DI_HISTORY = {};
 
 // v17: fake seed sparklines removed. Sparklines and trends now come from

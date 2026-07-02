@@ -4,7 +4,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianG
 import Layout from "../components/Layout";
 import Sparkline from "../components/Sparkline";
 import AnimatedNumber from "../components/AnimatedNumber";
-import { REGIONS, CATS, EI_COLOR, EI_LABEL, getConf } from "../data/seed";
+import { REGIONS, CATS, EI_COLOR, EI_LABEL, getConf, RECALIBRATING } from "../data/seed";
 
 const API = import.meta.env.VITE_API_URL || "https://threshold-production-d13c.up.railway.app";
 
@@ -71,6 +71,15 @@ export default function RegionPage() {
   return (
     <Layout>
       <div className="route-in" style={{ background:"var(--cream)" }}>
+
+        {RECALIBRATING[region.id] && (
+          <section className="container-wide" style={{ paddingTop:20 }}>
+            <div style={{ display:"flex", gap:12, alignItems:"flex-start", background:"rgba(176,125,26,0.07)", border:"1px solid rgba(176,125,26,0.3)", borderRadius:10, padding:"12px 16px" }}>
+              <span className="micro" style={{ color:"#B07D1A", border:"1px solid rgba(176,125,26,0.4)", borderRadius:4, padding:"2px 6px", flexShrink:0, marginTop:1 }}>RECALIBRATING</span>
+              <span style={{ fontSize:12.5, color:"var(--ink-muted)", lineHeight:1.6 }}>{RECALIBRATING[region.id]} See the Limitations section on the About page for details.</span>
+            </div>
+          </section>
+        )}
 
         {/* ─── BREADCRUMB ─────────────────────── */}
         <section className="container-wide" style={{ paddingTop:24, paddingBottom:12 }}>

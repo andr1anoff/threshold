@@ -2,17 +2,53 @@ import { useState, Fragment } from "react";
 import Layout from "../components/Layout";
 import Logo from "../components/Logo";
 
-const SOURCES = [
-  { name:"OCHA / ReliefWeb", cat:"Institutional", desc:"UN humanitarian and conflict reports by country.", url:"https://reliefweb.int", conf:"High" },
-  { name:"UCDP Uppsala",     cat:"Academic",       desc:"Verified armed conflict events, geocoded.", url:"https://ucdp.uu.se", conf:"High" },
-  { name:"UN News",          cat:"Institutional", desc:"Official UN press releases: peace & security, regional.", url:"https://news.un.org", conf:"High" },
-  { name:"ICRC",             cat:"Institutional", desc:"International Committee of the Red Cross field reporting.", url:"https://icrc.org", conf:"High" },
-  { name:"SHAPE NATO",       cat:"Official",       desc:"Supreme HQ Allied Powers Europe: exercise announcements.", url:"https://shape.nato.int", conf:"High" },
-  { name:"DeepState",        cat:"OSINT",          desc:"Ukrainian frontline tracker. Used for tactical context.", url:"https://deepstatemap.live", conf:"Medium" },
-  { name:"CIT / Leviev",     cat:"OSINT",          desc:"Conflict Intelligence Team. Arms tracking, verified imagery.", url:"https://citeam.org", conf:"Medium" },
-  { name:"Bellingcat",       cat:"OSINT",          desc:"Open-source investigation. OSINT verification.", url:"https://bellingcat.com", conf:"Medium" },
-  { name:"Guardian API",     cat:"Media",          desc:"International news coverage. Used as secondary reference.", url:"https://open-platform.theguardian.com", conf:"Medium" },
-  { name:"Wikipedia Current Events", cat:"Secondary", desc:"Discovery layer only. Not used as primary verification.", url:"https://en.wikipedia.org/wiki/Portal:Current_events", conf:"Low" },
+const SOURCE_GROUPS = [
+  {
+    group: "Institutional & Academic",
+    note: "High-confidence structured references. Primary verification layer.",
+    items: [
+      { name:"OCHA / ReliefWeb", desc:"UN humanitarian and conflict reports by country.", url:"https://reliefweb.int", conf:"High", cat:"Institutional" },
+      { name:"UCDP Uppsala", desc:"Verified armed conflict events, geocoded.", url:"https://ucdp.uu.se", conf:"High", cat:"Academic" },
+      { name:"UN News (global + 4 regional feeds)", desc:"Official UN press releases: peace & security.", url:"https://news.un.org", conf:"High", cat:"Institutional" },
+      { name:"UN Security Council", desc:"Consolidated Security Council press output.", url:"https://www.un.org/press", conf:"High", cat:"Institutional" },
+    ],
+  },
+  {
+    group: "Regional & Local Press",
+    note: "Added July 2026 as part of the coverage-floor expansion: every monitored theatre now has at least one dedicated regional source. Proximity coverage of theatres that international media under-report. Availability of individual feeds varies.",
+    items: [
+      { name:"ERR News / LSM / LRT / Yle", desc:"Estonia, Latvia, Lithuania, Finland — Baltic theatre.", url:"https://eng.lsm.lv", conf:"Medium", cat:"Media" },
+      { name:"Taipei Times / Focus Taiwan (CNA)", desc:"Taiwan Strait theatre.", url:"https://www.taipeitimes.com", conf:"Medium", cat:"Media" },
+      { name:"38 North / NK News", desc:"Korean Peninsula analysis and reporting.", url:"https://www.38north.org", conf:"Medium", cat:"OSINT" },
+      { name:"OC Media / JAMnews / Civil.ge", desc:"South Caucasus theatre.", url:"https://oc-media.org", conf:"Medium", cat:"Media" },
+      { name:"Balkan Insight (BIRN)", desc:"Kosovo and Western Balkans.", url:"https://balkaninsight.com", conf:"Medium", cat:"Media" },
+      { name:"Kyiv Independent / Kyiv Post", desc:"Ukraine theatre.", url:"https://kyivindependent.com", conf:"Medium", cat:"Media" },
+      { name:"Radio Dabanga / Sudan Tribune", desc:"Sudan theatre.", url:"https://www.dabangasudan.org", conf:"Medium", cat:"Media" },
+      { name:"Libya Herald · Somali Guardian · Ethiopia Observer · Zitamar", desc:"Libya, Somalia, Ethiopia, Mozambique.", url:"https://zitamar.com", conf:"Medium", cat:"Media" },
+      { name:"Myanmar Now / DVB English", desc:"Myanmar theatre (exile press).", url:"https://english.dvb.no", conf:"Medium", cat:"Media" },
+      { name:"Haitian Times · Eye on the Arctic", desc:"Haiti and Arctic theatres.", url:"https://haitiantimes.com", conf:"Medium", cat:"Media" },
+    ],
+  },
+  {
+    group: "Defence & Global OSINT",
+    note: "Cross-regional analysis, exercise signalling, and OSINT verification.",
+    items: [
+      { name:"Bellingcat", desc:"Open-source investigation and verification.", url:"https://bellingcat.com", conf:"Medium", cat:"OSINT" },
+      { name:"Breaking Defense / Defense News / Naval News", desc:"Defence trade press — exercise and deployment signal.", url:"https://breakingdefense.com", conf:"Medium", cat:"Media" },
+      { name:"RUSI / War on the Rocks / The Diplomat", desc:"Defence and security analysis.", url:"https://warontherocks.com", conf:"Medium", cat:"OSINT" },
+      { name:"Middle East Eye", desc:"Middle East regional coverage.", url:"https://www.middleeasteye.net", conf:"Medium", cat:"Media" },
+      { name:"DeepState", desc:"Ukrainian frontline tracker. Tactical context only.", url:"https://deepstatemap.live", conf:"Medium", cat:"OSINT" },
+    ],
+  },
+  {
+    group: "Discovery & Secondary",
+    note: "Used to surface events for verification, never as sole evidence.",
+    items: [
+      { name:"Guardian API", desc:"International news coverage. Secondary reference.", url:"https://open-platform.theguardian.com", conf:"Medium", cat:"Media" },
+      { name:"GDELT", desc:"Global event database. Discovery layer.", url:"https://www.gdeltproject.org", conf:"Low", cat:"Secondary" },
+      { name:"Wikipedia Current Events", desc:"Discovery layer only. Not used as primary verification.", url:"https://en.wikipedia.org/wiki/Portal:Current_events", conf:"Low", cat:"Secondary" },
+    ],
+  },
 ];
 
 const CAT_COLOR = { Institutional:"#2D7A4F", Academic:"#185FA5", Official:"#185FA5", OSINT:"#B07D1A", Media:"#888", Secondary:"rgba(26,16,8,0.35)" };
@@ -123,6 +159,7 @@ export default function AboutPage() {
               <li>Weights are theory-driven, not statistically estimated from historical data.</li>
               <li>Source availability and update frequency vary significantly across regions.</li>
               <li>Sparse reporting in some regions can depress short-term scores below actual escalation levels.</li>
+              <li><strong style={{ color:"var(--ink)" }}>Recalibration periods:</strong> when a theatre's source pool is expanded, its per-region baseline needs roughly 60–90 days to absorb the new observation volume. During this window the score can overstate escalation. Affected theatres carry a visible RECALIBRATING marker on their cards (currently: Baltic and Taiwan Strait, source pool expanded July 2026).</li>
               <li>AI-generated briefs are analytical summaries, not independent intelligence judgements.</li>
             </ul>
           </div>
@@ -164,6 +201,7 @@ export default function AboutPage() {
             <div style={{ marginTop:12, paddingTop:12, borderTop:"1px solid rgba(107,26,42,0.12)" }}>
               <div style={{ fontSize:10, fontWeight:700, letterSpacing:"1.5px", color:"var(--crimson)", marginBottom:8 }}>RECENT UPDATES</div>
               <ul style={{ margin:0, paddingLeft:16, fontSize:12, color:"var(--ink-muted)", lineHeight:1.9 }}>
+                <li><strong style={{ color:"var(--ink)" }}>v1.8.1</strong> — Cold-start guard: theatres without meaningful baseline history fall back to the global saturation constant instead of the sensitive per-region floor, preventing observability spikes when new sources come online. Recalibrating theatres are now marked in the interface.</li>
                 <li><strong style={{ color:"var(--ink)" }}>v1.8</strong> — Per-region normalization of the Gray-Zone saturation constant (trailing 90-day median). Methodology version now recorded with every daily index value.</li>
                 <li><strong style={{ color:"var(--ink)" }}>v1.7</strong> — All charts, sparklines and trends now render exclusively from recorded index history; no synthetic placeholder data anywhere in the interface. LLM classification hardened with a multi-provider fallback chain.</li>
                 <li><strong style={{ color:"var(--ink)" }}>v1.6</strong> — Event-based scoring: incident reports are deduplicated into events; severity dominates volume.</li>
@@ -216,26 +254,28 @@ export default function AboutPage() {
         <section id="sources" style={{ marginBottom:44 }}>
           <SectionLabel>DATA SOURCES</SectionLabel>
           <p style={{ fontSize:13, color:"var(--ink-muted)", marginBottom:16, lineHeight:1.6 }}>
-            Sources are categorised by confidence level. UN, OCHA, and UCDP sources are treated as high-confidence institutional or academic references. OSINT sources are used for tactical context and cross-verification. Wikipedia Current Events is a discovery layer only.
+            The pool currently spans 38 curated feeds plus structured databases, grouped below by function. UN, OCHA, and UCDP sources are treated as high-confidence institutional or academic references; regional press provides proximity coverage of under-reported theatres; OSINT and defence press provide cross-verification and exercise signal. Feed availability varies day to day and the index is designed to remain well-defined when any source is unreachable.
           </p>
-          <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-            {SOURCES.map(s => (
-              <div key={s.name} style={{ background:"var(--card)", border:"1px solid var(--card-border)", borderRadius:12, padding:"13px 18px", display:"flex", gap:14, alignItems:"flex-start" }}>
-                <div style={{ display:"flex", flexDirection:"column", gap:4, flexShrink:0 }}>
-                  <span style={{ fontSize:8, fontWeight:700, letterSpacing:"1px", padding:"2px 6px", borderRadius:3, background:`${CAT_COLOR[s.cat]}10`, color:CAT_COLOR[s.cat], border:`1px solid ${CAT_COLOR[s.cat]}25` }}>
-                    {s.cat.toUpperCase()}
-                  </span>
-                  <span style={{ fontSize:8, fontWeight:700, letterSpacing:"1px", padding:"2px 6px", borderRadius:3, color:CONF_COLOR[s.conf] }}>
-                    {s.conf} confidence
-                  </span>
+          <div style={{ display:"flex", flexDirection:"column", gap:0 }}>
+            {SOURCE_GROUPS.map(g => (
+              <Accordion key={g.group} title={`${g.group} (${g.items.length})`}>
+                <p style={{ fontSize:12, color:"var(--ink-55)", marginBottom:12, lineHeight:1.6 }}>{g.note}</p>
+                <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                  {g.items.map(src => (
+                    <div key={src.name} style={{ display:"flex", gap:12, alignItems:"flex-start", paddingBottom:8, borderBottom:"1px solid rgba(26,16,8,0.05)" }}>
+                      <span style={{ fontSize:8, fontWeight:700, letterSpacing:"1px", padding:"2px 6px", borderRadius:3, color:CONF_COLOR[src.conf], border:`1px solid ${CONF_COLOR[src.conf]}30`, flexShrink:0, marginTop:2 }}>
+                        {src.conf.toUpperCase()}
+                      </span>
+                      <div>
+                        <a href={src.url} target="_blank" rel="noopener noreferrer" style={{ fontSize:13, fontWeight:600, color:"var(--ink)", textDecoration:"none" }}>
+                          {src.name} ↗
+                        </a>
+                        <div style={{ fontSize:12, color:"var(--ink-muted)", marginTop:1, lineHeight:1.5 }}>{src.desc}</div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <a href={s.url} target="_blank" rel="noopener noreferrer" style={{ fontSize:13, fontWeight:600, color:"var(--ink)", textDecoration:"none" }}>
-                    {s.name} ↗
-                  </a>
-                  <div style={{ fontSize:12, color:"var(--ink-muted)", marginTop:2, lineHeight:1.5 }}>{s.desc}</div>
-                </div>
-              </div>
+              </Accordion>
             ))}
           </div>
         </section>

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
 import Sparkline from "../components/Sparkline";
 import AnimatedNumber from "../components/AnimatedNumber";
-import { REGIONS, CATS, EI_COLOR, EI_LABEL, getConf } from "../data/seed";
+import { REGIONS, CATS, EI_COLOR, EI_LABEL, getConf, RECALIBRATING } from "../data/seed";
 
 const API = import.meta.env.VITE_API_URL || "https://threshold-production-d13c.up.railway.app";
 
@@ -255,7 +255,12 @@ function RegionTable({ regions, onSelect }) {
               {spark && <Sparkline data={spark} color={color} width={150} height={22} strokeWidth={1.25} />}
             </div>
             <span style={{ textAlign:"right" }}>
-              <span className="micro" style={{ color }}>{EI_LABEL(r.ei)}</span>
+              <span style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:5 }}>
+                <span className="micro" style={{ color }}>{EI_LABEL(r.ei)}</span>
+                {RECALIBRATING[r.id] && (
+                  <span className="micro" title={RECALIBRATING[r.id]} style={{ color:"#B07D1A", border:"1px solid rgba(176,125,26,0.35)", borderRadius:4, padding:"1px 5px", fontSize:8, cursor:"help" }}>RECALIBRATING</span>
+                )}
+              </span>
             </span>
             <span style={{ color:"var(--ink-40)", textAlign:"right" }}>→</span>
           </div>
@@ -278,7 +283,12 @@ function RegionGrid({ regions, onSelect }) {
                 <div className="filing" style={{ marginBottom:4 }}>№ {String(i+1).padStart(2,"0")} · {r.short||r.id.slice(0,3).toUpperCase()}</div>
                 <div style={{ fontSize:17, fontWeight:600 }}>{r.label}</div>
               </div>
-              <span className="micro" style={{ color }}>{EI_LABEL(r.ei)}</span>
+              <span style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:5 }}>
+                <span className="micro" style={{ color }}>{EI_LABEL(r.ei)}</span>
+                {RECALIBRATING[r.id] && (
+                  <span className="micro" title={RECALIBRATING[r.id]} style={{ color:"#B07D1A", border:"1px solid rgba(176,125,26,0.35)", borderRadius:4, padding:"1px 5px", fontSize:8, cursor:"help" }}>RECALIBRATING</span>
+                )}
+              </span>
             </div>
             <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", marginBottom:12 }}>
               <span className="tab-num" style={{ fontSize:56, fontWeight:800, letterSpacing:"-0.035em", color, lineHeight:1 }}>{r.ei ?? "—"}</span>
