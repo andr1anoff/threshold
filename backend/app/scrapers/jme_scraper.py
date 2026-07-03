@@ -38,12 +38,15 @@ REGION_KEYWORDS = {
     "Mediterranean":    ["mediterranean","nato south"],
 }
 
-def detect_region(text: str) -> str:
+def detect_region(text: str):
+    """Fail closed: no keyword match -> None, caller must skip the record.
+    A wrong-region exercise poisons a theatre's EX component; a skipped one
+    costs a news cycle. Same asymmetry as the incident filter (v1.8 postmortem)."""
     t = text.lower()
     for region, kws in REGION_KEYWORDS.items():
         if any(kw in t for kw in kws):
             return region
-    return "Baltic"  # Default for NATO exercises
+    return None
 
 def parse_exercise_dates(text: str):
     patterns = [
@@ -135,6 +138,8 @@ async def scrape_shape_exercises(db) -> int:
                 troops = extract_troop_count(body)
                 start, end = parse_exercise_dates(body)
                 region = detect_region(f"{title} {body[:500]}")
+                if region is None:
+                    continue
                 record = {
                     "name": title[:200],
                     "region": region,
@@ -182,6 +187,8 @@ async def scrape_wikipedia_exercises(db) -> int:
                         continue
                     context = " ".join(c.get_text(strip=True) for c in cells)
                     region = detect_region(context)
+                    if region is None:
+                        continue
                     start, end = parse_exercise_dates(context)
                     troops = extract_troop_count(context)
                     link_tag = cells[0].find("a")
@@ -229,6 +236,8 @@ async def scrape_defense_gov_exercises(db) -> int:
             if href and not href.startswith("http"):
                 href = f"https://www.defense.gov{href}"
             region = detect_region(title_text)
+            if region is None:
+                continue
             start, end = parse_exercise_dates(title_text)
             record = {
                 "name": title_text[:200],

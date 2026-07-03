@@ -170,7 +170,11 @@ export default function WarRoom() {
   useEffect(() => {
     fetch(`${API}/api/exercises/`)
       .then(r=>r.json())
-      .then(d=>{ if(d.data?.length) setExercises(d.data); })
+      .then(d=>{
+        if(!d.data?.length) return;
+        const cutoff = new Date(Date.now() - 14*24*3600*1000).toISOString().slice(0,10);
+        setExercises(d.data.filter(e => (e.end_date || e.start_date || "") >= cutoff));
+      })
       .catch(()=>{});
   }, []);
 

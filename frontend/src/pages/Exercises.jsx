@@ -135,7 +135,7 @@ export default function ExercisesPage() {
         <div style={{ marginBottom:28 }}>
           <div className="micro micro-accent" style={{ marginBottom:14, display:"flex", alignItems:"center", gap:8 }}>
             <span className="tick"/>
-            EXERCISES · ±14 DAY WINDOW
+            EXERCISE REGISTRY
           </div>
           <h1 className="h1" style={{ marginBottom:10 }}>Military exercises.</h1>
           <p className="body" style={{ color:"var(--ink-55)", maxWidth:560 }}>
