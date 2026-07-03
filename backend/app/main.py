@@ -11,7 +11,21 @@ from app.routers import incidents, exercises, di, correlations, admin
 
 app = FastAPI(title="Threshold API", version="0.9.0", description="Geopolitical Escalation Index")
 
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+ALLOWED_ORIGINS = [
+    "https://threshold-osint.com",
+    "https://www.threshold-osint.com",
+    "https://threshold-lyart.vercel.app",
+    "http://localhost:5173",
+    "http://localhost:4173",
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_origin_regex=r"https://threshold-[a-z0-9-]+\.vercel\.app",  # Vercel previews
+    allow_credentials=False,  # no cookies in use; wildcard+credentials was spec-invalid anyway
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "X-Admin-Key"],
+)
 
 app.include_router(incidents.router,    prefix="/api/incidents",    tags=["incidents"])
 app.include_router(exercises.router,    prefix="/api/exercises",    tags=["exercises"])

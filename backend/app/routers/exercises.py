@@ -12,7 +12,11 @@ def get_exercises(
     limit: int = Query(50, ge=1, le=200),
 ):
     db = get_client()
-    query = db.table("exercises").select("*").order("start_date", desc=True).limit(limit)
+    query = (
+        db.table("exercises").select("*")
+        .neq("announcement_status", "archived-manual")
+        .order("start_date", desc=True).limit(limit)
+    )
 
     if region:
         query = query.eq("region", region)
@@ -31,6 +35,7 @@ def get_upcoming_exercises():
     result = (
         db.table("exercises")
         .select("*")
+        .neq("announcement_status", "archived-manual")
         .gte("start_date", today)
         .order("start_date")
         .limit(20)

@@ -152,7 +152,8 @@ def calculate_ei(region: str, target_date: date = None) -> dict:
 
     future = (target_date + timedelta(days=14)).isoformat()
     exercises = db.table("exercises").select("scale,rhetoric_score") \
-        .eq("region", region).gte("end_date", target_date.isoformat()) \
+        .eq("region", region).neq("announcement_status", "archived-manual") \
+        .gte("end_date", target_date.isoformat()) \
         .lte("start_date", future).execute().data
 
     if exercises:

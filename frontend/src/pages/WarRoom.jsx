@@ -31,13 +31,9 @@ const MARKER_POS = {
   "STEADFAST DEFENDER":[55,24], "CYBER COALITION":[59.5,24.7], "STEADFAST DART":[44,26],
 };
 
-const THEATRES = [
-  { coords:[[54,10],[54,30],[65,30],[65,10]], color:"rgba(139,32,48,0.06)", border:"rgba(139,32,48,0.15)" },
-  { coords:[[0,105],[0,122],[22,122],[22,105]], color:"rgba(24,95,165,0.06)", border:"rgba(24,95,165,0.15)" },
-  { coords:[[75,-30],[75,60],[90,60],[90,-30]], color:"rgba(148,163,184,0.06)", border:"rgba(148,163,184,0.12)" },
-  { coords:[[30,-5],[30,36],[46,36],[46,-5]], color:"rgba(24,95,165,0.04)", border:"rgba(24,95,165,0.10)" },
-  { coords:[[20,28],[20,58],[37,58],[37,28]], color:"rgba(176,125,26,0.06)", border:"rgba(176,125,26,0.15)" },
-];
+// Static dashed theatre boxes removed: permanent decor that read as
+// selection state (v1.8.1 UI pass). Real geometry now comes from registry coords.
+
 
 // ±14 day window
 const WINDOW_START = new Date(Date.now() - 14*86400000).toISOString().slice(0,10);
@@ -174,7 +170,10 @@ export default function WarRoom() {
       .then(d=>{
         if(!d.data?.length) return;
         const cutoff = new Date(Date.now() - 14*24*3600*1000).toISOString().slice(0,10);
-        setExercises(d.data.filter(e => (e.end_date || e.start_date || "") >= cutoff));
+        setExercises(d.data.filter(e =>
+          e.announcement_status !== "archived-manual" &&
+          (e.end_date || e.start_date || "") >= cutoff
+        ));
       })
       .catch(()=>{});
   }, []);
@@ -221,7 +220,6 @@ export default function WarRoom() {
     for (let i=-90;i<=90;i+=15) L.polyline([[-85,i],[85,i]],{color:'rgba(107,26,42,0.05)',weight:0.4}).addTo(map);
     for (let i=-180;i<=180;i+=30) L.polyline([[-85,i],[85,i]],{color:'rgba(107,26,42,0.05)',weight:0.4}).addTo(map);
     L.polyline([[-85,0],[85,0]],{color:'rgba(107,26,42,0.10)',weight:0.7,dashArray:'5,5'}).addTo(map);
-    THEATRES.forEach(t=>L.polygon(t.coords,{fillColor:t.color,fillOpacity:1,color:t.border,weight:1,dashArray:'4,4',interactive:false}).addTo(map));
     map.on('dragstart',()=>setMapMoved(true));
     mapRef.current = map;
     setMapLoaded(true);

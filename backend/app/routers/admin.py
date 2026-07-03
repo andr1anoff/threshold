@@ -136,6 +136,11 @@ def get_narrative(region: str, force: bool = False, x_admin_key: str = Header(de
         cached = get_cached(region)
         if cached:
             return {"region": region, "narrative": cached, "cached": True}
+        # Cache miss on a public call would burn LLM quota on demand — an
+        # anonymous visitor (or a crawler walking 20 regions) must not be
+        # able to spend the day's Groq budget. Generation is admin/cron work.
+        if not _key_ok(x_admin_key):
+            raise HTTPException(status_code=404, detail="Narrative not generated yet.")
     else:
         invalidate(region)  # clear stale cache so fresh Groq call is made
     db = get_client()
@@ -150,13 +155,22 @@ def get_narrative(region: str, force: bool = False, x_admin_key: str = Header(de
     return {"region": region, "narrative": narrative, "cached": False}
 
 @router.get("/exercise-brief/{exercise_id}")
-def get_exercise_brief(exercise_id: str):
+def get_exercise_brief(exercise_id: str, x_admin_key: str = Header(default="")):
+    from app.cache.brief_cache import get_cached, set_cached
+    cache_key = f"exbrief:{exercise_id}"
+    cached = get_cached(cache_key)
+    if cached:
+        return {"exercise_id": exercise_id, "brief": cached, "cached": True}
+    if not _key_ok(x_admin_key):
+        # Same quota rule as /narrative: no key, no fresh LLM call.
+        raise HTTPException(status_code=404, detail="Brief not generated yet.")
     db = get_client()
     ex = db.table("exercises").select("*").eq("id",exercise_id).execute().data
     if not ex:
         raise HTTPException(status_code=404, detail="Exercise not found")
     brief = generate_exercise_brief(ex[0])
-    return {"exercise":ex[0].get("name"),"brief":brief}
+    set_cached(cache_key, brief)
+    return {"exercise": ex[0].get("name"), "brief": brief, "cached": False}
 
 @router.get("/status")
 def get_status():

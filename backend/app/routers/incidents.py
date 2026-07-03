@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Query
 from typing import Optional
+from datetime import date, timedelta
 from app.db.supabase import get_client
 
 router = APIRouter()
@@ -13,8 +14,9 @@ def get_incidents(
     limit: int = Query(200, ge=1, le=500),
 ):
     db = get_client()
-    query = db.table("incidents").select("*").order("date", desc=True).limit(limit)
-    count_query = db.table("incidents").select("id", count="exact")
+    since = (date.today() - timedelta(days=days)).isoformat()
+    query = db.table("incidents").select("*").gte("date", since).order("date", desc=True).limit(limit)
+    count_query = db.table("incidents").select("id", count="exact").gte("date", since)
 
     if region:
         query = query.eq("region", region)
@@ -36,12 +38,14 @@ def get_incident(incident_id: str):
 
 
 @router.get("/region/{region}")
-def get_incidents_by_region(region: str, days: int = Query(30)):
+def get_incidents_by_region(region: str, days: int = Query(30, ge=1, le=365)):
     db = get_client()
+    since = (date.today() - timedelta(days=days)).isoformat()
     result = (
         db.table("incidents")
         .select("*")
         .eq("region", region)
+        .gte("date", since)
         .order("date", desc=True)
         .limit(100)
         .execute()
