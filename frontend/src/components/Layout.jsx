@@ -316,10 +316,14 @@ export default function Layout({ children }) {
           </div>
 
           <div style={{ borderTop:"1px solid rgba(245,240,232,0.08)", paddingTop:14, display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:8, fontSize:10, color:"rgba(245,240,232,0.22)", maxWidth:1200, margin:"0 auto" }}>
-            <span>© 2026 Threshold · Research indicator — not an official intelligence assessment.</span>
-            <span style={{ display:"flex", gap:4 }}>
-              <Link to="/impressum" className="ft-a" style={{ padding:"8px 10px" }}>Impressum</Link>
-              <Link to="/datenschutz" className="ft-a" style={{ padding:"8px 10px" }}>Datenschutz</Link>
+            <span style={{ display:"flex", alignItems:"center", flexWrap:"wrap", columnGap:4 }}>
+              <span>© 2026 Threshold · Research indicator — not an official intelligence assessment.</span>
+              <span style={{ display:"flex", alignItems:"center" }}>
+                <span style={{ margin:"0 6px", color:"rgba(245,240,232,0.15)" }}>·</span>
+                <Link to="/impressum" className="ft-a" style={{ padding:"8px 6px" }}>Impressum</Link>
+                <span style={{ margin:"0 2px", color:"rgba(245,240,232,0.15)" }}>·</span>
+                <Link to="/datenschutz" className="ft-a" style={{ padding:"8px 6px" }}>Datenschutz</Link>
+              </span>
             </span>
             <span style={{ fontFamily:"var(--mono)" }}>v1.8β · threshold-osint.com</span>
           </div>
