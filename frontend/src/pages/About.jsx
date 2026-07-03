@@ -41,6 +41,15 @@ const SOURCE_GROUPS = [
     ],
   },
   {
+    group: "Exercise Registry (curated)",
+    note: "The joint-military-exercise layer is a hand-curated registry, not an automated scrape: each entry carries a source URL, announced dates, and an announcement status (confirmed vs. projected from an established cycle). Exercises are assigned to a theatre only when they take place in it; power-projection exercises elsewhere appear on the map but do not feed any theatre's EX component. The registry is versioned in the repository and reviewed monthly.",
+    items: [
+      { name:"NATO exercise programme & SHAPE releases", desc:"Annual programme, per-exercise announcements.", url:"https://shape.nato.int/nato-exercises", conf:"High", cat:"Institutional" },
+      { name:"Service & command press releases", desc:"USFK, US Pacific Fleet, national MoDs — dates and scale.", url:"https://www.cpf.navy.mil", conf:"High", cat:"Institutional" },
+      { name:"Named-exercise reference pages", desc:"Cycle patterns for projected entries (RIMPAC, Vostok, Keen Sword).", url:"https://en.wikipedia.org/wiki/List_of_Vostok_exercises", conf:"Medium", cat:"Secondary" },
+    ],
+  },
+  {
     group: "Discovery & Secondary",
     note: "Used to surface events for verification, never as sole evidence.",
     items: [

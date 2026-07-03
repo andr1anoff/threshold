@@ -49,7 +49,8 @@ function inWindow(ex) {
   return s <= WINDOW_END && e >= WINDOW_START;
 }
 
-function getPos(name) {
+function getPos(name, ex) {
+  if (ex && ex.lat != null && ex.lng != null) return [ex.lat, ex.lng];
   const u = name.toUpperCase();
   for (const [k,v] of Object.entries(MARKER_POS)) { if (u.includes(k)) return v; }
   if (u.includes("PACIFIC")||u.includes("INDO")) return [-10,140];
@@ -59,10 +60,10 @@ function getPos(name) {
   return [30,15];
 }
 
-function getViewport(name) {
+function getViewport(name, ex) {
   const u = name.toUpperCase();
   for (const [k,v] of Object.entries(VIEWPORTS)) { if (u.includes(k)) return v; }
-  const [lat,lng] = getPos(name);
+  const [lat,lng] = getPos(name, ex);
   return { center:[lat,lng], zoom:4 };
 }
 
@@ -258,7 +259,7 @@ export default function WarRoom() {
   const flyTo = useCallback((ex) => {
     const map = mapRef.current; const L = window.L;
     if (!map||!L) return;
-    const vp = getViewport(ex.name);
+    const vp = getViewport(ex.name, ex);
     if (vp.bounds) map.flyToBounds(vp.bounds,{padding:[60,60],duration:0.9,animate:true});
     else map.flyTo([vp.center[0],vp.center[1]],vp.zoom||4.5,{duration:0.9,animate:true});
     setMapMoved(false);
@@ -289,7 +290,7 @@ export default function WarRoom() {
     const labelShadow = isDark ? 'none' : `0 0 6px ${CREAM},0 0 3px ${CREAM}`;
     map.eachLayer(l=>{ if(l._em) map.removeLayer(l); });
     exercises.forEach(ex=>{
-      const [lat,lng] = getPos(ex.name);
+      const [lat,lng] = getPos(ex.name, ex);
       const c = getColor(ex);
       const isSel = sel?.id===ex.id;
       const isHov = hovered?.id===ex.id;

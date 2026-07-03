@@ -1,0 +1,335 @@
+# ══════════════════════════════════════════════════════════════════════
+# THRESHOLD — Curated Joint Military Exercise Registry
+# ══════════════════════════════════════════════════════════════════════
+# This registry is the source of truth for the exercise layer (EX component
+# + War Room map). It is maintained BY HAND, with a source URL per entry,
+# in the same spirit as UCDP-style curated event data. No LLM writes here.
+#
+# RULES:
+#   region:        one of the 20 canonical theatres, assigned ONLY when the
+#                  exercise takes place in/at that theatre. Power-projection
+#                  exercises far from any monitored theatre (RIMPAC, Vostok)
+#                  get region: null -> they appear on the map but do not
+#                  feed any theatre's EX component. Print the choice on the
+#                  label, don't smuggle it into the number.
+#   status:        confirmed  = officially announced, dates from source
+#                  projected  = inferred from an established annual/biennial
+#                               cycle; dates approximate until announced
+#                  Runtime state (upcoming/active/concluded) is computed
+#                  from dates, never stored.
+#   scale:         personnel if published; null if unknown (never guess).
+#
+# MAINTENANCE: ~30 min monthly. Add newly announced exercises, firm up
+# projected dates, never delete concluded entries (they are the archive).
+# Sync with: python3.11 scripts/sync_exercise_registry.py
+# Last review: 2026-07-03
+# ══════════════════════════════════════════════════════════════════════
+
+exercises:
+  # ─── ACTIVE / JUST CONCLUDED ──────────────────────────────────────────
+  - id: rimpac-2026
+    name: "RIMPAC 2026"
+    status: confirmed
+    exercise_type: LIVEX
+    lead_nation: "United States"
+    participants: "30 nations, 40+ surface ships, 5 submarines, 206 aircraft"
+    domain: maritime
+    region: null            # Hawaii — power projection, no monitored theatre
+    start_date: 2026-06-24
+    end_date: 2026-07-31
+    scale: 30000
+    lat: 21.35
+    lng: -157.95
+    signal_target: "China"
+    source: "https://www.cpf.navy.mil/Newsroom/News/Article/4465055/us-pacific-fleet-announces-30th-rimpac-exercise/"
+    notes: "30th iteration, largest to date. Philippine Coast Guard participates for the first time."
+
+  - id: valiant-shield-2026
+    name: "VALIANT SHIELD 26"
+    status: confirmed
+    exercise_type: LIVEX
+    lead_nation: "United States"
+    participants: "US, Japan, Australia, Canada, New Zealand"
+    domain: joint
+    region: null            # Guam / Marianas
+    start_date: 2026-06-22
+    end_date: 2026-07-01
+    scale: 10000
+    lat: 13.45
+    lng: 144.75
+    signal_target: "China"
+    source: "https://www.pacom.mil"
+    notes: "Biennial US-led joint exercise in the Western Pacific."
+
+  - id: roc-combat-readiness-q3-2026
+    name: "ROC IMMEDIATE COMBAT READINESS DRILL (Q3)"
+    status: confirmed
+    exercise_type: FTX
+    lead_nation: "Taiwan"
+    participants: "ROC Armed Forces"
+    domain: joint
+    region: "Taiwan Strait"
+    start_date: 2026-07-06
+    end_date: 2026-07-10
+    scale: null
+    lat: 24.0
+    lng: 120.9
+    signal_target: "China"
+    source: "https://www.taipeitimes.com/News/front/archives/2026/06/20/2003859413"
+    notes: "Five-day immediate readiness drill preceding the Han Kuang cycle."
+
+  - id: roc-joint-defense-2026
+    name: "ROC JOINT DEFENSE EXERCISE"
+    status: confirmed
+    exercise_type: FTX
+    lead_nation: "Taiwan"
+    participants: "ROC Armed Forces"
+    domain: joint
+    region: "Taiwan Strait"
+    start_date: 2026-07-13
+    end_date: 2026-07-19
+    scale: null
+    lat: 23.7
+    lng: 120.9
+    signal_target: "China"
+    source: "https://www.taipeitimes.com/News/front/archives/2026/06/20/2003859413"
+    notes: "One-week joint defense exercise, described by MND as the prelude to Han Kuang 42."
+
+  # ─── UPCOMING H2-2026 ────────────────────────────────────────────────
+  - id: pitch-black-2026
+    name: "PITCH BLACK 26"
+    status: projected
+    exercise_type: LIVEX
+    lead_nation: "Australia"
+    participants: "RAAF + ~20 partner air forces (2024 pattern)"
+    domain: air
+    region: null            # Northern Territory, Australia
+    start_date: 2026-07-13
+    end_date: 2026-08-07
+    scale: 4000
+    lat: -12.4
+    lng: 130.9
+    signal_target: null
+    source: "https://www.airforce.gov.au/exercises/exercise-pitch-black"
+    notes: "Biennial (even years); PB24 ran 12 Jul-2 Aug 2024. Dates approximate until RAAF announcement."
+
+  - id: han-kuang-42-ftx
+    name: "HAN KUANG 42 (LIVE-FIRE PHASE)"
+    status: projected
+    exercise_type: FTX
+    lead_nation: "Taiwan"
+    participants: "ROC Armed Forces + ~22,000 reservists"
+    domain: joint
+    region: "Taiwan Strait"
+    start_date: 2026-08-03
+    end_date: 2026-08-12
+    scale: 22000
+    lat: 23.9
+    lng: 120.9
+    signal_target: "China"
+    source: "https://www.taipeitimes.com/News/front/archives/2026/06/20/2003859413"
+    notes: "MND confirms 10 days, early August; exact dates TBA. CPX phase ran in April. Emphasis: decentralized ops, anti-drone, urban resilience."
+
+  - id: ufs-2026
+    name: "ULCHI FREEDOM SHIELD 26"
+    status: projected
+    exercise_type: CPX
+    lead_nation: "United States / South Korea"
+    participants: "US, ROK, UNC member states"
+    domain: joint
+    region: "Korean Peninsula"
+    start_date: 2026-08-17
+    end_date: 2026-08-28
+    scale: 18000
+    lat: 37.2
+    lng: 127.0
+    signal_target: "North Korea"
+    source: "https://www.usfk.mil/What-We-Do/Exercises/Ulchi-Freedom-Shield/"
+    notes: "Annual summer CPX+FTX; mid-late Aug pattern (UFS23: 21-31 Aug). 2026 dates TBA; 2025 iteration saw field-training events partly rescheduled."
+
+  - id: super-garuda-shield-2026
+    name: "SUPER GARUDA SHIELD 26"
+    status: projected
+    exercise_type: LIVEX
+    lead_nation: "United States / Indonesia"
+    participants: "US, Indonesia + regional partners"
+    domain: joint
+    region: null
+    start_date: 2026-08-25
+    end_date: 2026-09-05
+    scale: 5000
+    lat: -6.9
+    lng: 107.6
+    signal_target: null
+    source: "https://www.army.mil/article/279126"
+    notes: "Annual, late Aug-early Sep pattern. Dates approximate."
+
+  - id: vostok-2026
+    name: "VOSTOK-2026"
+    status: projected
+    exercise_type: LIVEX
+    lead_nation: "Russia"
+    participants: "Russia + partner states (2022 pattern: China, India, Belarus et al.)"
+    domain: joint
+    region: null            # Eastern MD / Far East
+    start_date: 2026-09-01
+    end_date: 2026-09-07
+    scale: null
+    lat: 43.8
+    lng: 132.0
+    signal_target: "US / Japan"
+    source: "https://en.wikipedia.org/wiki/List_of_Vostok_exercises"
+    notes: "Four-year cycle (2018, 2022 -> 2026), early-Sep pattern. NOT yet announced; wartime force commitments may scale it down or cancel, as with Zapad-2025. Scale left null deliberately."
+
+  - id: northern-coasts-2026
+    name: "NORTHERN COASTS 26"
+    status: projected
+    exercise_type: MAREX
+    lead_nation: "Germany"
+    participants: "Baltic Sea NATO navies"
+    domain: maritime
+    region: "Baltic"
+    start_date: 2026-09-07
+    end_date: 2026-09-18
+    scale: 3000
+    lat: 57.0
+    lng: 19.0
+    signal_target: "Russia"
+    source: "https://www.bundeswehr.de/en/organization/navy"
+    notes: "Annual German-led Baltic naval exercise, September pattern. Dates approximate."
+
+  - id: namejs-2026
+    name: "NAMEJS 2026"
+    status: projected
+    exercise_type: FTX
+    lead_nation: "Latvia"
+    participants: "Latvian NAF + allied units"
+    domain: land
+    region: "Baltic"
+    start_date: 2026-09-14
+    end_date: 2026-10-09
+    scale: 10000
+    lat: 56.9
+    lng: 24.6
+    signal_target: "Russia"
+    source: "https://www.grosswald.org/nato-exercises-2026/"
+    notes: "Annual national defense exercise, Sep-Oct expected; civil-military precursor NATRIX 26 ran 24-27 Mar as scheduled."
+
+  - id: dynamic-messenger-2026
+    name: "DYNAMIC MESSENGER 26"
+    status: projected
+    exercise_type: MAREX
+    lead_nation: "NATO (MARCOM/ACT)"
+    participants: "NATO navies, unmanned maritime systems focus"
+    domain: maritime
+    region: null            # Portugal / Atlantic
+    start_date: 2026-09-14
+    end_date: 2026-09-25
+    scale: 2000
+    lat: 38.7
+    lng: -9.4
+    signal_target: null
+    source: "https://www.grosswald.org/nato-exercises-2026/"
+    notes: "Annual maritime unmanned-systems integration exercise, September expected."
+
+  - id: thunder-strike-2026
+    name: "THUNDER STRIKE 26"
+    status: projected
+    exercise_type: FTX
+    lead_nation: "Lithuania"
+    participants: "Lithuanian Armed Forces + allies"
+    domain: land
+    region: "Baltic"
+    start_date: 2026-10-05
+    end_date: 2026-10-23
+    scale: null
+    lat: 55.2
+    lng: 23.9
+    signal_target: "Russia"
+    source: "https://www.grosswald.org/nato-exercises-2026/"
+    notes: "Live tactical-manoeuvre phase of the 2026 Thunder cycle (CPX phase Thunder Fortress 26 concluded 14 May). Autumn; dates approximate."
+
+  - id: steadfast-noon-2026
+    name: "STEADFAST NOON 26"
+    status: projected
+    exercise_type: LIVEX
+    lead_nation: "NATO"
+    participants: "~14 nations, 60+ aircraft (recent pattern)"
+    domain: air
+    region: null            # Host nation not yet announced
+    start_date: 2026-10-12
+    end_date: 2026-10-23
+    scale: 2000
+    lat: 52.0
+    lng: 5.5
+    signal_target: "Russia"
+    source: "https://www.nato.int"
+    notes: "Annual nuclear deterrence exercise, mid-October pattern (SN25 began 13 Oct). Host TBA; coordinates provisional (NW Europe). High rhetoric salience both directions."
+
+  - id: grom-2026
+    name: "GROM-2026 (STRATEGIC FORCES EXERCISE)"
+    status: projected
+    exercise_type: CPX
+    lead_nation: "Russia"
+    participants: "Strategic Missile Forces, Northern & Pacific Fleets, LRA"
+    domain: nuclear
+    region: null
+    start_date: 2026-10-20
+    end_date: 2026-10-22
+    scale: null
+    lat: 62.0
+    lng: 50.0
+    signal_target: "NATO"
+    source: "https://www.criticalthreats.org/analysis/russian-offensive-campaign-assessment-may-19-2026"
+    notes: "Annual October pattern since 2022. NOTE: Russia already ran an unannounced strategic nuclear exercise 19-21 May 2026 (with Belarus), which may substitute for or supplement the autumn iteration."
+
+  - id: keen-sword-27
+    name: "KEEN SWORD 27"
+    status: projected
+    exercise_type: LIVEX
+    lead_nation: "United States / Japan"
+    participants: "US Forces Japan, JSDF"
+    domain: joint
+    region: null
+    start_date: 2026-10-26
+    end_date: 2026-11-06
+    scale: 30000
+    lat: 33.5
+    lng: 133.5
+    signal_target: "China"
+    source: "https://www.usfj.mil"
+    notes: "Biennial (even fiscal years); KS25 ran Oct-Nov 2024. Dates approximate."
+
+  - id: cyber-coalition-2026
+    name: "CYBER COALITION 26"
+    status: projected
+    exercise_type: CPX
+    lead_nation: "NATO"
+    participants: "NATO members + partners, hosted in Estonia"
+    domain: cyber
+    region: "Baltic"
+    start_date: 2026-11-30
+    end_date: 2026-12-04
+    scale: 1000
+    lat: 59.4
+    lng: 24.7
+    signal_target: null
+    source: "https://www.grosswald.org/nato-exercises-2026/"
+    notes: "Annual defensive cyber exercise, Nov-Dec cadence, Tallinn."
+
+  - id: yama-sakura-2026
+    name: "YAMA SAKURA 91"
+    status: projected
+    exercise_type: CPX
+    lead_nation: "United States / Japan"
+    participants: "US Army Pacific, JGSDF, Australian Army"
+    domain: land
+    region: null
+    start_date: 2026-12-07
+    end_date: 2026-12-14
+    scale: 6000
+    lat: 43.0
+    lng: 141.4
+    signal_target: null
+    source: "https://www.usarpac.army.mil"
+    notes: "Annual December CPX, trilateral since YS85. Dates approximate."
