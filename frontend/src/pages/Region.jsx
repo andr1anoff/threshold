@@ -106,7 +106,7 @@ export default function RegionPage() {
               </h1>
               <Coord lat={region.lat} lng={region.lng} />
               <p className="body-lg" style={{ maxWidth:520, marginTop:24 }}>
-                Live escalation index, indexed incidents and concurrent exercise activity for the {region.label} theatre. Calculated against a logarithmic deterrence function over a 30-day window.
+                Live escalation index, indexed incidents and concurrent exercise activity for the {region.label} theatre. Scored against the theatre's own trailing baseline — <Link to="/about#methodology" style={{ color:"var(--ink-55)", textDecoration:"underline", textUnderlineOffset:3 }}>methodology</Link>.
               </p>
             </div>
 
@@ -169,7 +169,6 @@ export default function RegionPage() {
                     tick={{ fontSize:10, fontFamily:"var(--mono)", fill:"var(--ink-40)" }}
                     axisLine={false}
                     tickLine={false}
-                    label={{ value:"Date", position:"insideBottom", offset:-4, fontSize:9, fill:"var(--ink-40)", fontFamily:"var(--mono)" }}
                   />
                   <YAxis
                     domain={[0, 100]}
@@ -177,7 +176,6 @@ export default function RegionPage() {
                     axisLine={false}
                     tickLine={false}
                     width={32}
-                    label={{ value:"Escalation Index", angle:-90, position:"insideLeft", offset:10, fontSize:9, fill:"var(--ink-40)", fontFamily:"var(--mono)" }}
                   />
                   <Tooltip
                     contentStyle={{ fontFamily:"var(--mono)", fontSize:11, border:"1px solid var(--rule)", background:"var(--cream)", borderRadius:4 }}
