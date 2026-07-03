@@ -84,13 +84,13 @@ export default function Home() {
         {/* ─── HERO ─────────────────────── */}
         <section style={{ paddingTop:72, paddingBottom:56 }}>
           <div className="container-wide">
-            <div className="stack-mobile" style={{ display:"grid", gridTemplateColumns:"1.1fr 1fr", gap:56, alignItems:"end" }}>
-              <div>
+            <div className="stack-mobile" style={{ display:"grid", gridTemplateColumns:"1.1fr 1fr", gap:56, alignItems:"stretch" }}>
+              <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-start" }}>
                 <div className="micro micro-accent" style={{ marginBottom:24 }}>ESCALATION MONITOR</div>
                 <h1 className="h1" style={{ fontSize:"clamp(40px, 4.6vw, 64px)", marginBottom:32, maxWidth:720, textWrap:"balance" }}>
                   Twenty regions. One index. Observed daily through open sources.
                 </h1>
-                <button className="btn-ghost" onClick={() => navigate("/incidents")}>View incidents</button>
+                <button className="btn-ghost" style={{ marginTop:"auto" }} onClick={() => navigate("/incidents")}>View incidents</button>
               </div>
               <div className="hide-mobile">
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:18 }}>
