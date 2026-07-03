@@ -168,7 +168,7 @@ export default function AboutPage() {
               <li>Weights are theory-driven, not statistically estimated from historical data.</li>
               <li>Source availability and update frequency vary significantly across regions.</li>
               <li>Sparse reporting in some regions can depress short-term scores below actual escalation levels.</li>
-              <li><strong style={{ color:"var(--ink)" }}>Recalibration periods:</strong> when a theatre's source pool is expanded, its per-region baseline needs roughly 60–90 days to absorb the new observation volume. During this window the score can overstate escalation. Affected theatres carry a visible RECALIBRATING marker on their cards (currently: Baltic and Taiwan Strait, source pool expanded July 2026).</li>
+              <li><strong style={{ color:"var(--ink)" }}>Recalibration periods:</strong> when a theatre's source pool is expanded, its per-region baseline needs roughly 60–90 days to absorb the new observation volume. During this window the score can overstate escalation. Affected theatres carry a visible RECALIBRATING marker on their cards (currently: Baltic, Taiwan Strait, Haiti, and Libya — source pool expanded July 2026).</li>
               <li>AI-generated briefs are analytical summaries, not independent intelligence judgements.</li>
             </ul>
           </div>

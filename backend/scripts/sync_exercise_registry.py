@@ -23,7 +23,7 @@ except ImportError:
     sys.exit("pyyaml missing: pip3.11 install pyyaml --user")
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from app.db import get_client  # noqa: E402
+from app.db.supabase import get_client  # noqa: E402
 
 REGISTRY = Path(__file__).resolve().parents[1] / "data" / "exercises_registry.yaml"
 
@@ -46,7 +46,7 @@ def main() -> None:
             "name": e["name"],
             "exercise_type": e.get("exercise_type"),
             "lead_nation": e.get("lead_nation"),
-            "participants": e.get("participants"),
+            "participants": [x.strip() for x in e["participants"].split(",")] if e.get("participants") else None,
             "domain": e.get("domain"),
             "region": e.get("region"),
             "start_date": str(e["start_date"]),

@@ -28,6 +28,8 @@ export const REGIONS = [
 export const RECALIBRATING = {
   "Baltic":        "Source pool expanded July 2026 (ERR, LSM, LRT, Yle). Baseline recalibrating; score may overstate escalation until ~Sep 2026.",
   "Taiwan Strait": "Source pool expanded July 2026 (Taipei Times, Focus Taiwan). Baseline recalibrating; score may overstate escalation until ~Sep 2026.",
+  "Haiti":         "Source pool expanded July 2026 (Haitian Times). Baseline recalibrating; score may overstate escalation until ~Sep 2026.",
+  "Libya":         "Source pool expanded July 2026 (Libya Herald). Baseline recalibrating; score may overstate escalation until ~Sep 2026.",
 };
 
 export const DI_HISTORY = {};
