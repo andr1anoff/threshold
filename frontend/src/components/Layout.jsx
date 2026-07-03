@@ -270,7 +270,7 @@ export default function Layout({ children }) {
           padding:"32px 20px 20px", flexShrink:0,
           paddingBottom:"calc(20px + env(safe-area-inset-bottom))",
         }}>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(180px, 1fr))", gap:"28px 32px", marginBottom:24, maxWidth:1200, marginLeft:"auto", marginRight:"auto" }}>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(180px, 1fr))", gap:"24px 32px", alignItems:"start", marginBottom:24, maxWidth:1200, marginLeft:"auto", marginRight:"auto" }}>
 
             <div style={{ gridColumn:"span 1", minWidth:220 }}>
               <div style={{ display:"flex", alignItems:"center", gap:9, marginBottom:10 }}>
@@ -283,34 +283,34 @@ export default function Layout({ children }) {
             </div>
 
             <div>
-              <div style={{ fontSize:10, letterSpacing:"2px", fontWeight:600, color:"rgba(245,240,232,0.28)", marginBottom:8 }}>NAVIGATE</div>
+              <div style={{ fontSize:10, letterSpacing:"2px", fontWeight:600, color:"rgba(245,240,232,0.28)", marginBottom:10 }}>NAVIGATE</div>
               <div style={{ display:"flex", flexDirection:"column" }}>
                 {[...NAV, { label:"About & methodology", path:"/about" }].map(n => (
-                  <Link key={n.path} to={n.path} className="ft-a" style={{ fontSize:12, padding:"5px 0", display:"inline-block", width:"fit-content" }}>{n.label}</Link>
+                  <Link key={n.path} to={n.path} className="ft-a" style={{ fontSize:12, padding:"5px 0", lineHeight:1.4, display:"inline-block", width:"fit-content" }}>{n.label}</Link>
                 ))}
               </div>
             </div>
 
             <div>
-              <div style={{ fontSize:10, letterSpacing:"2px", fontWeight:600, color:"rgba(245,240,232,0.28)", marginBottom:8 }}>PROJECT</div>
-              <div style={{ fontSize:12, lineHeight:2.1, color:"rgba(245,240,232,0.42)" }}>
-                <div>JFKI · Freie Universität Berlin</div>
-                <div>North American Studies MA</div>
-                <div>Research project · Summer Term 2026</div>
+              <div style={{ fontSize:10, letterSpacing:"2px", fontWeight:600, color:"rgba(245,240,232,0.28)", marginBottom:10 }}>PROJECT</div>
+              <div style={{ display:"flex", flexDirection:"column", fontSize:12, color:"rgba(245,240,232,0.42)" }}>
+                <span style={{ padding:"5px 0", lineHeight:1.4 }}>JFKI · Freie Universität Berlin</span>
+                <span style={{ padding:"5px 0", lineHeight:1.4 }}>North American Studies MA</span>
+                <span style={{ padding:"5px 0", lineHeight:1.4 }}>Research project · Summer Term 2026</span>
               </div>
             </div>
 
             <div>
-              <div style={{ fontSize:10, letterSpacing:"2px", fontWeight:600, color:"rgba(245,240,232,0.28)", marginBottom:8 }}>DATA</div>
-              <p style={{ fontSize:12, lineHeight:1.8, color:"rgba(245,240,232,0.42)", margin:"0 0 6px", textWrap:"pretty", maxWidth:260 }}>
+              <div style={{ fontSize:10, letterSpacing:"2px", fontWeight:600, color:"rgba(245,240,232,0.28)", marginBottom:10 }}>DATA</div>
+              <p style={{ fontSize:12, lineHeight:1.7, color:"rgba(245,240,232,0.42)", margin:0, padding:"5px 0 8px", textWrap:"pretty", maxWidth:250 }}>
                 38 curated feeds across 20 theatres, anchored by UCDP, ReliefWeb, and UN reporting.
               </p>
-              <Link to="/about#sources" className="ft-a" style={{ fontSize:12, color:"rgba(245,240,232,0.65)", borderBottom:"1px solid rgba(139,32,48,0.9)", padding:"3px 0", display:"inline-block" }}>
+              <Link to="/about#sources" className="ft-a" style={{ fontSize:12, color:"rgba(245,240,232,0.65)", borderBottom:"1px solid rgba(139,32,48,0.9)", paddingBottom:2, display:"inline-block", lineHeight:1.4 }}>
                 Full source list →
               </Link>
-              <div style={{ display:"flex", gap:16, marginTop:12 }}>
-                <a href="https://github.com/andr1anoff/threshold" target="_blank" rel="noopener noreferrer" className="ft-a" style={{ fontSize:11, fontFamily:"var(--mono)", padding:"5px 0" }}>GitHub ↗</a>
-                <a href="https://evandrianov.substack.com" target="_blank" rel="noopener noreferrer" className="ft-a" style={{ fontSize:11, fontFamily:"var(--mono)", padding:"5px 0" }}>Substack ↗</a>
+              <div style={{ display:"flex", gap:18, marginTop:10 }}>
+                <a href="https://evandrianov.pro/" target="_blank" rel="noopener noreferrer" className="ft-a" style={{ fontSize:12, padding:"5px 0" }}>Founder ↗</a>
+                <a href="https://evandrianov.substack.com" target="_blank" rel="noopener noreferrer" className="ft-a" style={{ fontSize:12, padding:"5px 0" }}>Substack ↗</a>
               </div>
             </div>
           </div>
@@ -329,6 +329,7 @@ export default function Layout({ children }) {
       <style>{`
         .ft-a { color: rgba(245,240,232,0.55); text-decoration: none; transition: color .15s ease; }
         .ft-a:hover { color: #fff; }
+        .ft-a:focus-visible { color: #fff; outline: 1px solid rgba(245,240,232,0.4); outline-offset: 2px; border-radius: 2px; }
         @media (min-width: 700px) {
           .desktop-nav-link { display: block !important; }
           .hamburger-btn { display: none !important; }
