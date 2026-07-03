@@ -87,12 +87,9 @@ export default function Home() {
             <div className="stack-mobile" style={{ display:"grid", gridTemplateColumns:"1.1fr 1fr", gap:56, alignItems:"end" }}>
               <div>
                 <div className="micro micro-accent" style={{ marginBottom:24 }}>ESCALATION MONITOR</div>
-                <h1 className="h1" style={{ fontSize:"clamp(40px, 4.6vw, 64px)", marginBottom:24, maxWidth:720 }}>
+                <h1 className="h1" style={{ fontSize:"clamp(40px, 4.6vw, 64px)", marginBottom:32, maxWidth:720, textWrap:"balance" }}>
                   Twenty regions. One index. Observed daily through open sources.
                 </h1>
-                <p className="body-lg" style={{ maxWidth:520, marginBottom:32, color:"var(--ink-55)" }}>
-                  A research indicator covering active conflict and strategic-tension theatres. Not an official intelligence assessment.
-                </p>
                 <button className="btn-ghost" onClick={() => navigate("/incidents")}>View incidents</button>
               </div>
               <div className="hide-mobile">
@@ -128,11 +125,7 @@ export default function Home() {
         <section className="container-wide" style={{ paddingTop:32, paddingBottom:60 }}>
           <div className="section-bar">
             <span className="micro micro-strong">Regions</span>
-            <span className="micro" style={{ color:"var(--ink-40)" }}>
-              {sort==="ei" && "sorted by escalation index"}
-              {sort==="alpha" && "sorted A–Z"}
-              {sort==="rising" && "sorted by 7-day rise"}
-            </span>
+
             <div className="meta" style={{ display:"flex", gap:8 }}>
               <button className={`chip ${view==="grid"?"is-active":""}`} onClick={()=>setView("grid")}>Grid</button>
               <button className={`chip ${view==="index"?"is-active":""}`} onClick={()=>setView("index")}>Table</button>
@@ -149,7 +142,7 @@ export default function Home() {
             {[["all","All"],["high","High"],["moderate","Moderate"],["low","Low"],["conflict","Active"],["tension","Tension"],["rising","Rising"]].map(([k,l]) => (
               <button key={k} className={`chip is-accent ${filter===k?"is-active":""}`} onClick={()=>setFilter(k)}>{l}</button>
             ))}
-            <span className="micro" style={{ marginLeft:"auto", alignSelf:"center", color:"var(--ink-40)" }}>{sorted.length}/20</span>
+            {filter !== "all" && <span className="micro tab-num" style={{ marginLeft:"auto", alignSelf:"center", color:"var(--ink-40)" }}>{sorted.length}/20</span>}
           </div>
 
           {view === "index"
@@ -163,7 +156,6 @@ export default function Home() {
           <section className="container-wide" style={{ paddingTop:24, paddingBottom:72 }}>
             <div className="section-bar">
               <span className="micro micro-strong">§ 02 · LATEST DISPATCHES</span>
-              <span className="micro hide-mobile" style={{ color:"var(--ink-40)" }}>recent · {incidents.length} entries</span>
               <button className="micro" style={{ cursor:"pointer", textDecoration:"underline", textUnderlineOffset:4, marginLeft:"auto", color:"var(--ink-55)" }} onClick={()=>navigate("/incidents")}>
                 All incidents →
               </button>
@@ -280,7 +272,7 @@ function RegionGrid({ regions, onSelect }) {
           <div key={r.id} className="tile" onClick={() => onSelect(r)}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14 }}>
               <div>
-                <div className="filing" style={{ marginBottom:4 }}>№ {String(i+1).padStart(2,"0")} · {r.short||r.id.slice(0,3).toUpperCase()}</div>
+                <div className="filing" style={{ marginBottom:4 }}>{r.short||r.id.slice(0,3).toUpperCase()}</div>
                 <div style={{ fontSize:17, fontWeight:600 }}>{r.label}</div>
               </div>
               <span style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:5 }}>
