@@ -93,8 +93,6 @@ const NAV = [
   { label:"Briefs",    path:"/briefs" },
 ];
 
-const SOURCES = ["ReliefWeb/OCHA","UCDP Uppsala","UN News","38 RSS feeds","Regional press ×14 theatres","GDELT","DeepState","Wikipedia CE"];
-
 export default function Layout({ children }) {
   const loc = useLocation();
   const isWarRoom = loc.pathname === "/warroom";
@@ -269,52 +267,59 @@ export default function Layout({ children }) {
       {!isWarRoom && (
         <footer role="contentinfo" style={{
           background:"#0F0B07", color:"rgba(245,240,232,0.5)",
-          padding:"28px 20px 20px", flexShrink:0,
+          padding:"32px 20px 20px", flexShrink:0,
           paddingBottom:"calc(20px + env(safe-area-inset-bottom))",
         }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:20, marginBottom:20 }}>
-            <div style={{ minWidth:220 }}>
-              <div style={{ display:"flex", alignItems:"center", gap:9, marginBottom:8 }}>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(180px, 1fr))", gap:"28px 32px", marginBottom:24, maxWidth:1200, marginLeft:"auto", marginRight:"auto" }}>
+
+            <div style={{ gridColumn:"span 1", minWidth:220 }}>
+              <div style={{ display:"flex", alignItems:"center", gap:9, marginBottom:10 }}>
                 <Logo size={18} white/>
                 <span style={{ fontSize:12, fontWeight:700, letterSpacing:"3px", color:"#fff" }}>THRESHOLD</span>
               </div>
-              <p style={{ fontSize:12, lineHeight:1.7, maxWidth:300, color:"rgba(245,240,232,0.4)" }}>
+              <p style={{ fontSize:12, lineHeight:1.7, maxWidth:280, color:"rgba(245,240,232,0.42)", textWrap:"pretty" }}>
                 OSINT-based escalation monitoring. Sources include official releases, institutional datasets, open-source reporting, and secondary references.
               </p>
             </div>
+
             <div>
-              <div style={{ fontSize:10, letterSpacing:"2px", fontWeight:600, color:"rgba(245,240,232,0.25)", marginBottom:8 }}>DATA SOURCES</div>
-              <div style={{ display:"flex", flexWrap:"wrap", justifyContent:"flex-start", gap:6 }}>
-                {SOURCES.map(s=>(
-                  <span key={s} style={{
-                    display:"inline-block",
-                    borderRadius:999,
-                    background:"rgba(245,240,232,0.07)",
-                    border:"1px solid rgba(245,240,232,0.12)",
-                    padding:"3px 10px",
-                    fontSize:11,
-                    color:"rgba(245,240,232,0.5)",
-                    letterSpacing:"0.04em",
-                  }}>
-                    {s}
-                  </span>
+              <div style={{ fontSize:10, letterSpacing:"2px", fontWeight:600, color:"rgba(245,240,232,0.28)", marginBottom:8 }}>NAVIGATE</div>
+              <div style={{ display:"flex", flexDirection:"column" }}>
+                {[...NAV, { label:"About & methodology", path:"/about" }].map(n => (
+                  <Link key={n.path} to={n.path} className="ft-a" style={{ fontSize:12, padding:"5px 0", display:"inline-block", width:"fit-content" }}>{n.label}</Link>
                 ))}
               </div>
             </div>
+
             <div>
-              <div style={{ fontSize:10, letterSpacing:"2px", fontWeight:600, color:"rgba(245,240,232,0.25)", marginBottom:8 }}>PROJECT</div>
-              <div style={{ fontSize:11, lineHeight:2, color:"rgba(245,240,232,0.4)" }}>
+              <div style={{ fontSize:10, letterSpacing:"2px", fontWeight:600, color:"rgba(245,240,232,0.28)", marginBottom:8 }}>PROJECT</div>
+              <div style={{ fontSize:12, lineHeight:2.1, color:"rgba(245,240,232,0.42)" }}>
                 <div>JFKI · Freie Universität Berlin</div>
                 <div>North American Studies MA</div>
                 <div>Research project · Summer Term 2026</div>
               </div>
             </div>
+
+            <div>
+              <div style={{ fontSize:10, letterSpacing:"2px", fontWeight:600, color:"rgba(245,240,232,0.28)", marginBottom:8 }}>DATA</div>
+              <p style={{ fontSize:12, lineHeight:1.8, color:"rgba(245,240,232,0.42)", margin:"0 0 6px", textWrap:"pretty", maxWidth:260 }}>
+                38 curated feeds across 20 theatres, anchored by UCDP, ReliefWeb, and UN reporting.
+              </p>
+              <Link to="/about#sources" className="ft-a" style={{ fontSize:12, color:"rgba(245,240,232,0.65)", borderBottom:"1px solid rgba(139,32,48,0.9)", padding:"3px 0", display:"inline-block" }}>
+                Full source list →
+              </Link>
+              <div style={{ display:"flex", gap:16, marginTop:12 }}>
+                <a href="https://github.com/andr1anoff/threshold" target="_blank" rel="noopener noreferrer" className="ft-a" style={{ fontSize:11, fontFamily:"var(--mono)", padding:"5px 0" }}>GitHub ↗</a>
+                <a href="https://evandrianov.substack.com" target="_blank" rel="noopener noreferrer" className="ft-a" style={{ fontSize:11, fontFamily:"var(--mono)", padding:"5px 0" }}>Substack ↗</a>
+              </div>
+            </div>
           </div>
-          <div style={{ borderTop:"1px solid rgba(245,240,232,0.08)", paddingTop:16, display:"flex", justifyContent:"space-between", flexWrap:"wrap", gap:8, fontSize:10, color:"rgba(245,240,232,0.2)" }}>
+
+          <div style={{ borderTop:"1px solid rgba(245,240,232,0.08)", paddingTop:14, display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:8, fontSize:10, color:"rgba(245,240,232,0.22)", maxWidth:1200, margin:"0 auto" }}>
             <span>© 2026 Threshold · Research indicator — not an official intelligence assessment.</span>
-            <span style={{ display:"flex", gap:14 }}>
-              <Link to="/impressum" style={{ color:"rgba(245,240,232,0.45)", textDecoration:"none" }}>Impressum</Link>
-              <Link to="/datenschutz" style={{ color:"rgba(245,240,232,0.45)", textDecoration:"none" }}>Datenschutz</Link>
+            <span style={{ display:"flex", gap:4 }}>
+              <Link to="/impressum" className="ft-a" style={{ padding:"8px 10px" }}>Impressum</Link>
+              <Link to="/datenschutz" className="ft-a" style={{ padding:"8px 10px" }}>Datenschutz</Link>
             </span>
             <span style={{ fontFamily:"var(--mono)" }}>v1.8β · threshold-osint.com</span>
           </div>
@@ -322,6 +327,8 @@ export default function Layout({ children }) {
       )}
 
       <style>{`
+        .ft-a { color: rgba(245,240,232,0.55); text-decoration: none; transition: color .15s ease; }
+        .ft-a:hover { color: #fff; }
         @media (min-width: 700px) {
           .desktop-nav-link { display: block !important; }
           .hamburger-btn { display: none !important; }
