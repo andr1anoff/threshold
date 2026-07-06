@@ -1,5 +1,7 @@
 import logging, os, threading
-from fastapi import APIRouter, HTTPException, Header, Depends
+import time
+from collections import defaultdict
+from fastapi import APIRouter, HTTPException, Header, Depends, Request
 from app.scrapers.universal_scraper import scrape_all_sources
 from app.scrapers.ukraine_osint import scrape_ukraine_osint
 from app.scrapers.jme_scraper import scrape_all_exercises
@@ -10,6 +12,26 @@ from app.db.supabase import get_client
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+# ── Public narrative generation: cheap in-process guard ──────────────
+# Variant B (public generation restored) but not naked: a per-IP token
+# bucket stops a crawler from walking all 20 regions and burning the day's
+# Groq budget in one pass. Legit humans click one region at a time and
+# never notice. In-process (resets on redeploy) — good enough for a single
+# Railway instance; if it ever scales out, move this to Supabase.
+_NARRATIVE_HITS: dict = defaultdict(list)
+_NARRATIVE_WINDOW = 3600      # 1 hour
+_NARRATIVE_MAX = 8           # max fresh generations per IP per hour
+
+def _rate_ok(ip: str) -> bool:
+    now = time.time()
+    hits = [t for t in _NARRATIVE_HITS[ip] if now - t < _NARRATIVE_WINDOW]
+    _NARRATIVE_HITS[ip] = hits
+    if len(hits) >= _NARRATIVE_MAX:
+        return False
+    hits.append(now)
+    return True
 
 
 def _key_ok(key: str) -> bool:
@@ -127,27 +149,38 @@ async def full_pipeline():
     return {"status":"done","scraped":scraped,"ukraine":ukraine,"exercises":exercises,"classified":classified,"exercises_classified":ex_classified,"ei_regions":len(ei)}
 
 @router.get("/narrative/{region}")
-def get_narrative(region: str, force: bool = False, x_admin_key: str = Header(default="")):
+def get_narrative(region: str, request: Request, force: bool = False, x_admin_key: str = Header(default="")):
     from app.cache.brief_cache import get_cached, set_cached, invalidate
-    # force=true burns LLM quota — only honored with a valid admin key
-    if force and not _key_ok(x_admin_key):
+    admin = _key_ok(x_admin_key)
+    # force refresh is admin-only (bypasses cache); public force is downgraded
+    if force and not admin:
         force = False
+
+    # Cache-first: served to everyone, costs nothing.
     if not force:
         cached = get_cached(region)
         if cached:
             return {"region": region, "narrative": cached, "cached": True}
-        # Cache miss on a public call would burn LLM quota on demand — an
-        # anonymous visitor (or a crawler walking 20 regions) must not be
-        # able to spend the day's Groq budget. Generation is admin/cron work.
-        if not _key_ok(x_admin_key):
-            raise HTTPException(status_code=404, detail="Narrative not generated yet.")
     else:
-        invalidate(region)  # clear stale cache so fresh Groq call is made
+        invalidate(region)
+
+    # Cache miss -> fresh generation. Public callers pass an IP rate limit;
+    # admin bypasses it. This keeps generation public (variant B) without
+    # letting a crawler drain the Groq budget.
+    if not admin:
+        ip = (request.client.host if request.client else "unknown")
+        if not _rate_ok(ip):
+            # Serve stale cache if we have any; otherwise ask them to wait.
+            cached = get_cached(region)
+            if cached:
+                return {"region": region, "narrative": cached, "cached": True}
+            raise HTTPException(status_code=429, detail="Too many briefs generated recently. Try again shortly.")
+
     db = get_client()
     incidents = db.table("incidents").select("title,category,escalation_level,date").eq("region",region).order("date",desc=True).limit(10).execute().data
-    exercises = db.table("exercises").select("name,scale,lead_nation,signal_target,exercise_type,domain").eq("region",region).limit(4).execute().data
+    exercises = db.table("exercises").select("name,scale,lead_nation,signal_target,exercise_type,domain").eq("region",region).neq("announcement_status","archived-manual").limit(4).execute().data
     if not incidents and not exercises:
-        raise HTTPException(status_code=404, detail=f"No data for region '{region}'. Run scrapers first.")
+        raise HTTPException(status_code=404, detail=f"No recent open-source data for \"{region}\" yet.")
     narrative = generate_narrative(region, incidents, exercises)
     if not narrative:
         raise HTTPException(status_code=502, detail="LLM returned empty response. Check GROQ_API_KEY.")
