@@ -68,6 +68,21 @@ export default function RegionPage() {
 
   const spark = history.length >= 2 ? history.map(h => h.ei) : null;
 
+  const deltaPrev = history.length >= 2
+  ? history[history.length - 1].ei - history[history.length - 2].ei
+  : null;
+
+const trendColor =
+  deltaPrev > 0 ? "var(--hi)" :
+  deltaPrev < 0 ? "var(--lo)" :
+  "var(--ink-40)";
+
+const trendText =
+  deltaPrev == null ? "no previous point" :
+  deltaPrev > 0 ? `↑ +${deltaPrev}` :
+  deltaPrev < 0 ? `↓ ${deltaPrev}` :
+  "→ stable";
+
   return (
     <Layout>
       <div className="route-in" style={{ background:"var(--cream)" }}>
@@ -112,16 +127,16 @@ export default function RegionPage() {
 
             {/* EI block */}
             <div style={{ borderTop:"1px solid var(--ink)", borderBottom:"1px solid var(--ink)", padding:"32px 0", position:"relative" }}>
-              <div className="micro" style={{ marginBottom:8 }}>ESCALATION INDEX · 14D</div>
+              <div className="micro" style={{ marginBottom:8 }}>ESCALATION INDEX · LATEST</div>
               <div style={{ display:"flex", alignItems:"flex-end", gap:24 }}>
                 <span className="tab-num" style={{ fontSize:clamp(80,160), fontWeight:800, lineHeight:0.85, letterSpacing:"-0.05em", color }}>
                   {loading ? "…" : <AnimatedNumber value={score} duration={1500} />}
                 </span>
                 <div style={{ paddingBottom:12 }}>
                   <div className="micro" style={{ color, marginBottom:8 }}>{EI_LABEL(score)}</div>
-                  <div className="mono small tab-num" style={{ color: region.trend > 0 ? "var(--hi)" : region.trend < 0 ? "var(--lo)" : "var(--ink-40)" }}>
-                    {region.trend > 0 ? `↑ +${region.trend}` : region.trend < 0 ? `↓ ${region.trend}` : "→ stable"} vs prev.
-                  </div>
+                  <div className="mono small tab-num" style={{ color: trendColor }}>
+  {deltaPrev == null ? trendText : `${trendText} vs prev.`}
+</div>
                   
                 </div>
               </div>
