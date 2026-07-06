@@ -1,275 +1,92 @@
-# Threshold — Geopolitical Escalation Monitor
+# Threshold
 
-Open-source intelligence platform monitoring escalation dynamics across 20 UN-recognized conflict zones. Developed at JFKI, Freie Universität Berlin.
+Open-source monitoring of geopolitical escalation. Threshold reads open-source conflict and security reporting across 20 theatres, classifies incidents, and computes a per-region **Escalation Index (EI)**. It also tracks a curated layer of joint military exercises.
 
-**Live:** https://threshold-lyart.vercel.app
+**Status:** public beta. Methodology is versioned per record (current: `v18`). The index is a transparent heuristic, not a forecast.
 
----
-
-## v14 — Frontend Redesign (current branch: `claude/sharp-fermi-bqHFy`)
-
-### What changed in v14
-
-| File | Change |
-|------|--------|
-| `Layout.jsx` | Frosted-glass header (60px), bottom-border active nav, LIVE + UTC clock + About→ link, removed dark mode toggle & Contact |
-| `Home.jsx` | Simplified h1 hero, Grid default view, INCIDENTS static fallback, conditional sort label |
-| `Incidents.jsx` | Full-width ledger (max-width 920px), static INCIDENTS fallback, removed analytics sidebar, 4-col row layout |
-| `WarRoom.jsx` | Masthead with h1 + BigStats (active/upcoming/personnel) + filter strip, 380px sidebar, RUS/CHN badge, ExerciseDetail dock, static EXERCISES fallback |
-| `Patterns.jsx` | Flex layout fix for centered empty state |
-| `seed.js` | Added `cat` field to REGIONS, 30 static INCIDENTS, 8 static EXERCISES |
-| `index.css` | Added `@keyframes slide-up` |
-
-### How to push this branch to GitHub
-
-These changes are committed on branch `claude/sharp-fermi-bqHFy`. To push and merge:
-
-```bash
-# Option A — push the feature branch and open a PR
-git push -u origin claude/sharp-fermi-bqHFy
-# Then open a PR on GitHub: claude/sharp-fermi-bqHFy → main
-
-# Option B — merge directly into main and push
-git checkout main
-git merge claude/sharp-fermi-bqHFy
-git push origin main
-```
-
-If you downloaded this ZIP and want to apply only the changed files on top of an existing checkout:
-
-```bash
-# From your local clone of andr1anoff/threshold
-git checkout main                        # or whichever base branch
-git checkout -b v14-frontend             # new branch for the changes
-
-# Copy the 7 changed files from the ZIP into place:
-#   frontend/src/components/Layout.jsx
-#   frontend/src/data/seed.js
-#   frontend/src/index.css
-#   frontend/src/pages/Home.jsx
-#   frontend/src/pages/Incidents.jsx
-#   frontend/src/pages/Patterns.jsx
-#   frontend/src/pages/WarRoom.jsx
-
-git add frontend/src/
-git commit -m "v14: redesign frontend to match HTML prototype"
-git push -u origin v14-frontend
-# Open PR: v14-frontend → main
-```
-
-After merging to main, Vercel redeploys automatically.
+Live: [threshold-osint.com](https://threshold-osint.com)
 
 ---
+
+## What the Escalation Index is, and what it is not
+
+The EI measures **relative escalation pressure** in a theatre against that theatre's own recent baseline. It is not a casualty counter and not a severity score for human suffering.
+
+This distinction matters and it produces behaviour that looks counterintuitive at first. In a high-violence theatre, a day with several lethal incidents can still show a falling EI if that day's weighted event load sits below the region's recent norm. A rising EI means activity above the observed baseline, not simply that bad things happened. Reading the number as a body count will mislead you.
+
+Because the index normalises each region against its own history, scores are comparable across theatres by construction rather than by raw volume. A quiet theatre and an active war zone are placed on the same relative scale.
+
+## How the index is built
+
+The composite is a weighted sum of three components, scaled to 0 to 100:
+
+```
+EI = (GZ * 0.45 + EX * 0.35 + BASE * 0.20) * 100
+```
+
+- **GZ, gray-zone load (0.45).** Deduplicated event load over a 30-day window with a 7-day recency boost. Not a raw report count. Multiple media reports about the same strike collapse into one event before scoring, so the index is not inflated by coverage volume.
+- **EX, exercise signal (0.35).** Active and upcoming joint military exercises assigned to the theatre, drawn from the curated registry.
+- **BASE, structural baseline (0.20).** A per-region constant reflecting the standing conflict floor.
+
+Each region is normalised by a trailing 90-day median (per-region κ), so a fixed κ does not have to cover the large volume spread between theatres. Regions without enough history fall back to a legacy calibration and are flagged `RECALIBRATING` in the interface until their median stabilises.
+
+The weights are theory-driven and fixed. They are documented, not tuned to make any single region look a particular way. Empirical calibration against historical anchors is a planned research step, not a claim the project makes today.
+
+## Pipeline
+
+```
+scrape  ->  keyword pre-gate  ->  LLM classification  ->  event grouping (dedup)  ->  per-region κ  ->  EI
+```
+
+Scraping and classification run twice daily (06:00 and 18:00 UTC) on GitHub Actions, with a Sunday resweep pass for anything left unclassified. A keyword pre-gate runs before the LLM to cut classification calls on irrelevant items. The classifier uses a fallback chain (Groq, then OpenRouter) so a single provider outage does not stall the pipeline. Raw reports are never deleted; deduplication happens at read time.
+
+## Data sources
+
+38 feeds across 25 grouped sources, tiered by confidence. The full list with per-source notes is documented in the interface under About. Summary:
+
+**Institutional and academic (high confidence).** OCHA / ReliefWeb, UCDP Uppsala, UN News, UN Security Council. Primary verification layer.
+
+**Regional and local press.** One or more dedicated feeds per theatre, added in July 2026 as a coverage floor: Baltic (ERR, LSM, LRT, Yle), Taiwan Strait (Taipei Times, Focus Taiwan), Korean Peninsula (38 North, NK News), South Caucasus (OC Media, JAMnews, Civil.ge), Kosovo (Balkan Insight), Ukraine (Kyiv Independent, Kyiv Post), Sudan (Radio Dabanga, Sudan Tribune), Libya / Somalia / Ethiopia / Mozambique (Libya Herald, Somali Guardian, Ethiopia Observer, Zitamar), Myanmar (Myanmar Now, DVB), Haiti and Arctic (Haitian Times, Eye on the Arctic).
+
+**Defence and global OSINT.** Bellingcat, defence trade press (Breaking Defense, Defense News, Naval News), analysis (RUSI, War on the Rocks, The Diplomat), Middle East Eye, DeepState (tactical context only).
+
+**Exercise registry (curated).** NATO exercise programme and SHAPE releases, service and command press releases (USFK, US Pacific Fleet, national MoDs), named-exercise reference pages for projected cycle entries.
+
+**Discovery and secondary.** Guardian API, GDELT, Wikipedia Current Events. Used to surface events for verification, never as sole evidence.
+
+## Exercise layer
+
+The joint-military-exercise layer is a hand-curated registry, not an automated scrape. Each entry carries a source URL, announced dates, and an announcement status (confirmed, or projected from an established cycle). An exercise feeds a theatre's EX component only when it takes place in that theatre; power-projection exercises elsewhere appear on the map but do not affect any theatre's score. The registry is versioned in this repository and reviewed monthly.
+
+## Interface
+
+Overview, Incidents, Exercises, War Room (map), Briefs, and per-region dossiers. Empty states are shown as empty. No displayed value is ever synthetic.
 
 ## Stack
 
-| Layer | Service |
-|-------|---------|
-| Frontend | React + Vite → Vercel |
-| Backend | FastAPI (Python) → Railway |
-| Database | Supabase (PostgreSQL) |
-| LLM | Groq (Llama 3.1-8b / 3.3-70b) |
+- Frontend: React, Vite (Vercel)
+- Backend: FastAPI (Railway)
+- Database: Supabase / PostgreSQL
+- Pipeline: GitHub Actions, Python, LLM classification (Groq with OpenRouter fallback)
 
----
+## Limitations
 
-## Full Setup from Scratch
+- The index is relative, not absolute. A score of 100 means "top of the current observed watch-list," not a fixed catastrophe anchor.
+- No backtesting has been run yet. Validation against historical episodes (Crimea 2014, Nagorno-Karabakh 2020, February 2022) is planned.
+- Regional coverage is uneven. Theatres with thinner source pools produce noisier scores and are flagged accordingly.
+- LLM classification carries a known error rate. The pipeline mitigates this with a defined rubric, a pre-gate, and corroboration weighting, but does not eliminate it.
 
-### 1. Clone
+These limitations are stated deliberately. Threshold is an accountability and transparency instrument built on open data, not a predictive black box.
 
-```bash
-git clone https://github.com/andr1anoff/threshold.git
-cd threshold
-```
+## Roadmap
 
----
+Classifier refactor from scheduler to queue (classify only new incidents at scrape time), backtesting against historical anchors, per-region methodology exposed through the API, and a public methodology paper.
 
-### 2. Supabase (Database)
+## Author
 
-1. Go to [supabase.com](https://supabase.com) → New project → choose Frankfurt region
-2. Go to **SQL Editor** → paste and run `backend/schema.sql`
-3. Run this to disable RLS (development):
-```sql
-ALTER TABLE incidents DISABLE ROW LEVEL SECURITY;
-ALTER TABLE exercises DISABLE ROW LEVEL SECURITY;
-ALTER TABLE deterrence_index DISABLE ROW LEVEL SECURITY;
-ALTER TABLE correlations DISABLE ROW LEVEL SECURITY;
-```
-4. Copy **Project URL** and **anon public key** from Settings → API
+Ivan Andrianov. Built solo.
+[evandrianov.pro](https://evandrianov.pro) · [Substack](https://evandrianov.substack.com)
 
----
+## License
 
-### 3. Groq (LLM — free)
-
-1. Go to [console.groq.com](https://console.groq.com) → Sign up
-2. API Keys → Create API Key
-3. Copy the key (starts with `gsk_...`)
-4. Free tier: 14,400 requests/day on Llama 3.1-8b — sufficient for this project
-
----
-
-### 4. Railway (Backend)
-
-1. Go to [railway.app](https://railway.app) → New Project → Deploy from GitHub repo → select `threshold`
-2. Set **Root Directory** to `backend`
-3. Add environment variables:
-
-```
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_KEY=your-anon-key
-GROQ_API_KEY=gsk_...
-FRONTEND_URL=https://your-app.vercel.app
-```
-
-Optional (ACLED — requires approval at acleddata.com):
-```
-ACLED_EMAIL=your@email.com
-ACLED_PASSWORD=your-password
-```
-
-4. Railway auto-deploys on every `git push` to main
-
----
-
-### 5. Vercel (Frontend)
-
-1. Go to [vercel.com](https://vercel.com) → New Project → Import from GitHub
-2. Set **Root Directory** to `frontend`
-3. Add environment variable:
-```
-VITE_API_URL=https://your-railway-app.up.railway.app
-```
-4. Deploy → Vercel auto-deploys on every `git push`
-
----
-
-### 6. Populate data (first time)
-
-After both services are deployed:
-
-```bash
-# Run all scrapers
-curl -X POST https://your-railway-app.up.railway.app/api/admin/scrape
-
-# Classify events with LLM
-curl -X POST https://your-railway-app.up.railway.app/api/admin/classify
-
-# Calculate Deterrence Index for all 20 regions
-curl -X POST https://your-railway-app.up.railway.app/api/admin/calculate-di
-```
-
-Or run the full pipeline at once (slower, ~10 min due to rate limits):
-```bash
-curl -X POST https://your-railway-app.up.railway.app/api/admin/pipeline
-```
-
----
-
-### 7. Daily automation (Railway Cron)
-
-In Railway → your service → Settings → Cron Jobs:
-```
-0 6 * * *   curl -X POST $RAILWAY_STATIC_URL/api/admin/pipeline
-```
-Runs every day at 06:00 UTC.
-
----
-
-## Local Development
-
-### Backend
-
-```bash
-cd backend
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-
-# Create .env from template
-cp .env.example .env
-# Fill in SUPABASE_URL, SUPABASE_KEY, GROQ_API_KEY
-
-uvicorn app.main:app --reload --port 8000
-```
-
-API available at `http://localhost:8000`
-Docs at `http://localhost:8000/docs`
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-
-# Create .env.local
-echo "VITE_API_URL=http://localhost:8000" > .env.local
-
-npm run dev
-```
-
-App at `http://localhost:5173`
-
----
-
-## Admin API
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/admin/scrape` | POST | Run all scrapers |
-| `/api/admin/scrape/reliefweb` | POST | ReliefWeb/OCHA only |
-| `/api/admin/scrape/ucdp` | POST | UCDP Uppsala only |
-| `/api/admin/scrape/wikipedia` | POST | Wikipedia Current Events |
-| `/api/admin/scrape/un-news` | POST | UN News RSS |
-| `/api/admin/scrape/ukraine` | POST | DeepState + CIT |
-| `/api/admin/classify` | POST | LLM classify all unknown events |
-| `/api/admin/calculate-di` | POST | Recalculate DI for all 20 regions |
-| `/api/admin/pipeline` | POST | Full pipeline (scrape → classify → DI) |
-| `/api/admin/narrative/{region}` | GET | Generate AI narrative for region |
-| `/api/admin/status` | GET | Event/exercise/DI counts |
-
----
-
-## Data Sources
-
-| Source | Type | API Key needed |
-|--------|------|---------------|
-| ReliefWeb / OCHA | Humanitarian reports | No |
-| UCDP Uppsala | Verified conflict events | No |
-| Wikipedia Current Events | Daily chronicle | No |
-| UN News RSS | Official UN press releases | No |
-| UNOCHA Situation Reports | Field situation reports | No |
-| DeepState (Ukraine) | Frontline tracker | No |
-| CIT / Leviev | OSINT verification | No |
-| ACLED | Conflict event database | Yes (free, apply at acleddata.com) |
-
----
-
-## Deterrence Index Formula
-
-```
-DI = log(GZ) × 0.45 + EX × 0.30 + BASELINE × 0.25
-
-GZ  = logarithmic normalization of weighted incident escalation (30d)
-      recent events (7d) are double-weighted
-EX  = exercise scale + rhetoric score, ±14 day window
-BASE = per-region structural constant (conflict vs tension zone)
-```
-
-Scores are logarithmically normalized to prevent sparse data from producing identical values across all regions.
-
----
-
-## Monitored Regions
-
-All 20 regions based on UN Security Council agenda items and OCHA Global Humanitarian Overview:
-
-Gaza & Middle East · Ukraine · Sudan · South China Sea · Taiwan Strait · Yemen · Sahel · Korean Peninsula · Myanmar · DRC · Syria · Somalia · Baltic · Haiti · Ethiopia · South Caucasus · Libya · Kosovo · Arctic · Mozambique
-
----
-
-## Project Context
-
-Developed as part of MA North American Studies, seminar *Multilateral Military Maneuvers and Joint Exercises* (Dr. David Bosold, JFKI, FU Berlin, Summer Term 2026).
-
-The Deterrence Index is a research indicator — not an official intelligence assessment.
-
-**Contact:** ivan@easily.berlin
+Released under the GNU AGPL-3.0. See [LICENSE](LICENSE).
