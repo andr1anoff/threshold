@@ -2,7 +2,7 @@
 
 Open-source monitoring of geopolitical escalation. Threshold reads open-source conflict and security reporting across 20 theatres, classifies incidents, and computes a per-region **Escalation Index (EI)**. It also tracks a curated layer of joint military exercises.
 
-**Status:** public beta. Methodology is versioned per record (current: `v18`). The index is a transparent heuristic, not a forecast.
+**Status:** public beta. Methodology is versioned per record (current: `v1.8`). The index is a transparent heuristic, not a forecast.
 
 Live: [threshold-osint.com](https://threshold-osint.com)
 
