@@ -19,7 +19,9 @@ export default function BriefsPage() {
   const [copied, setCopied]       = useState(false);
   const [generatedAt, setGeneratedAt] = useState(null);
 
-  const currentRegion = regionId ? REGIONS.find(r => r.id === regionId) : null;
+  const [liveEi, setLiveEi] = useState(null);   // { ei, trend } from /api/di/overview
+  const baseRegion = regionId ? REGIONS.find(r => r.id === regionId) : null;
+  const currentRegion = baseRegion ? { ...baseRegion, ...(liveEi || {}) } : null;
 
   function copyBrief() {
     const text = narrative || (briefObj ? briefObj.sections.map(s => `${s.heading}\n${s.body.join("\n")}`).join("\n\n") : "");
@@ -33,7 +35,17 @@ export default function BriefsPage() {
     setNarrative("");
     setBriefObj(null);
     setError("");
+    setLiveEi(null);
     setLoading(true);
+
+    // Headline indicators come from the live index, not the static seed dict.
+    fetch(`${API}/api/di/overview`)
+      .then(r => r.json())
+      .then(d => {
+        const row = d?.data?.[REGIONS.find(x => x.id === rid)?.label] || d?.data?.[rid];
+        if (row) setLiveEi({ ei: row.ei_score != null ? Math.round(row.ei_score) : null, trend: row.delta_7d ?? 0 });
+      })
+      .catch(() => {});
 
     try {
       const url = `${API}/api/admin/narrative/${encodeURIComponent(rid)}${force ? "?force=true" : ""}`;
