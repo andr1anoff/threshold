@@ -117,7 +117,7 @@ export default function AboutPage() {
         <div className="about-sidenav" style={{ width:180, flexShrink:0, paddingTop:36 }}>
           <div style={{ position:"sticky", top:72 }}>
             <div style={{ fontSize:9, fontWeight:700, letterSpacing:"2px", color:"var(--ink-muted)", marginBottom:12 }}>ON THIS PAGE</div>
-            {[["project","Project Context"],["limitations","Limitations"],["methodology","Methodology"],["sources","Data Sources"],["validation","Validation"],["references","References"],["contact","Contact"]].map(([id,label]) => (
+            {[["project","Project Context"],["limitations","Limitations"],["methodology","Methodology"],["sources","Data Sources"],["roadmap","Roadmap"],["references","References"],["contact","Contact"]].map(([id,label]) => (
               <a key={id} href={"#"+id} onClick={e=>{ e.preventDefault(); document.getElementById(id)?.scrollIntoView({behavior:"smooth"}); }} style={{ display:"block", fontSize:12, color:"var(--ink-muted)", padding:"5px 0", textDecoration:"none", borderLeft:"2px solid transparent", paddingLeft:8, marginBottom:2, transition:"all .15s" }}
                 onMouseEnter={e=>{ e.currentTarget.style.color="var(--crimson)"; e.currentTarget.style.borderLeftColor="var(--crimson)"; }}
                 onMouseLeave={e=>{ e.currentTarget.style.color="var(--ink-muted)"; e.currentTarget.style.borderLeftColor="transparent"; }}
@@ -168,7 +168,7 @@ export default function AboutPage() {
               <li>Weights are theory-driven, not statistically estimated from historical data.</li>
               <li>Source availability and update frequency vary significantly across regions.</li>
               <li>Sparse reporting in some regions can depress short-term scores below actual escalation levels.</li>
-              <li><strong style={{ color:"var(--ink)" }}>Recalibration periods:</strong> when a theatre's source pool is expanded, its per-region baseline needs roughly 60–90 days to absorb the new observation volume. During this window the score can overstate escalation. Affected theatres carry a visible RECALIBRATING marker on their cards (currently: Baltic, Taiwan Strait, Haiti, and Libya — source pool expanded July 2026).</li>
+              <li><strong style={{ color:"var(--ink)" }}>Recalibration periods:</strong> when a theatre's source pool is expanded, its per-region baseline needs roughly 60–90 days to absorb the new observation volume. During this window the score can overstate escalation. Affected theatres carry a visible RECALIBRATING marker on their cards (currently Baltic, Taiwan Strait, Haiti, and Libya; source pool expanded July 2026).</li>
               <li>AI-generated briefs are analytical summaries, not independent intelligence judgements.</li>
             </ul>
           </div>
@@ -205,13 +205,13 @@ export default function AboutPage() {
           <div style={{ background:"rgba(107,26,42,0.04)", border:"1px solid rgba(107,26,42,0.12)", borderRadius:12, padding:"16px 20px", marginBottom:10 }}>
             <div style={{ fontSize:10, fontWeight:700, letterSpacing:"1.5px", color:"var(--crimson)", marginBottom:8 }}>METHODOLOGICAL NOTE · v1.8</div>
             <p style={{ fontSize:12.5, color:"var(--ink-muted)", lineHeight:1.7, margin:0 }}>
-              The Gray-Zone Score is computed over deduplicated <strong style={{ color:"var(--ink)" }}>events</strong> with a convex severity weighting, so a region's score reflects what is happening rather than how many outlets report it. From v1.8, the saturation constant is additionally <strong style={{ color:"var(--ink)" }}>calibrated per region</strong> against that region's own trailing 90-day median load: the score measures deviation from a theatre's observed norm, making regions with very different source coverage comparable by construction. Cross-region structural differences are carried by the conflict baseline.
+              The Gray-Zone Score is computed over deduplicated <strong style={{ color:"var(--ink)" }}>events</strong> with a convex severity weighting, so a region's score reflects what is happening rather than how many outlets report it. From v1.8, the saturation constant is additionally <strong style={{ color:"var(--ink)" }}>calibrated per region</strong> against that region's own trailing 90-day median load: the score measures deviation from a theatre's observed norm; regions with very different source coverage become comparable by construction. Cross-region structural differences are carried by the conflict baseline.
             </p>
             <div style={{ marginTop:12, paddingTop:12, borderTop:"1px solid rgba(107,26,42,0.12)" }}>
               <div style={{ fontSize:10, fontWeight:700, letterSpacing:"1.5px", color:"var(--crimson)", marginBottom:8 }}>RECENT UPDATES</div>
               <ul style={{ margin:0, paddingLeft:16, fontSize:12, color:"var(--ink-muted)", lineHeight:1.9 }}>
-                <li><strong style={{ color:"var(--ink)" }}>v1.8.1 (interface)</strong> — War Room rebuilt on vendor basemaps: theme-aware CARTO cartography with a switchable Esri World Imagery satellite layer, higher zoom ceiling for theatre inspection, exercise labels legible on imagery, and a status footer carrying basemap attribution and legal links. Groundwork for the planned Satellite Verification mode.</li>
-                <li><strong style={{ color:"var(--ink)" }}>v1.8.1</strong> — Cold-start guard: theatres without meaningful baseline history fall back to the global saturation constant instead of the sensitive per-region floor, preventing observability spikes when new sources come online. Recalibrating theatres are now marked in the interface.</li>
+                <li><strong style={{ color:"var(--ink)" }}>v1.8.1 (interface)</strong> — War Room rebuilt on vendor basemaps: CARTO cartography that follows the site theme, a switchable Esri satellite layer, a higher zoom ceiling, exercise labels that stay legible on imagery, and a status footer with attribution and legal links. Groundwork for Satellite Verification mode.</li>
+                <li><strong style={{ color:"var(--ink)" }}>v1.8.1</strong> — Cold-start guard: theatres without meaningful baseline history fall back to the global saturation constant instead of the sensitive per-region floor, so a new source coming online no longer spikes the score. Recalibrating theatres are marked in the interface.</li>
                 <li><strong style={{ color:"var(--ink)" }}>v1.8</strong> — Per-region normalization of the Gray-Zone saturation constant (trailing 90-day median). Methodology version now recorded with every daily index value.</li>
                 <li><strong style={{ color:"var(--ink)" }}>v1.7</strong> — All charts, sparklines and trends now render exclusively from recorded index history; no synthetic placeholder data anywhere in the interface. LLM classification hardened with a multi-provider fallback chain.</li>
                 <li><strong style={{ color:"var(--ink)" }}>v1.6</strong> — Event-based scoring: incident reports are deduplicated into events; severity dominates volume.</li>
@@ -290,13 +290,59 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* Validation Roadmap */}
-        <section id="validation" style={{ marginBottom:44 }}>
-          <SectionLabel>VALIDATION ROADMAP</SectionLabel>
+        
+
+        
+
+        
+
+        {/* Product Roadmap */}
+        <section id="roadmap" style={{ marginBottom:44 }}>
+          <SectionLabel>ROADMAP</SectionLabel>
+          <span id="validation" style={{ position:"relative", top:-80 }} aria-hidden="true"/>
           <div style={{ background:"var(--card)", border:"1px solid var(--card-border)", borderRadius:14, padding:24 }}>
-            <p style={{ fontSize:13, color:"var(--ink-muted)", lineHeight:1.75 }}>
-              Future iterations should include backtesting against known escalation episodes, sensitivity analysis of component weights, and case comparisons across regions such as Ukraine, Taiwan, the Red Sea, and Israel/Iran. Additional steps may include expert review of baseline values and calibration of the exercise rhetoric scoring rubric.
+            <p style={{ fontSize:13, color:"var(--ink-muted)", lineHeight:1.7, marginBottom:20 }}>
+              Threshold is a solo research project. Order reflects priority. No dates attached, and "shipped" means live in production, not announced.
             </p>
+            {[
+              { status:"SHIPPED", color:"#3B6D11", items:[
+                ["v1.8.1", "War Room now runs on vendor basemaps with a switchable satellite imagery layer. Map controls follow the site theme."],
+                ["v1.8", "Escalation Index normalized per theatre against its own 90-day baseline, with a cold-start guard for new theatres."],
+                ["v1.7", "LLM classification with a multi-provider fallback chain. All synthetic placeholder data removed from the interface."],
+              ]},
+              { status:"IN PROGRESS", color:"#C0622B", items:[
+                ["Classifier at ingest", "New incidents are classified at scrape time through a queue instead of 12-hour full re-sweeps. The index gets fresher and the model load drops."],
+                ["Satellite Verification, v1", "Each exercise gets an AOI with the latest available Sentinel-2 scene and its acquisition metadata: age, cloud cover, resolution, coverage. Latest available, never \u201clive\u201d."],
+              ]},
+              { status:"PLANNED", color:"var(--ink-40)", items:[
+                ["Imagery timeline", "Before, during and after comparison per exercise. Sentinel-1 radar layer for cloud and night coverage."],
+                ["Higher-cadence imagery", "Near-daily optical revisit through research programme access, pending approval."],
+                ["Backtesting", "Validation of the Escalation Index against known historical escalation episodes: Ukraine, Taiwan, the Red Sea, Israel and Iran."],
+                ["Weight sensitivity", "Sensitivity analysis of the component weights, plus expert review of baseline values and of the exercise rhetoric rubric."],
+              ]},
+              { status:"EXPLORING", color:"#185FA5", items:[
+                ["JME database", "The curated joint-exercise registry as a standalone structured dataset: coverage beyond the current 20 theatres, versioned history, machine-readable access. A possible product in its own right."],
+                ["Observable indicators", "Analyst-annotated activity markers on imagery (vessel concentration, temporary structures, logistics buildup) with explicit confidence levels."],
+                ["Read API", "Public endpoint for daily index history, for researchers and journalists."],
+              ]},
+            ].map(group => (
+              <div key={group.status} style={{ marginBottom:18 }}>
+                <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
+                  <span style={{ fontSize:9, fontWeight:700, letterSpacing:"1.5px", padding:"3px 8px", borderRadius:3, color:group.color, border:`1px solid ${group.color}`, fontFamily:"var(--mono)" }}>
+                    {group.status}
+                  </span>
+                  <span style={{ flex:1, height:1, background:"var(--rule)" }}/>
+                </div>
+                <div style={{ display:"flex", flexDirection:"column", gap:0 }}>
+                  {group.items.map(([title, desc]) => (
+                    <div key={title} style={{ display:"flex", gap:14, padding:"9px 0", borderBottom:"1px solid rgba(26,16,8,0.05)", alignItems:"baseline" }}>
+                      <span style={{ fontSize:12.5, fontWeight:600, color:"var(--ink)", flexShrink:0, minWidth:150 }}>{title}</span>
+                      <span style={{ fontSize:12.5, color:"var(--ink-muted)", lineHeight:1.6 }}>{desc}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -323,54 +369,6 @@ export default function AboutPage() {
                 </div>
               ))}
             </div>
-          </div>
-        </section>
-
-        {/* Product Roadmap */}
-        <section id="roadmap" style={{ marginBottom:44 }}>
-          <SectionLabel>PRODUCT ROADMAP</SectionLabel>
-          <div style={{ background:"var(--card)", border:"1px solid var(--card-border)", borderRadius:14, padding:24 }}>
-            <p style={{ fontSize:13, color:"var(--ink-muted)", lineHeight:1.7, marginBottom:20 }}>
-              Threshold is a solo research project. Order reflects priority. No dates attached, and "shipped" means live in production, not announced.
-            </p>
-            {[
-              { status:"SHIPPED", color:"#3B6D11", items:[
-                ["v1.8.1", "War Room now runs on vendor basemaps with a switchable satellite imagery layer. Map controls follow the site theme."],
-                ["v1.8", "Escalation Index normalized per theatre against its own 90-day baseline, with a cold-start guard for new theatres."],
-                ["v1.7", "LLM classification with a multi-provider fallback chain. All synthetic placeholder data removed from the interface."],
-              ]},
-              { status:"IN PROGRESS", color:"#C0622B", items:[
-                ["Classifier at ingest", "New incidents are classified at scrape time through a queue instead of 12-hour full re-sweeps. The index gets fresher and the model load drops."],
-                ["Satellite Verification, v1", "Each exercise gets an AOI with the latest available Sentinel-2 scene and its acquisition metadata: age, cloud cover, resolution, coverage. Latest available, never \u201clive\u201d."],
-              ]},
-              { status:"PLANNED", color:"var(--ink-40)", items:[
-                ["Imagery timeline", "Before, during and after comparison per exercise. Sentinel-1 radar layer for cloud and night coverage."],
-                ["Higher-cadence imagery", "Near-daily optical revisit through research programme access, pending approval."],
-                ["Backtesting", "Validation of the Escalation Index against known historical escalation episodes. See Validation Roadmap above."],
-              ]},
-              { status:"EXPLORING", color:"#185FA5", items:[
-                ["JME database", "The curated joint-exercise registry as a standalone structured dataset: coverage beyond the current 20 theatres, versioned history, machine-readable access. A possible product in its own right."],
-                ["Observable indicators", "Analyst-annotated activity markers on imagery (vessel concentration, temporary structures, logistics buildup) with explicit confidence levels."],
-                ["Read API", "Public endpoint for daily index history, for researchers and journalists."],
-              ]},
-            ].map(group => (
-              <div key={group.status} style={{ marginBottom:18 }}>
-                <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
-                  <span style={{ fontSize:9, fontWeight:700, letterSpacing:"1.5px", padding:"3px 8px", borderRadius:3, color:group.color, border:`1px solid ${group.color}`, fontFamily:"var(--mono)" }}>
-                    {group.status}
-                  </span>
-                  <span style={{ flex:1, height:1, background:"var(--rule)" }}/>
-                </div>
-                <div style={{ display:"flex", flexDirection:"column", gap:0 }}>
-                  {group.items.map(([title, desc]) => (
-                    <div key={title} style={{ display:"flex", gap:14, padding:"9px 0", borderBottom:"1px solid rgba(26,16,8,0.05)", alignItems:"baseline" }}>
-                      <span style={{ fontSize:12.5, fontWeight:600, color:"var(--ink)", flexShrink:0, minWidth:150 }}>{title}</span>
-                      <span style={{ fontSize:12.5, color:"var(--ink-muted)", lineHeight:1.6 }}>{desc}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
           </div>
         </section>
 
