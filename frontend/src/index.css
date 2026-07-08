@@ -21,6 +21,7 @@
   --ink-faint:    rgba(26,16,8,0.10);
   --crimson:      #6B1A2A;
   --crimson-dim:  rgba(107,26,42,0.65);
+  --logo-acc:     #6B1A2A;           /* logo connectors; brightened in dark mode */
   --hi:   #8B2030;
   --mid:  #B07D1A;
   --lo:   #2D7A4F;
@@ -459,6 +460,7 @@ a { color: inherit; text-decoration: none; }
   .warroom-sidebar { display: none !important; }
 }
 body.dark-mode {
+  --logo-acc:     #B2485C;
   --cream:        #14100B;
   --cream-deep:   #0F0B07;
   --paper:        #1A1611;

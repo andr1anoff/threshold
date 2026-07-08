@@ -157,6 +157,11 @@ export default function WarRoom() {
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 700);
   const [filter, setFilter] = useState("active");
   const [domain, setDomain] = useState("all");
+  // Basemap: 'map' (CARTO, theme-aware) | 'sat' (Esri World Imagery).
+  // Ref mirrors state so initMap/addMarkers (called outside React flow) read the truth.
+  const [basemap, setBasemap] = useState("map");
+  const basemapRef = useRef("map");
+  const layersRef  = useRef({});
 
   useEffect(() => {
     const h = () => setIsMobile(window.innerWidth < 700);
@@ -192,31 +197,32 @@ export default function WarRoom() {
 
   useEffect(() => {
     if (mapRef.current && mapLoaded) addMarkers();
-  }, [exercises, mapLoaded, sel, hovered]);
+  }, [exercises, mapLoaded, sel, hovered, basemap]);
 
   function initMap() {
     if (!mapDiv.current || mapRef.current) return;
     const L = window.L;
     const map = L.map(mapDiv.current, {
-      center:[30,15], zoom:2, minZoom:2, maxZoom:7,
+      center:[30,15], zoom:2, minZoom:2, maxZoom:10,
       zoomControl:false,
       scrollWheelZoom:false,
       doubleClickZoom:false,
       touchZoom:true,
       dragging:true,
       tap:true,
-      attributionControl:false,
+      attributionControl:false, // attribution rendered in the War Room footer strip
     });
     L.control.zoom({position:'bottomright'}).addTo(map);
     const isDark = document.body.classList.contains('dark-mode');
-    if (isDark) {
-      // Dark/night map tile
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',{maxZoom:7,subdomains:'abcd'}).addTo(map);
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',{maxZoom:7,subdomains:'abcd',opacity:0.5}).addTo(map);
-    } else {
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',{maxZoom:7,subdomains:'abcd'}).addTo(map);
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',{maxZoom:7,subdomains:'abcd',opacity:0.35}).addTo(map);
-    }
+    // Build all basemap layers once; toggling swaps them without re-init.
+    const variant = isDark ? 'dark' : 'light';
+    const base = L.tileLayer(`https://{s}.basemaps.cartocdn.com/${variant}_nolabels/{z}/{x}/{y}{r}.png`,{maxZoom:10,subdomains:'abcd'});
+    const baseLabels = L.tileLayer(`https://{s}.basemaps.cartocdn.com/${variant}_only_labels/{z}/{x}/{y}{r}.png`,{maxZoom:10,subdomains:'abcd',opacity:isDark?0.5:0.35});
+    const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:10});
+    const satLabels = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',{maxZoom:10,subdomains:'abcd',opacity:0.75});
+    layersRef.current = { base, baseLabels, sat, satLabels };
+    if (basemapRef.current === 'sat') { sat.addTo(map); satLabels.addTo(map); }
+    else { base.addTo(map); baseLabels.addTo(map); }
     for (let i=-90;i<=90;i+=15) L.polyline([[-85,i],[85,i]],{color:'rgba(107,26,42,0.05)',weight:0.4}).addTo(map);
     for (let i=-180;i<=180;i+=30) L.polyline([[-85,i],[85,i]],{color:'rgba(107,26,42,0.05)',weight:0.4}).addTo(map);
     L.polyline([[-85,0],[85,0]],{color:'rgba(107,26,42,0.10)',weight:0.7,dashArray:'5,5'}).addTo(map);
@@ -263,6 +269,17 @@ export default function WarRoom() {
     setMapMoved(false);
   }, []);
 
+  const switchBasemap = useCallback((mode) => {
+    if (basemapRef.current === mode) return;
+    basemapRef.current = mode;
+    setBasemap(mode);
+    const map = mapRef.current, ly = layersRef.current;
+    if (!map || !ly.base) return;
+    [ly.base, ly.baseLabels, ly.sat, ly.satLabels].forEach(l => { if (map.hasLayer(l)) map.removeLayer(l); });
+    if (mode === 'sat') { ly.sat.addTo(map); ly.satLabels.addTo(map); }
+    else { ly.base.addTo(map); ly.baseLabels.addTo(map); }
+  }, []);
+
   const selectEx = useCallback((ex, fromMap=false) => {
     const next = sel?.id===ex.id ? null : ex;
     setSel(next);
@@ -284,8 +301,10 @@ export default function WarRoom() {
     const L = window.L; const map = mapRef.current;
     if (!L||!map) return;
     const isDark = document.body.classList.contains('dark-mode');
-    const labelColor = isDark ? '#ffffff' : null;
-    const labelShadow = isDark ? 'none' : `0 0 6px ${CREAM},0 0 3px ${CREAM}`;
+    const onSat = basemapRef.current === 'sat';
+    const labelColor  = onSat ? '#ffffff' : (isDark ? '#ffffff' : null);
+    const labelShadow = onSat ? '0 1px 3px rgba(0,0,0,0.95), 0 0 8px rgba(0,0,0,0.6)'
+                       : isDark ? 'none' : `0 0 6px ${CREAM},0 0 3px ${CREAM}`;
     map.eachLayer(l=>{ if(l._em) map.removeLayer(l); });
     exercises.forEach(ex=>{
       const [lat,lng] = getPos(ex.name, ex);
@@ -382,6 +401,15 @@ export default function WarRoom() {
       pointerEvents: isMobile && mobileTab!=="map" ? "none" : "auto",
     }}>
       <div ref={mapDiv} style={{width:"100%",height:"100%"}}/>
+      <div style={{ position:"absolute", right:10, top:10, zIndex:1000, display:"flex", padding:3, gap:2, background:"color-mix(in oklab, var(--cream) 92%, transparent)", backdropFilter:"blur(4px)", border:"1px solid var(--rule)", borderRadius:8 }}>
+        {[["map","Map"],["sat","Sat"]].map(([k,l])=>(
+          <button key={k} onClick={()=>switchBasemap(k)}
+            aria-pressed={basemap===k}
+            style={{ fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.12em", textTransform:"uppercase", padding:"9px 12px", border:0, borderRadius:5, cursor:"pointer", background: basemap===k ? "var(--ink)" : "transparent", color: basemap===k ? "var(--cream)" : "var(--ink-70)", transition:"background 0.15s ease, color 0.15s ease" }}>
+            {l}
+          </button>
+        ))}
+      </div>
       {sel && mapMoved && !isMobile && (
         <button onClick={()=>flyTo(sel)} style={{position:"absolute",top:12,left:12,zIndex:1000,background:CREAM,border:`1px solid ${FAINT}`,borderRadius:6,padding:"6px 12px",fontSize:11,color:CRIMSON,cursor:"pointer",fontWeight:600}}>
           ◎ Focus {sel.name.split(" ")[0]}
@@ -441,7 +469,23 @@ export default function WarRoom() {
               <div ref={mapDiv} style={{ position:"absolute", inset:0 }}/>
               {/* overlays */}
               <div style={{ position:"absolute", left:20, top:18, zIndex:500, pointerEvents:"none" }}>
-                <div className="micro" style={{ color:"var(--ink)" }}>EXERCISE THEATRE OVERVIEW</div>
+                <div className="micro" style={{ color: basemap==='sat' ? '#fff' : 'var(--ink)', textShadow: basemap==='sat' ? '0 1px 3px rgba(0,0,0,0.9)' : 'none' }}>EXERCISE THEATRE OVERVIEW</div>
+              </div>
+              {/* Basemap toggle */}
+              <div style={{ position:"absolute", right:14, top:14, zIndex:500, display:"flex", padding:3, gap:2, background:"color-mix(in oklab, var(--cream) 92%, transparent)", backdropFilter:"blur(4px)", border:"1px solid var(--rule)", borderRadius:8 }}>
+                {[["map","Map"],["sat","Satellite"]].map(([k,l])=>(
+                  <button key={k} onClick={()=>switchBasemap(k)}
+                    aria-pressed={basemap===k}
+                    style={{
+                      fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.14em", textTransform:"uppercase",
+                      padding:"8px 12px", border:0, borderRadius:5, cursor:"pointer",
+                      background: basemap===k ? "var(--ink)" : "transparent",
+                      color: basemap===k ? "var(--cream)" : "var(--ink-70)",
+                      transition:"background 0.15s ease, color 0.15s ease",
+                    }}>
+                    {l}
+                  </button>
+                ))}
               </div>
               <div style={{ position:"absolute", left:20, bottom:20, zIndex:500, display:"flex", gap:14, alignItems:"center", padding:"8px 14px", background:"color-mix(in oklab, var(--cream) 92%, transparent)", backdropFilter:"blur(4px)", border:"1px solid var(--rule)", fontFamily:"var(--mono)", fontSize:9, letterSpacing:"0.12em", textTransform:"uppercase" }}>
                 {[["#8B2030","NATO"],["#185FA5","US-led"],["#3D1219","RUS/CHN"],["#3B6D11","National"]].map(([c,l])=>(
@@ -513,6 +557,29 @@ export default function WarRoom() {
           </div>
         </section>}
 
+        {/* Status footer — frames the map, carries attribution + legal links */}
+        {!isMobile && (
+          <footer role="contentinfo" style={{
+            flexShrink:0, display:"flex", alignItems:"center", justifyContent:"space-between", gap:16,
+            padding:"0 20px", height:36, borderTop:"1px solid var(--rule)",
+            background:"var(--cream)", fontFamily:"var(--mono)", fontSize:9.5,
+            letterSpacing:"0.06em", color:"var(--ink-40)", whiteSpace:"nowrap", overflow:"hidden",
+          }}>
+            <span style={{ display:"flex", alignItems:"center", gap:6, minWidth:0, overflow:"hidden", textOverflow:"ellipsis" }}>
+              <span>© 2026 Threshold · Research indicator — not an official intelligence assessment</span>
+              <span style={{ color:"var(--ink-15)" }}>·</span>
+              <a href="/impressum" className="wr-ft-a">Impressum</a>
+              <span style={{ color:"var(--ink-15)" }}>·</span>
+              <a href="/datenschutz" className="wr-ft-a">Datenschutz</a>
+            </span>
+            <span style={{ display:"flex", alignItems:"center", gap:6, flexShrink:0 }}>
+              <span>{basemap==='sat' ? 'Imagery © Esri · Maxar · Earthstar Geographics' : 'Basemap © CARTO · © OpenStreetMap contributors'}</span>
+              <span style={{ color:"var(--ink-15)" }}>·</span>
+              <span style={{ color:"var(--ink-55)" }}>v1.8.1β</span>
+            </span>
+          </footer>
+        )}
+
         {/* Mobile layout */}
         {isMobile && (
           <div style={{position:"fixed",inset:0,top:60,background:CREAM,zIndex:50,display:"flex",flexDirection:"column"}}>
@@ -541,10 +608,13 @@ export default function WarRoom() {
                 </div>
               </>
             )}
-            <div style={{padding:"6px 16px",borderTop:`1px solid ${FAINT}`,display:"flex",gap:12,flexShrink:0,paddingBottom:"calc(6px + env(safe-area-inset-bottom))"}}>
+            <div style={{padding:"6px 16px",borderTop:`1px solid ${FAINT}`,display:"flex",gap:12,alignItems:"center",flexShrink:0,paddingBottom:"calc(6px + env(safe-area-inset-bottom))"}}>
               {[["#8B2030","NATO"],["#185FA5","Multilateral"],["#3B6D11","National"]].map(([c,l])=>(
                 <span key={l} style={{display:"flex",alignItems:"center",gap:4,fontSize:9,color:MUTED}}><span style={{width:6,height:6,borderRadius:"50%",background:c}}/>{l}</span>
               ))}
+              <span style={{marginLeft:"auto",fontSize:8,color:"var(--ink-25)",fontFamily:"var(--mono)",letterSpacing:"0.04em"}}>
+                {basemap==='sat' ? '© Esri' : '© CARTO · OSM'} · v1.8.1β
+              </span>
             </div>
           </div>
         )}
@@ -555,6 +625,8 @@ export default function WarRoom() {
         .leaflet-control-zoom a{background:${CREAM}!important;color:${CRIMSON}!important;border-color:rgba(26,16,8,0.12)!important;font-weight:700!important;width:28px!important;height:28px!important;line-height:28px!important;font-size:16px!important;box-shadow:none!important}
         .leaflet-control-zoom a:hover{background:rgba(107,26,42,0.08)!important}
         @keyframes wr-detail-in { from { transform: translateY(10px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+        .wr-ft-a { color: var(--ink-55); text-decoration: none; padding: 10px 2px; transition: color .15s ease; }
+        .wr-ft-a:hover { color: var(--ink); }
       `}</style>
     </Layout>
   );

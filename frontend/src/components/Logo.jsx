@@ -1,6 +1,8 @@
 export default function Logo({ size = 28, white = false }) {
-  const c = white ? "#fff" : "#1A1008";
-  const acc = white ? "rgba(255,255,255,0.6)" : "#6B1A2A";
+  // Theme-aware: steps follow the wordmark colour (--ink flips to beige in dark
+  // mode), connectors use a logo-specific accent that stays legible on dark.
+  const c   = white ? "#fff" : "var(--ink)";
+  const acc = white ? "rgba(255,255,255,0.6)" : "var(--logo-acc, var(--crimson))";
   return (
     <svg width={size} height={size} viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
       {/* Threshold step symbol */}

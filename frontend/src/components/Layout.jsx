@@ -325,7 +325,7 @@ export default function Layout({ children }) {
                 <Link to="/datenschutz" className="ft-a" style={{ padding:"8px 6px" }}>Datenschutz</Link>
               </span>
             </span>
-            <span style={{ fontFamily:"var(--mono)" }}>v1.8β · threshold-osint.com</span>
+            <span style={{ fontFamily:"var(--mono)" }}>v1.8.1β · threshold-osint.com</span>
           </div>
         </footer>
       )}
