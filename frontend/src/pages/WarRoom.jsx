@@ -163,6 +163,9 @@ export default function WarRoom() {
   const basemapRef = useRef("map");
   const layersRef  = useRef({});
   const [themeTick, setThemeTick] = useState(0); // bumped when body theme class changes
+  const markersRef  = useRef({});   // ex.id -> { m, lm, ex } — persistent across renders
+  const selectExRef = useRef(null); // fresh selectEx for handlers on persistent markers
+  const hoverSrcRef = useRef(null); // 'map' | 'list' — where the current hover came from
 
   useEffect(() => {
     const h = () => setIsMobile(window.innerWidth < 700);
@@ -196,9 +199,31 @@ export default function WarRoom() {
     document.head.appendChild(s);
   }, []);
 
+  // Full marker rebuild ONLY when the data or the canvas changes.
+  // sel/hovered emphasis is applied by the effect below via setIcon on
+  // individual markers — rebuilding everything on hover destroyed the DOM
+  // node mid-press and swallowed marker clicks.
   useEffect(() => {
     if (mapRef.current && mapLoaded) addMarkers();
-  }, [exercises, mapLoaded, sel, hovered, basemap, themeTick]);
+  }, [exercises, mapLoaded, basemap, themeTick]);
+
+  // Point-update emphasis on selection / list-driven hover.
+  useEffect(() => {
+    const L = window.L; if (!L || !mapRef.current) return;
+    Object.values(markersRef.current).forEach(({ m, lm, ex }) => {
+      const isSel = sel?.id === ex.id;
+      // Map-driven hover is styled by CSS (:hover) — replacing the node
+      // under the pointer would restart the mouseover/out loop.
+      const isHov = hovered?.id === ex.id && hoverSrcRef.current === 'list';
+      const wantKey = `${isSel}|${isHov}|${basemapRef.current}`;
+      if (m._emKey === wantKey) return;
+      if (hovered?.id === ex.id && hoverSrcRef.current === 'map' && !isSel) return;
+      m._emKey = wantKey;
+      m.setIcon(makeMarkerIcon(ex, isSel, isHov));
+      m.setZIndexOffset(isSel ? 1000 : isHov ? 500 : 0);
+      lm.setIcon(makeLabelIcon(ex, isSel, isHov));
+    });
+  }, [sel, hovered, basemap, themeTick]);
 
   // Theme can flip after the map initialised (toggle on this page, or the
   // dark-mode class landing on <body> a tick after initMap during first load).
@@ -284,8 +309,15 @@ export default function WarRoom() {
     const map = mapRef.current; const L = window.L;
     if (!map||!L) return;
     const vp = getViewport(ex.name, ex);
-    if (vp.bounds) map.flyToBounds(vp.bounds,{padding:[60,60],duration:0.9,animate:true});
-    else map.flyTo([vp.center[0],vp.center[1]],vp.zoom||4.5,{duration:0.9,animate:true});
+    if (vp.bounds) {
+      // Modest zoom-in: respect the theatre bounds but never dive deeper
+      // than a comfortable overview level.
+      const z = Math.min(map.getBoundsZoom(vp.bounds, false, L.point(60,60)), 5.5);
+      map.flyTo(L.latLngBounds(vp.bounds).getCenter(), z, {duration:1.1, animate:true});
+    } else {
+      const target = Math.min(vp.zoom||4.5, map.getZoom()+2.5, 5.5);
+      map.flyTo([vp.center[0],vp.center[1]], Math.max(target, 3.5), {duration:1.1, animate:true});
+    }
     setMapMoved(false);
   }, []);
 
@@ -316,46 +348,61 @@ export default function WarRoom() {
       setShowSheet(false);
     }
   }, [sel, flyTo, isMobile]);
+  selectExRef.current = selectEx;
+
+  function makeMarkerIcon(ex, isSel, isHov) {
+    const L = window.L;
+    const c = getColor(ex);
+    const onSat = basemapRef.current === 'sat';
+    const active = inWindow(ex);
+    const size = isSel?26:isHov?22:18;
+    const inner = isSel?10:isHov?8:6;
+    const opacity = active ? 1 : 0.35;
+    const fillA = onSat ? (isSel?'45':isHov?'3A':'2E') : (isSel?'28':isHov?'20':'12');
+    const ring  = onSat ? '0 0 0 1.5px rgba(255,255,255,0.92), 0 2px 8px rgba(0,0,0,0.55)' : 'none';
+    const glow  = isSel?`0 0 16px ${c.marker}66`:isHov?`0 0 8px ${c.marker}55`:'none';
+    const shadow = [ring, glow].filter(s=>s!=='none').join(', ') || 'none';
+    return L.divIcon({
+      className:'',
+      html:`<div class="wrm" style="width:${size}px;height:${size}px;border-radius:50%;border:${isSel?2:1.5}px solid ${c.marker};background:${c.marker}${fillA};display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:${opacity};box-shadow:${shadow}"><div style="width:${inner}px;height:${inner}px;border-radius:50%;background:${c.marker};box-shadow:${onSat?'0 0 0 1px rgba(255,255,255,0.65)':'none'}"></div></div>`,
+      iconSize:[size,size], iconAnchor:[size/2,size/2],
+    });
+  }
+
+  function makeLabelIcon(ex, isSel, isHov) {
+    const L = window.L;
+    const c = getColor(ex);
+    const isDark = document.body.classList.contains('dark-mode');
+    const onSat = basemapRef.current === 'sat';
+    const active = inWindow(ex);
+    const size = isSel?26:isHov?22:18;
+    const labelColor  = onSat ? '#ffffff' : (isDark ? '#ffffff' : null);
+    const labelShadow = onSat ? '0 1px 3px rgba(0,0,0,0.95), 0 0 8px rgba(0,0,0,0.6)'
+                       : isDark ? 'none' : `0 0 6px ${CREAM},0 0 3px ${CREAM}`;
+    return L.divIcon({
+      className:'',
+      html:`<div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:0.8px;color:${labelColor||c.marker};white-space:nowrap;pointer-events:none;text-shadow:${labelShadow};font-weight:${isSel?700:isHov?600:400};opacity:${active?1:0.35}">${ex.name}</div>`,
+      iconSize:[220,14], iconAnchor:[-(size/2+4),7],
+    });
+  }
 
   function addMarkers() {
     const L = window.L; const map = mapRef.current;
     if (!L||!map) return;
-    const isDark = document.body.classList.contains('dark-mode');
-    const onSat = basemapRef.current === 'sat';
-    const labelColor  = onSat ? '#ffffff' : (isDark ? '#ffffff' : null);
-    const labelShadow = onSat ? '0 1px 3px rgba(0,0,0,0.95), 0 0 8px rgba(0,0,0,0.6)'
-                       : isDark ? 'none' : `0 0 6px ${CREAM},0 0 3px ${CREAM}`;
     map.eachLayer(l=>{ if(l._em) map.removeLayer(l); });
+    markersRef.current = {};
     exercises.forEach(ex=>{
       const [lat,lng] = getPos(ex.name, ex);
-      const c = getColor(ex);
       const isSel = sel?.id===ex.id;
-      const isHov = hovered?.id===ex.id;
-      const active = inWindow(ex);
-      const size = isSel?26:isHov?22:18;
-      const inner = isSel?10:isHov?8:6;
-      const opacity = active ? 1 : 0.35;
-      const fillA = onSat ? (isSel?'45':isHov?'3A':'2E') : (isSel?'28':isHov?'20':'12');
-      const ring  = onSat ? '0 0 0 1.5px rgba(255,255,255,0.92), 0 2px 8px rgba(0,0,0,0.55)' : 'none';
-      const glow  = isSel?`0 0 16px ${c.marker}66`:isHov?`0 0 8px ${c.marker}55`:'none';
-      const shadow = [ring, glow].filter(s=>s!=='none').join(', ') || 'none';
-      const icon = L.divIcon({
-        className:'',
-        html:`<div style="width:${size}px;height:${size}px;border-radius:50%;border:${isSel?2:1.5}px solid ${c.marker};background:${c.marker}${fillA};display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:${opacity};box-shadow:${shadow}"><div style="width:${inner}px;height:${inner}px;border-radius:50%;background:${c.marker};box-shadow:${onSat?'0 0 0 1px rgba(255,255,255,0.65)':'none'}"></div></div>`,
-        iconSize:[size,size], iconAnchor:[size/2,size/2],
-      });
-      const m = L.marker([lat,lng],{icon,zIndexOffset:isSel?1000:isHov?500:0})
+      const m = L.marker([lat,lng],{icon:makeMarkerIcon(ex,isSel,false),zIndexOffset:isSel?1000:0})
         .addTo(map)
-        .on('click',()=>selectEx(ex, true))
-        .on('mouseover',()=>setHovered(ex))
-        .on('mouseout',()=>setHovered(null));
+        .on('click',()=>selectExRef.current?.(ex, true))
+        .on('mouseover',()=>{ hoverSrcRef.current='map'; setHovered(ex); })
+        .on('mouseout',()=>{ hoverSrcRef.current=null; setHovered(null); });
       m._em=true;
-      const lbl = L.divIcon({
-        className:'',
-        html:`<div style="font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:0.8px;color:${labelColor||c.marker};white-space:nowrap;pointer-events:none;text-shadow:${labelShadow};font-weight:${isSel?700:isHov?600:400};opacity:${opacity}">${ex.name}</div>`,
-        iconSize:[220,14], iconAnchor:[-(size/2+4),7],
-      });
-      const lm = L.marker([lat,lng],{icon:lbl,interactive:false}).addTo(map); lm._em=true;
+      m._emKey=`${isSel}|false|${basemapRef.current}`;
+      const lm = L.marker([lat,lng],{icon:makeLabelIcon(ex,isSel,false),interactive:false}).addTo(map); lm._em=true;
+      markersRef.current[ex.id] = { m, lm, ex };
     });
   }
 
@@ -537,9 +584,9 @@ export default function WarRoom() {
                   const active = inWindow(ex);
                   return (
                     <div key={ex.id} className="wr-row"
-                      onClick={()=>setSel(prev=>prev?.id===ex.id?null:ex)}
-                      onMouseEnter={()=>setHovered(ex)}
-                      onMouseLeave={()=>setHovered(null)}
+                      onClick={()=>selectEx(ex)}
+                      onMouseEnter={()=>{ hoverSrcRef.current='list'; setHovered(ex); }}
+                      onMouseLeave={()=>{ hoverSrcRef.current=null; setHovered(null); }}
                       style={{
                         padding:"14px 22px", borderBottom:"1px solid var(--rule)",
                         borderLeft: isSel ? `3px solid ${c.marker}` : "3px solid transparent",
@@ -649,6 +696,8 @@ export default function WarRoom() {
         .leaflet-control-zoom a{background:var(--cream)!important;color:var(--ink)!important;border-color:var(--rule)!important;font-weight:700!important;width:30px!important;height:30px!important;line-height:30px!important;font-size:16px!important;box-shadow:none!important;transition:background 0.15s ease}
         .leaflet-control-zoom a:hover{background:color-mix(in oklab, var(--ink) 9%, var(--cream))!important;color:var(--ink)!important}
         .leaflet-control-zoom a.leaflet-disabled{color:var(--ink-25)!important;background:var(--cream)!important}
+        .wrm{transition:transform 0.12s ease;transform-origin:center}
+        .wrm:hover{transform:scale(1.18)}
         @keyframes wr-detail-in { from { transform: translateY(10px); opacity:0; } to { transform: translateY(0); opacity:1; } }
         .wr-ft-a { color: var(--ink-55); text-decoration: none; padding: 10px 2px; transition: color .15s ease; }
         .wr-ft-a:hover { color: var(--ink); }
