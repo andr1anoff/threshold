@@ -162,6 +162,7 @@ export default function WarRoom() {
   const [basemap, setBasemap] = useState("map");
   const basemapRef = useRef("map");
   const layersRef  = useRef({});
+  const [themeTick, setThemeTick] = useState(0); // bumped when body theme class changes
 
   useEffect(() => {
     const h = () => setIsMobile(window.innerWidth < 700);
@@ -197,7 +198,26 @@ export default function WarRoom() {
 
   useEffect(() => {
     if (mapRef.current && mapLoaded) addMarkers();
-  }, [exercises, mapLoaded, sel, hovered, basemap]);
+  }, [exercises, mapLoaded, sel, hovered, basemap, themeTick]);
+
+  // Theme can flip after the map initialised (toggle on this page, or the
+  // dark-mode class landing on <body> a tick after initMap during first load).
+  // Rebuild the CARTO base layers to match and repaint markers/labels.
+  useEffect(() => {
+    const obs = new MutationObserver(() => {
+      const map = mapRef.current, L = window.L, ly = layersRef.current;
+      if (!map || !L || !ly.base) return;
+      const isDark = document.body.classList.contains('dark-mode');
+      const variant = isDark ? 'dark' : 'light';
+      [ly.base, ly.baseLabels].forEach(l => { if (map.hasLayer(l)) map.removeLayer(l); });
+      ly.base = L.tileLayer(`https://{s}.basemaps.cartocdn.com/${variant}_nolabels/{z}/{x}/{y}{r}.png`,{maxZoom:10,subdomains:'abcd'});
+      ly.baseLabels = L.tileLayer(`https://{s}.basemaps.cartocdn.com/${variant}_only_labels/{z}/{x}/{y}{r}.png`,{maxZoom:10,subdomains:'abcd',opacity:isDark?0.5:0.35});
+      if (basemapRef.current !== 'sat') { ly.base.addTo(map); ly.baseLabels.addTo(map); }
+      setThemeTick(t => t + 1);
+    });
+    obs.observe(document.body, { attributes:true, attributeFilter:['class'] });
+    return () => obs.disconnect();
+  }, []);
 
   function initMap() {
     if (!mapDiv.current || mapRef.current) return;
@@ -315,9 +335,13 @@ export default function WarRoom() {
       const size = isSel?26:isHov?22:18;
       const inner = isSel?10:isHov?8:6;
       const opacity = active ? 1 : 0.35;
+      const fillA = onSat ? (isSel?'45':isHov?'3A':'2E') : (isSel?'28':isHov?'20':'12');
+      const ring  = onSat ? '0 0 0 1.5px rgba(255,255,255,0.92), 0 2px 8px rgba(0,0,0,0.55)' : 'none';
+      const glow  = isSel?`0 0 16px ${c.marker}66`:isHov?`0 0 8px ${c.marker}55`:'none';
+      const shadow = [ring, glow].filter(s=>s!=='none').join(', ') || 'none';
       const icon = L.divIcon({
         className:'',
-        html:`<div style="width:${size}px;height:${size}px;border-radius:50%;border:${isSel?2:1.5}px solid ${c.marker};background:${c.marker}${isSel?'28':isHov?'20':'12'};display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:${opacity};box-shadow:0 0 ${isSel?16:isHov?8:0}px ${c.marker}44"><div style="width:${inner}px;height:${inner}px;border-radius:50%;background:${c.marker}"></div></div>`,
+        html:`<div style="width:${size}px;height:${size}px;border-radius:50%;border:${isSel?2:1.5}px solid ${c.marker};background:${c.marker}${fillA};display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:${opacity};box-shadow:${shadow}"><div style="width:${inner}px;height:${inner}px;border-radius:50%;background:${c.marker};box-shadow:${onSat?'0 0 0 1px rgba(255,255,255,0.65)':'none'}"></div></div>`,
         iconSize:[size,size], iconAnchor:[size/2,size/2],
       });
       const m = L.marker([lat,lng],{icon,zIndexOffset:isSel?1000:isHov?500:0})
@@ -411,7 +435,7 @@ export default function WarRoom() {
         ))}
       </div>
       {sel && mapMoved && !isMobile && (
-        <button onClick={()=>flyTo(sel)} style={{position:"absolute",top:12,left:12,zIndex:1000,background:CREAM,border:`1px solid ${FAINT}`,borderRadius:6,padding:"6px 12px",fontSize:11,color:CRIMSON,cursor:"pointer",fontWeight:600}}>
+        <button onClick={()=>flyTo(sel)} style={{position:"absolute",top:12,left:12,zIndex:1000,background:"var(--cream)",border:"1px solid var(--rule)",borderRadius:6,padding:"8px 12px",fontSize:11,color:"var(--ink)",cursor:"pointer",fontWeight:600,boxShadow:"var(--shadow-sm)"}}>
           ◎ Focus {sel.name.split(" ")[0]}
         </button>
       )}
@@ -621,9 +645,10 @@ export default function WarRoom() {
       </div>
 
       <style>{`
-        .leaflet-control-zoom{border:1px solid rgba(26,16,8,0.15)!important;border-radius:6px!important;overflow:hidden;box-shadow:none!important}
-        .leaflet-control-zoom a{background:${CREAM}!important;color:${CRIMSON}!important;border-color:rgba(26,16,8,0.12)!important;font-weight:700!important;width:28px!important;height:28px!important;line-height:28px!important;font-size:16px!important;box-shadow:none!important}
-        .leaflet-control-zoom a:hover{background:rgba(107,26,42,0.08)!important}
+        .leaflet-control-zoom{border:1px solid var(--rule)!important;border-radius:6px!important;overflow:hidden;box-shadow:var(--shadow-sm)!important}
+        .leaflet-control-zoom a{background:var(--cream)!important;color:var(--ink)!important;border-color:var(--rule)!important;font-weight:700!important;width:30px!important;height:30px!important;line-height:30px!important;font-size:16px!important;box-shadow:none!important;transition:background 0.15s ease}
+        .leaflet-control-zoom a:hover{background:color-mix(in oklab, var(--ink) 9%, var(--cream))!important;color:var(--ink)!important}
+        .leaflet-control-zoom a.leaflet-disabled{color:var(--ink-25)!important;background:var(--cream)!important}
         @keyframes wr-detail-in { from { transform: translateY(10px); opacity:0; } to { transform: translateY(0); opacity:1; } }
         .wr-ft-a { color: var(--ink-55); text-decoration: none; padding: 10px 2px; transition: color .15s ease; }
         .wr-ft-a:hover { color: var(--ink); }
