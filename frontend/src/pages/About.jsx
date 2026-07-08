@@ -326,6 +326,54 @@ export default function AboutPage() {
           </div>
         </section>
 
+        {/* Product Roadmap */}
+        <section id="roadmap" style={{ marginBottom:44 }}>
+          <SectionLabel>PRODUCT ROADMAP</SectionLabel>
+          <div style={{ background:"var(--card)", border:"1px solid var(--card-border)", borderRadius:14, padding:24 }}>
+            <p style={{ fontSize:13, color:"var(--ink-muted)", lineHeight:1.7, marginBottom:20 }}>
+              Threshold is a solo research project. Order reflects priority. No dates attached, and "shipped" means live in production, not announced.
+            </p>
+            {[
+              { status:"SHIPPED", color:"#3B6D11", items:[
+                ["v1.8.1", "War Room now runs on vendor basemaps with a switchable satellite imagery layer. Map controls follow the site theme."],
+                ["v1.8", "Escalation Index normalized per theatre against its own 90-day baseline, with a cold-start guard for new theatres."],
+                ["v1.7", "LLM classification with a multi-provider fallback chain. All synthetic placeholder data removed from the interface."],
+              ]},
+              { status:"IN PROGRESS", color:"#C0622B", items:[
+                ["Classifier at ingest", "New incidents are classified at scrape time through a queue instead of 12-hour full re-sweeps. The index gets fresher and the model load drops."],
+                ["Satellite Verification, v1", "Each exercise gets an AOI with the latest available Sentinel-2 scene and its acquisition metadata: age, cloud cover, resolution, coverage. Latest available, never \u201clive\u201d."],
+              ]},
+              { status:"PLANNED", color:"var(--ink-40)", items:[
+                ["Imagery timeline", "Before, during and after comparison per exercise. Sentinel-1 radar layer for cloud and night coverage."],
+                ["Higher-cadence imagery", "Near-daily optical revisit through research programme access, pending approval."],
+                ["Backtesting", "Validation of the Escalation Index against known historical escalation episodes. See Validation Roadmap above."],
+              ]},
+              { status:"EXPLORING", color:"#185FA5", items:[
+                ["JME database", "The curated joint-exercise registry as a standalone structured dataset: coverage beyond the current 20 theatres, versioned history, machine-readable access. A possible product in its own right."],
+                ["Observable indicators", "Analyst-annotated activity markers on imagery (vessel concentration, temporary structures, logistics buildup) with explicit confidence levels."],
+                ["Read API", "Public endpoint for daily index history, for researchers and journalists."],
+              ]},
+            ].map(group => (
+              <div key={group.status} style={{ marginBottom:18 }}>
+                <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
+                  <span style={{ fontSize:9, fontWeight:700, letterSpacing:"1.5px", padding:"3px 8px", borderRadius:3, color:group.color, border:`1px solid ${group.color}`, fontFamily:"var(--mono)" }}>
+                    {group.status}
+                  </span>
+                  <span style={{ flex:1, height:1, background:"var(--rule)" }}/>
+                </div>
+                <div style={{ display:"flex", flexDirection:"column", gap:0 }}>
+                  {group.items.map(([title, desc]) => (
+                    <div key={title} style={{ display:"flex", gap:14, padding:"9px 0", borderBottom:"1px solid rgba(26,16,8,0.05)", alignItems:"baseline" }}>
+                      <span style={{ fontSize:12.5, fontWeight:600, color:"var(--ink)", flexShrink:0, minWidth:150 }}>{title}</span>
+                      <span style={{ fontSize:12.5, color:"var(--ink-muted)", lineHeight:1.6 }}>{desc}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* Contact */}
         <section id="contact">
           <SectionLabel>CONTACT</SectionLabel>
