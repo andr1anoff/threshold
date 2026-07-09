@@ -3,6 +3,18 @@ import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
 import Logo from "./Logo";
 const STRANGELOVE_IMG = "/strangelove.png";
+const CONTACT_EMAIL = "contact@threshold-osint.com";
+const CONTACT_MAILTO = `mailto:${CONTACT_EMAIL}`;
+
+const CONTACT_BUTTON_STYLE = {
+  display:"inline-flex", alignItems:"center", justifyContent:"center", gap:6,
+  flexShrink:0, fontSize:12, fontWeight:700, color:"#fff",
+  padding:"6px 12px", textDecoration:"none", whiteSpace:"nowrap",
+  border:"1px solid rgba(245,240,232,0.16)", borderRadius:"var(--r-md)",
+  background:"linear-gradient(135deg, var(--crimson) 0%, #3D0A14 100%)",
+  boxShadow:"0 8px 24px rgba(107,26,42,0.18)",
+  transition:"filter 0.12s ease, box-shadow 0.2s ease, scale 0.1s ease",
+};
 
 // Module-level: persists across Layout remounts when navigating between pages
 let _warRoomClicks = 0;
@@ -167,7 +179,8 @@ export default function Layout({ children }) {
           <UtcClock />
         </div>
 
-        {/* About link */}
+        {/* Contact + About links */}
+        <a href={CONTACT_MAILTO} className="hide-mobile" style={CONTACT_BUTTON_STYLE}>Contact us</a>
         <Link to="/about" className="btn-ghost hide-mobile" style={{ flexShrink:0, fontSize:12, padding:"6px 12px" }}>About →</Link>
 
         {/* Dark mode toggle */}
@@ -242,6 +255,13 @@ export default function Layout({ children }) {
             }}>
             About
           </Link>
+          <a href={CONTACT_MAILTO} onClick={()=>setMenuOpen(false)}
+            style={{
+              margin:"12px 24px", ...CONTACT_BUTTON_STYLE,
+              fontSize:16, padding:"12px 18px",
+            }}>
+            Contact us
+          </a>
           {/* Dark mode toggle in mobile menu */}
           <button onClick={()=>{ setDark(d=>!d); }}
             style={{
