@@ -2,6 +2,12 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
 import Logo from "./Logo";
+
+/* Flip to false when Threshold leaves beta — removes the β from both the
+   header wordmark and the footer version string. Nothing else to change. */
+const IS_BETA = true;
+const VERSION = "v1.8.1";
+
 const STRANGELOVE_IMG = "/strangelove.png";
 const CONTACT_EMAIL = "contact@threshold-osint.com";
 const CONTACT_MAILTO = `mailto:${CONTACT_EMAIL}`;
@@ -145,7 +151,17 @@ export default function Layout({ children }) {
       }}>
         <Link to="/" style={{ display:"flex", alignItems:"center", gap:8, textDecoration:"none", flexShrink:0 }} aria-label="Threshold home">
           <Logo size={20}/>
-          <span style={{ fontSize:13, fontWeight:700, letterSpacing:"3px", color:"var(--ink)" }}>THRESHOLD<sup style={{ fontSize:8, fontWeight:500, letterSpacing:"0px", color:"var(--crimson)", marginLeft:3, verticalAlign:"super" }}>β</sup></span>
+          <span style={{ fontSize:13, fontWeight:700, letterSpacing:"3px", color:"var(--ink)" }}>
+            THRESHOLD
+            {IS_BETA && (
+              <sup style={{
+                fontSize:8, fontWeight:600, letterSpacing:"0",
+                color:"var(--crimson)", marginLeft:"2px",
+                verticalAlign:"super", lineHeight:0,
+                fontFamily:"var(--sans)",
+              }}>β</sup>
+            )}
+          </span>
         </Link>
 
         {/* Desktop nav */}
@@ -345,7 +361,7 @@ export default function Layout({ children }) {
                 <Link to="/datenschutz" className="ft-a" style={{ padding:"8px 6px" }}>Datenschutz</Link>
               </span>
             </span>
-            <span style={{ fontFamily:"var(--mono)" }}>v1.8.1β · threshold-osint.com</span>
+            <span style={{ fontFamily:"var(--mono)" }}>{VERSION}{IS_BETA && "β"} · threshold-osint.com</span>
           </div>
         </footer>
       )}

@@ -21,7 +21,10 @@
   --ink-faint:    rgba(26,16,8,0.10);
   --crimson:      #6B1A2A;
   --crimson-dim:  rgba(107,26,42,0.65);
-  --logo-acc:     #6B1A2A;           /* logo connectors; brightened in dark mode */
+  --logo-acc:     #6B1A2A;           /* logo echo, top rung; brightened in dark mode */
+  --logo-echo-1:  #B08A92;           /* echo, bottom rung — faintest trace */
+  --logo-echo-2:  #8E4655;           /* echo, middle rung */
+  --logo-echo-3:  var(--logo-acc);   /* echo, top rung — full crimson */
   --hi:   #8B2030;
   --mid:  #B07D1A;
   --lo:   #2D7A4F;
@@ -461,6 +464,9 @@ a { color: inherit; text-decoration: none; }
 }
 body.dark-mode {
   --logo-acc:     #B2485C;
+  --logo-echo-1:  #6E3B46;
+  --logo-echo-2:  #93414F;
+  --logo-echo-3:  var(--logo-acc);
   --cream:        #14100B;
   --cream-deep:   #0F0B07;
   --paper:        #1A1611;
