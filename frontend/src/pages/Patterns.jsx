@@ -14,7 +14,6 @@ export default function BriefsPage() {
   const [regionId, setRegionId]   = useState(null);
   const [loading, setLoading]     = useState(false);
   const [narrative, setNarrative] = useState("");
-  const [briefObj, setBriefObj]   = useState(null);
   const [error, setError]         = useState("");
   const [copied, setCopied]       = useState(false);
   const [generatedAt, setGeneratedAt] = useState(null);
@@ -24,7 +23,7 @@ export default function BriefsPage() {
   const currentRegion = baseRegion ? { ...baseRegion, ...(liveEi || {}) } : null;
 
   function copyBrief() {
-    const text = narrative || (briefObj ? briefObj.sections.map(s => `${s.heading}\n${s.body.join("\n")}`).join("\n\n") : "");
+    const text = narrative;   // only ever the real, backend-generated brief
     navigator.clipboard.writeText(text)
       .then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); })
       .catch(() => {});
@@ -33,7 +32,6 @@ export default function BriefsPage() {
   async function generate(rid, force = false) {
     setRegionId(rid);
     setNarrative("");
-    setBriefObj(null);
     setError("");
     setLiveEi(null);
     setLoading(true);
@@ -69,16 +67,24 @@ export default function BriefsPage() {
         throw new Error("LLM returned empty response.");
       }
     } catch(e) {
+      // NO FABRICATION. Previously this fell back to buildLocalBrief() — a
+      // hardcoded six-section "brief", complete with a Rhetoric assessment
+      // ("Official communications register moderate signalling intensity")
+      // that was pure invention, identical for every region, rendered whenever
+      // the backend failed. It contradicted the project's own README ("No
+      // displayed value is ever synthetic") and it hid real outages from us:
+      // a broken GROQ_API_KEY produced a plausible-looking brief instead of an
+      // error, so we could not tell whether the provider fallback worked.
+      //
+      // An empty state is the honest output. Say what broke and stop.
       const msg = e.message || "";
-      if (msg.includes("404") || msg.includes("No data") || msg.includes("no data")) {
-        setBriefObj(buildLocalBrief(rid));
-        setGeneratedAt(new Date().toLocaleString("en-GB",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}));
-      } else if (msg.includes("502") || msg.includes("empty")) {
-        setError("The LLM returned an empty response. Try again or select a region with more indexed incidents.");
-      } else {
-        setBriefObj(buildLocalBrief(rid));
-        setGeneratedAt(new Date().toLocaleString("en-GB",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}));
-      }
+      setError(
+        msg.includes("503") || /unavailable|provider/i.test(msg)
+          ? "Brief generation is temporarily unavailable — no LLM provider is responding. This is a Threshold-side fault, not a gap in the data."
+          : msg.includes("429") || /rate limit/i.test(msg)
+          ? "Provider rate limit reached. Try again in a minute."
+          : `Brief could not be generated. ${msg || "The backend did not respond."} No brief is shown rather than a synthetic one.`
+      );
     } finally {
       setLoading(false);
     }
@@ -139,7 +145,6 @@ export default function BriefsPage() {
           {loading && <BriefLoading region={currentRegion} />}
           {!loading && error && <BriefError error={error} onClear={()=>setError("")} />}
           {!loading && !error && narrative && <BriefText narrative={narrative} region={currentRegion} generatedAt={generatedAt} onCopy={copyBrief} copied={copied} onRegenerate={()=>generate(regionId, true)} navigate={navigate} />}
-          {!loading && !error && briefObj && !narrative && <BriefOutput brief={briefObj} region={currentRegion} generatedAt={generatedAt} onCopy={copyBrief} copied={copied} onRegenerate={()=>generate(regionId, true)} navigate={navigate} />}
         </section>
       </div>
     </Layout>
@@ -200,38 +205,9 @@ function BriefText({ narrative, region, generatedAt, onCopy, copied, onRegenerat
   );
 }
 
-function BriefOutput({ brief, region, generatedAt, onCopy, copied, onRegenerate, navigate }) {
-  const color = EI_COLOR(region?.ei);
-  return (
-    <article style={{ borderTop:"2px solid var(--ink)", paddingTop:32 }}>
-      <BriefMasthead region={region} color={color} generatedAt={generatedAt} />
+// BriefOutput() removed with buildLocalBrief() — it existed only to render the
+// fabricated sections. Real briefs are prose from the LLM and render via BriefText().
 
-      <div style={{ display:"grid", gridTemplateColumns:"200px 1fr", gap:56, paddingTop:40 }} className="stack-mobile">
-        <aside style={{ position:"sticky", top:100, alignSelf:"flex-start" }} className="hide-mobile">
-          <div className="micro" style={{ marginBottom:12 }}>SECTIONS</div>
-          {brief.sections.map((s, i) => (
-            <div key={i} style={{ padding:"8px 0", borderBottom:"1px solid var(--rule)", display:"flex", gap:10 }}>
-              <span className="mono small" style={{ color:"var(--accent)", width:18 }}>0{i+1}</span>
-              <span className="small">{s.heading}</span>
-            </div>
-          ))}
-        </aside>
-        <div>
-          {brief.sections.map((s, i) => (
-            <section key={i} style={{ marginBottom:40 }}>
-              <div className="micro micro-accent" style={{ marginBottom:10 }}>0{i+1} · {s.heading.toUpperCase()}</div>
-              {s.body.map((p, j) => (
-                <p key={j} className="body-lg" style={{ fontSize:17, lineHeight:1.65, marginBottom:14 }}>{p}</p>
-              ))}
-            </section>
-          ))}
-        </div>
-      </div>
-
-      <BriefFooter region={region} onCopy={onCopy} copied={copied} onRegenerate={onRegenerate} navigate={navigate} note={`Synthesised from ${brief._incidentCount||0} indexed incidents · open-source corpus only · not an official intelligence assessment.`} />
-    </article>
-  );
-}
 
 function BriefMasthead({ region, color, generatedAt }) {
   if (!region) return null;
@@ -284,52 +260,20 @@ function KV({ k, v, color, big }) {
   );
 }
 
-function buildLocalBrief(rid) {
-  const r = REGIONS.find(x => x.id === rid);
-  if (!r) return null;
-  return {
-    _incidentCount: 0,
-    sections: [
-      {
-        heading: "Situation overview",
-        body: [
-          `Live Escalation Index data for ${r.label} is currently unavailable — the backend index service could not be reached. No score is shown rather than an estimated one.`,
-          `${r.category === "conflict" ? `${r.label} carries an active-conflict structural baseline. Incident density remains high, and the rolling 7-day component continues to apply upward pressure to the index.` : `${r.label} carries a strategic-tension structural baseline. Exercise activity and rhetoric scoring continue to drive the index above the structural floor.`}`,
-        ],
-      },
-      {
-        heading: "Recent signals (gray zone)",
-        body: [
-          "No incidents could be retrieved from the backend corpus for this region in the current window. This is a data availability limitation rather than an absence of activity.",
-          "Category distribution is consistent with the historical pattern for this theatre. Cross-reference against UCDP and OCHA baselines recommended before citation.",
-        ],
-      },
-      {
-        heading: "Exercise activity",
-        body: [
-          `Exercise activity for ${r.label} could not be retrieved in the current window. Consult the Exercises page once backend connectivity is restored.`,
-        ],
-      },
-      {
-        heading: "Rhetoric assessment",
-        body: [
-          "Official communications in the window register moderate signalling intensity. Statements from primary actors emphasise conditional readiness rather than active escalation.",
-        ],
-      },
-      {
-        heading: "Source confidence",
-        body: [
-          "Source confidence is weighted toward institutional reporting (UN News, OCHA, UCDP), with secondary OSINT verification (Bellingcat, DeepState, CIT) for events lacking institutional coverage.",
-          "This brief was synthesised locally from seed data. Connect to the backend API for live incident corpus access.",
-        ],
-      },
-      {
-        heading: "Limitations & caveats",
-        body: [
-          "This brief was generated from static seed data — the backend API was unreachable or returned no incidents for this region. For a live brief, ensure the scraper pipeline has indexed recent events.",
-          "The Escalation Index compresses heterogeneous signals into a single number — useful for ranking, insufficient for prediction.",
-        ],
-      },
-    ],
-  };
-}
+// buildLocalBrief() was removed on 2026-07-12.
+//
+// It fabricated a full six-section analytical brief in JavaScript whenever the
+// backend was unreachable — including a "Rhetoric assessment" reading
+// "Official communications in the window register moderate signalling
+// intensity", hardcoded and identical for Ukraine, Sudan, Taiwan, every region,
+// with zero incidents behind it. Users could hit "Copy brief" and walk away
+// with invented analysis carrying the Threshold name.
+//
+// Two reasons it is gone and must stay gone:
+//   1. The README promises "No displayed value is ever synthetic." This broke
+//      that promise in the one place where it mattered most.
+//   2. It masked outages from US. An expired GROQ_API_KEY rendered a
+//      plausible brief instead of an error, so a provider failure was
+//      indistinguishable from a working system.
+//
+// If the backend cannot be reached, show the error. Empty stays empty.
