@@ -180,7 +180,7 @@ function RowIncident({ inc }) {
   const cat = CATS[inc.category || inc.cat] || CATS.civilian;
   const regionObj = REGIONS.find(r => r.label === inc.region);
   return (
-    <article style={{
+    <article className="incident-row" style={{
       display:"grid",
       gridTemplateColumns:"100px 130px 1fr 90px",
       gap:"0 20px", padding:"14px 0",
@@ -188,24 +188,24 @@ function RowIncident({ inc }) {
       alignItems:"start",
     }}>
       {/* Col 1: type glyph */}
-      <span style={{ display:"inline-flex", alignItems:"center", gap:6, paddingTop:2 }}>
+      <span className="incident-cat" style={{ display:"inline-flex", alignItems:"center", gap:6, paddingTop:2 }}>
         <span style={{ fontSize:13, color:cat.color }}>{cat.glyph}</span>
         <span className="micro" style={{ color:cat.color, fontSize:10 }}>{cat.label}</span>
       </span>
 
       {/* Col 2: date */}
-      <span className="mono small" style={{ color:"var(--ink-40)", paddingTop:2 }}>
+      <span className="mono small incident-date" style={{ color:"var(--ink-40)", paddingTop:2 }}>
         {inc.date?.slice(0,10) || ""}
       </span>
 
       {/* Col 3: title + description */}
-      <div>
-        <div style={{ fontSize:15, color:"var(--ink)", lineHeight:1.4, marginBottom:inc.description?4:0 }}>{inc.title}</div>
-        {inc.description && <div className="small" style={{ color:"var(--ink-55)", lineHeight:1.5, marginTop:4 }}>{inc.description}</div>}
+      <div className="incident-body">
+        <div className="incident-title" style={{ fontSize:15, color:"var(--ink)", lineHeight:1.4, marginBottom:inc.description?4:0 }}>{inc.title}</div>
+        {inc.description && <div className="small incident-desc" style={{ color:"var(--ink-55)", lineHeight:1.5, marginTop:4 }}>{inc.description}</div>}
       </div>
 
       {/* Col 4: region + EL + source — all right-aligned, source at bottom */}
-      <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:3, minHeight:40, justifyContent:"space-between" }}>
+      <div className="incident-meta" style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:3, minHeight:40, justifyContent:"space-between" }}>
         <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:2 }}>
           {regionObj ? (
             <span className="tt-wrap">

@@ -152,7 +152,7 @@ export default function ExercisesPage() {
 
         {/* Stats */}
         {exercises.length > 0 && (
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:12, marginBottom:28 }} className="stack-mobile">
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:12, marginBottom:28 }} className="stack-mobile stat-quad">
             {[["Total",exercises.length,"var(--ink)"],["NATO",nato,"#8B2030"],["Multilateral",multi,"#185FA5"],["National",nat,"#3B6D11"]].map(([l,v,c])=>(
               <div key={l} className="panel" style={{ padding:"16px 18px", textAlign:"center" }}>
                 <div className="tab-num" style={{ fontSize:28, fontWeight:800, color:c, letterSpacing:"-0.02em" }}>{v}</div>

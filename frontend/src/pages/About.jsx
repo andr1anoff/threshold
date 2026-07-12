@@ -131,7 +131,7 @@ export default function AboutPage() {
         {/* Hero */}
         <div style={{ marginBottom:48 }}>
           <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:18 }}>
-            <Logo size={34}/>
+            <span className="about-hero-mark"><Logo size={34}/></span>
             <div>
               <div style={{ fontSize:20, fontWeight:800, letterSpacing:"2px" }}>THRESHOLD<sup style={{ fontSize:10, fontWeight:500, letterSpacing:"0px", color:"var(--crimson)", marginLeft:3, verticalAlign:"super" }}>β</sup></div>
               <div style={{ fontSize:11, color:"var(--ink-muted)", letterSpacing:"1.5px" }}>GEOPOLITICAL ESCALATION MONITOR</div>
