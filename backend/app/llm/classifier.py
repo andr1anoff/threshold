@@ -95,7 +95,15 @@ def analyze_rhetoric(text: str) -> dict | None:
 
 
 def generate_narrative(region: str, incidents: list, exercises: list) -> str:
-    """Generate LLM analytical narrative for a region."""
+    """
+    Generate LLM analytical narrative for a region.
+
+    Raises on provider failure instead of returning "". The old version caught
+    every exception and returned an empty string, so an expired GROQ_API_KEY
+    surfaced to the user as "The LLM returned an empty response. Try again or
+    select a region with more indexed incidents" — a message that pointed at the
+    data when the data was fine. The caller now gets the real reason.
+    """
     inc_text = "\n".join(f"- [{i.get('category','?')}] {i.get('title','')}" for i in incidents[:8])
     ex_text = "\n".join(f"- {e.get('name','')} ({e.get('signal_target','')})" for e in exercises[:3])
     prompt = f"""You are a senior analyst at JFKI, Freie Universität Berlin.
@@ -109,19 +117,21 @@ Active exercises:
 
 Focus on: observable patterns, actor intent, escalation trajectory.
 Be precise. Do not speculate beyond the evidence. Academic tone."""
-    # 3.1: retry on 429 with exponential backoff
+
+    # call_llm handles the Groq → OpenRouter fallback internally. Retry here only
+    # on transient RPM limits; a dead provider is call_llm's problem, not ours.
     for attempt in range(3):
         try:
-            raw = _call_groq(prompt, model=SMART_MODEL, max_tokens=400)
-            return raw or ""
+            return call_llm(prompt, tier=SMART_MODEL, max_tokens=400) or ""
         except RateLimitError:
-            wait = 2000 * (attempt + 1) / 1000  # 2s, 4s, 6s
-            logger.warning(f"[narrative] 429 rate limit, retry {attempt+1}/3 after {wait}s")
+            wait = 2 * (attempt + 1)
+            logger.warning(f"[narrative] RPM limited, retry {attempt+1}/3 after {wait}s")
             time.sleep(wait)
-        except Exception as e:
-            logger.error(f"[narrative] {e}")
-            return ""
-    return ""
+        except DailyLimitError as e:
+            # Every provider is down. Let the router turn this into an honest 503.
+            logger.error(f"[narrative] all providers unavailable: {e}")
+            raise
+    raise DailyLimitError("Rate limited on every attempt")
 
 
 def cross_verify_incidents(db) -> dict:

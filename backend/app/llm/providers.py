@@ -29,6 +29,26 @@ class DailyLimitError(Exception):
     """All providers exhausted for today — caller should abort pipeline."""
 
 
+class ProviderError(Exception):
+    """
+    A provider failed for a reason that is NOT a rate limit: bad/expired key,
+    5xx, deprecated model, network error.
+
+    This class exists because of the 2026-07-12 outage. Before it, _call_groq
+    swallowed every non-429 failure and returned None. call_llm only caught
+    DailyLimitError, so a 401 (expired GROQ_API_KEY) never reached the fallback
+    path — it just returned None, and every brief on the site died with
+    "LLM returned an empty response". The fallback existed and did nothing.
+
+    Now: any provider failure is raised, and call_llm treats ALL of them as a
+    reason to try the next provider. Groq dying no longer takes the site down.
+    """
+    def __init__(self, provider: str, detail: str):
+        self.provider = provider
+        self.detail = detail
+        super().__init__(f"[{provider}] {detail}")
+
+
 # tier -> model per provider
 GROQ_MODELS = {
     "fast":  "llama-3.1-8b-instant",
@@ -51,7 +71,7 @@ def _get_groq():
 
 
 def _call_groq(prompt: str, tier: str, max_tokens: int, temperature: float) -> str | None:
-    """Returns text, or raises RateLimitError / DailyLimitError. None = hard failure."""
+    """Returns text, or raises RateLimitError / DailyLimitError / ProviderError."""
     try:
         r = _get_groq().chat.completions.create(
             model=GROQ_MODELS[tier],
@@ -70,14 +90,16 @@ def _call_groq(prompt: str, tier: str, max_tokens: int, temperature: float) -> s
                 raise DailyLimitError()
             logger.warning(f"[groq] RPM limited: {e}")
             raise RateLimitError()
+        # Everything else — 401 expired key, 404 deprecated model, 5xx, network.
+        # Previously this returned None and silently killed the request.
         logger.error(f"[groq] error: {e}")
-        return None
+        raise ProviderError("groq", err)
 
 
 def _call_openrouter(prompt: str, tier: str, max_tokens: int, temperature: float) -> str | None:
     key = os.getenv("OPENROUTER_API_KEY")
     if not key:
-        return None
+        raise ProviderError("openrouter", "OPENROUTER_API_KEY not set — no fallback configured")
     try:
         resp = httpx.post(
             "https://openrouter.ai/api/v1/chat/completions",
@@ -101,36 +123,68 @@ def _call_openrouter(prompt: str, tier: str, max_tokens: int, temperature: float
         return resp.json()["choices"][0]["message"]["content"].strip()
     except RateLimitError:
         raise
+    except ProviderError:
+        raise
     except Exception as e:
         logger.error(f"[openrouter] error: {e}")
-        return None
+        raise ProviderError("openrouter", str(e))
 
 
 # Sticky flag: once Groq TPD is exhausted, skip it for the rest of this process
 # (resets on next scheduled run — GH Actions spawns a fresh process each time).
 _groq_exhausted = False
 
+# Sticky flag: once Groq's credentials are proven bad (401/403), stop hammering
+# it for the life of this process. A dead key does not heal within a request.
+_groq_dead = False
+
 
 def call_llm(prompt: str, tier: str = "fast", max_tokens: int = 200,
              temperature: float = 0.1) -> str | None:
     """
-    Try Groq; on TPD exhaustion fall through to OpenRouter (if configured).
-    Raises:
-      RateLimitError  — transient RPM limit on current provider; caller retries
-      DailyLimitError — Groq TPD gone AND no fallback available; caller aborts
-    """
-    global _groq_exhausted
+    Try Groq; on ANY failure fall through to OpenRouter (if configured).
 
-    if not _groq_exhausted:
+    The distinction that matters: before 2026-07-12 this only fell through on
+    DailyLimitError. An expired GROQ_API_KEY (401) returned None instead, so the
+    fallback never fired and every brief on the site broke. Now every Groq
+    failure mode — TPD, bad key, deprecated model, 5xx, network — routes to the
+    fallback. Groq is a preference, not a dependency.
+
+    Raises:
+      RateLimitError  — transient RPM limit; caller may retry
+      DailyLimitError — every provider is unusable; caller aborts
+    """
+    global _groq_exhausted, _groq_dead
+
+    if not (_groq_exhausted or _groq_dead):
         try:
             return _call_groq(prompt, tier, max_tokens, temperature)
+
         except DailyLimitError:
             _groq_exhausted = True
             if not os.getenv("OPENROUTER_API_KEY"):
-                raise  # old behavior: abort pipeline
+                raise  # no fallback configured — preserve old abort behaviour
             logger.warning("[providers] Groq TPD exhausted — falling back to OpenRouter")
 
+        except ProviderError as e:
+            # Bad credentials will not fix themselves. Stop retrying Groq in
+            # this process so we don't burn a round-trip on every subsequent call.
+            if "401" in e.detail or "403" in e.detail or "api_key" in e.detail.lower():
+                _groq_dead = True
+                logger.error("[providers] Groq credentials rejected — check GROQ_API_KEY. "
+                             "Falling back to OpenRouter for the rest of this process.")
+            else:
+                logger.warning(f"[providers] Groq failed ({e.detail[:120]}) — trying OpenRouter")
+
+            if not os.getenv("OPENROUTER_API_KEY"):
+                # No fallback exists. Surface the real cause instead of a bare None,
+                # so the caller can tell the user something true.
+                raise DailyLimitError(
+                    f"Groq failed and no OPENROUTER_API_KEY is configured: {e.detail[:200]}"
+                )
+
     # Fallback path
+    last = None
     for attempt in range(3):
         try:
             return _call_openrouter(prompt, tier, max_tokens, temperature)
@@ -138,4 +192,19 @@ def call_llm(prompt: str, tier: str = "fast", max_tokens: int = 200,
             wait = 15 * (attempt + 1)
             logger.warning(f"[openrouter] 429, retry in {wait}s ({attempt+1}/3)")
             time.sleep(wait)
-    raise DailyLimitError()  # both providers dead
+        except ProviderError as e:
+            last = e.detail
+            logger.error(f"[providers] OpenRouter failed: {e.detail[:160]}")
+            break  # not a rate limit — retrying will not help
+
+    raise DailyLimitError(f"All LLM providers unavailable. Last error: {last or 'rate limited'}")
+
+
+def provider_health() -> dict:
+    """Cheap introspection for /api/admin/status — shows which providers are live."""
+    return {
+        "groq_key_present": bool(os.getenv("GROQ_API_KEY")),
+        "groq_dead": _groq_dead,
+        "groq_tpd_exhausted": _groq_exhausted,
+        "openrouter_configured": bool(os.getenv("OPENROUTER_API_KEY")),
+    }

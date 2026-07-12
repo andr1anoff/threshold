@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Analytics } from "@vercel/analytics/react";
+import ScrollToTop from "./components/ScrollToTop";
 import Home from "./pages/Home";
 import RegionPage from "./pages/Region";
 import IncidentsPage from "./pages/Incidents";
@@ -14,6 +15,7 @@ import "./index.css";
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/region/:id" element={<RegionPage />} />
