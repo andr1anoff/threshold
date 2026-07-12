@@ -122,7 +122,9 @@ Be precise. Do not speculate beyond the evidence. Academic tone."""
     # on transient RPM limits; a dead provider is call_llm's problem, not ours.
     for attempt in range(3):
         try:
-            return call_llm(prompt, tier=SMART_MODEL, max_tokens=400) or ""
+            # interactive=True: a human is watching a spinner. Fail fast rather
+            # than sitting through 90s of fallback backoff.
+            return call_llm(prompt, tier=SMART_MODEL, max_tokens=400, interactive=True) or ""
         except RateLimitError:
             wait = 2 * (attempt + 1)
             logger.warning(f"[narrative] RPM limited, retry {attempt+1}/3 after {wait}s")

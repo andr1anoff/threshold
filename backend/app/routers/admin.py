@@ -8,6 +8,7 @@ from app.scrapers.jme_scraper import scrape_all_exercises
 from app.di.calculator import calculate_all_regions
 from app.llm.classifier import run_classification_pipeline, generate_narrative, cross_verify_incidents, resweep_unclassifiable
 from app.llm.exercise_classifier import classify_all_exercises, generate_exercise_brief
+from app.llm.providers import DailyLimitError, RateLimitError, provider_health
 from app.db.supabase import get_client
 
 logger = logging.getLogger(__name__)
@@ -181,9 +182,28 @@ def get_narrative(region: str, request: Request, force: bool = False, x_admin_ke
     exercises = db.table("exercises").select("name,scale,lead_nation,signal_target,exercise_type,domain").eq("region",region).neq("announcement_status","archived-manual").limit(4).execute().data
     if not incidents and not exercises:
         raise HTTPException(status_code=404, detail=f"No recent open-source data for \"{region}\" yet.")
-    narrative = generate_narrative(region, incidents, exercises)
+
+    # generate_narrative raises now instead of returning "". If we don't catch
+    # these, FastAPI emits a bare 500 with no body, the frontend can't parse it,
+    # and the spinner turns forever. Translate each failure into something the
+    # user can act on.
+    try:
+        narrative = generate_narrative(region, incidents, exercises)
+    except DailyLimitError as e:
+        logger.error(f"[narrative] all providers down for {region}: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail="Brief generation is temporarily unavailable — no LLM provider is responding. "
+                   "This is a Threshold-side problem, not a gap in the data.",
+        )
+    except RateLimitError:
+        raise HTTPException(
+            status_code=429,
+            detail="Provider rate limit reached. Try again in a minute.",
+        )
+
     if not narrative:
-        raise HTTPException(status_code=502, detail="LLM returned empty response. Check GROQ_API_KEY.")
+        raise HTTPException(status_code=502, detail="LLM returned an empty response.")
     set_cached(region, narrative)
     return {"region": region, "narrative": narrative, "cached": False}
 

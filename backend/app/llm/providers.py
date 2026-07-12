@@ -140,7 +140,7 @@ _groq_dead = False
 
 
 def call_llm(prompt: str, tier: str = "fast", max_tokens: int = 200,
-             temperature: float = 0.1) -> str | None:
+             temperature: float = 0.1, interactive: bool = False) -> str | None:
     """
     Try Groq; on ANY failure fall through to OpenRouter (if configured).
 
@@ -149,6 +149,11 @@ def call_llm(prompt: str, tier: str = "fast", max_tokens: int = 200,
     fallback never fired and every brief on the site broke. Now every Groq
     failure mode — TPD, bad key, deprecated model, 5xx, network — routes to the
     fallback. Groq is a preference, not a dependency.
+
+    interactive=True — a human is watching a spinner. Retry backoff on the
+    fallback drops from 15/30/45s (90s total, unacceptable for a web request)
+    to a single 3s attempt. Batch callers (the nightly pipeline) leave this
+    False and keep the patient retries, because nobody is waiting on them.
 
     Raises:
       RateLimitError  — transient RPM limit; caller may retry
@@ -177,27 +182,30 @@ def call_llm(prompt: str, tier: str = "fast", max_tokens: int = 200,
                 logger.warning(f"[providers] Groq failed ({e.detail[:120]}) — trying OpenRouter")
 
             if not os.getenv("OPENROUTER_API_KEY"):
-                # No fallback exists. Surface the real cause instead of a bare None,
-                # so the caller can tell the user something true.
                 raise DailyLimitError(
                     f"Groq failed and no OPENROUTER_API_KEY is configured: {e.detail[:200]}"
                 )
 
     # Fallback path
+    attempts   = 1 if interactive else 3
+    backoff    = (3,) if interactive else (15, 30, 45)
     last = None
-    for attempt in range(3):
+    for attempt in range(attempts):
         try:
             return _call_openrouter(prompt, tier, max_tokens, temperature)
         except RateLimitError:
-            wait = 15 * (attempt + 1)
-            logger.warning(f"[openrouter] 429, retry in {wait}s ({attempt+1}/3)")
+            last = "rate limited"
+            if attempt + 1 >= attempts:
+                break
+            wait = backoff[attempt]
+            logger.warning(f"[openrouter] 429, retry in {wait}s ({attempt+1}/{attempts})")
             time.sleep(wait)
         except ProviderError as e:
             last = e.detail
             logger.error(f"[providers] OpenRouter failed: {e.detail[:160]}")
             break  # not a rate limit — retrying will not help
 
-    raise DailyLimitError(f"All LLM providers unavailable. Last error: {last or 'rate limited'}")
+    raise DailyLimitError(f"All LLM providers unavailable. Last error: {last or 'unknown'}")
 
 
 def provider_health() -> dict:
