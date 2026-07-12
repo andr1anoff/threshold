@@ -1,48 +1,33 @@
 /**
  * THRESHOLD — logo mark.
  *
- * Three treads ascending left-to-right, each trailing an offset crimson echo.
- * The echo is not a shadow: it is the trace of the step, and it strengthens
- * as the climb goes on. Depth comes from displacement, not from shading —
- * which is why the mark survives at 16px and why it behaves identically on
- * cream and on ink.
+ * Three tiles ascending left-to-right. The top one — the tread not yet stepped
+ * on — carries the crimson. Nothing else. Two colours, three rectangles.
  *
- * Geometry lives in ONE place (BARS / ECHOES below) and is mirrored exactly
- * in public/favicon.svg. If you change one, change the other.
+ * No echo, no gradient, no filter. The mark is legible at 16px because there is
+ * nothing in it that can smear, and it inverts cleanly because both colours are
+ * theme variables.
  *
- * Grid: 32×32. Tread 9×4. Run 8, rise 6 — even climb. Echo offset (−2, +2).
+ * Geometry is mirrored exactly in public/favicon.svg. Change one, change both.
+ *
+ * Grid: 32×32. Tile 10×4. Run 8, rise 6 — an even climb.
+ * Bounding box is 26×16, so margins are 3/3 horizontally and 8/8 vertically:
+ * the mark sits dead centre. Keep it that way if you touch the coordinates.
  */
 
-// x, y of each tread, bottom step first
-const BARS = [
-  [5, 19],
-  [13, 13],
-  [21, 7],
+const TILES = [
+  [3, 20],   // bottom — ink
+  [11, 14],  // middle — ink
+  [19, 8],   // top    — crimson, the threshold ahead
 ];
 
-// echo positions: each tread displaced (−2, +2)
-const ECHOES = [
-  [3, 21],
-  [11, 15],
-  [19, 9],
-];
-
-const TW = 9; // tread width
-const TH = 4; // tread height
+const TW = 10;
+const TH = 4;
 
 export default function Logo({ size = 28, white = false }) {
-  // Treads follow the wordmark: --ink flips to bone in dark mode.
-  const tread = white ? "#fff" : "var(--ink)";
-
-  // The echo escalates. Solid tints, not opacity — a washed-out echo goes
-  // muddy on cream and vanishes on ink. Each rung has its own declared value.
-  const echo = white
-    ? ["rgba(255,255,255,0.30)", "rgba(255,255,255,0.45)", "rgba(255,255,255,0.62)"]
-    : [
-        "var(--logo-echo-1, #B08A92)",
-        "var(--logo-echo-2, #8E4655)",
-        "var(--logo-echo-3, var(--logo-acc, var(--crimson)))",
-      ];
+  // --ink flips to bone in dark mode; --logo-acc brightens to #B2485C.
+  const ink = white ? "#fff" : "var(--ink)";
+  const acc = white ? "#C4485C" : "var(--logo-acc, var(--crimson))";
 
   return (
     <svg
@@ -56,11 +41,15 @@ export default function Logo({ size = 28, white = false }) {
       focusable="false"
       style={{ display: "block", flex: "none" }}
     >
-      {ECHOES.map(([x, y], i) => (
-        <rect key={`e${i}`} x={x} y={y} width={TW} height={TH} fill={echo[i]} />
-      ))}
-      {BARS.map(([x, y], i) => (
-        <rect key={`b${i}`} x={x} y={y} width={TW} height={TH} fill={tread} />
+      {TILES.map(([x, y], i) => (
+        <rect
+          key={i}
+          x={x}
+          y={y}
+          width={TW}
+          height={TH}
+          fill={i === 2 ? acc : ink}
+        />
       ))}
     </svg>
   );

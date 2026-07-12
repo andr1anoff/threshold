@@ -149,8 +149,8 @@ export default function Layout({ children }) {
         padding:"0 16px", height:60, gap:12, flexShrink:0,
         maxWidth:"100vw",
       }}>
-        <Link to="/" style={{ display:"flex", alignItems:"center", gap:8, textDecoration:"none", flexShrink:0 }} aria-label="Threshold home">
-          <Logo size={20}/>
+        <Link to="/" style={{ display:"flex", alignItems:"center", gap:10, textDecoration:"none", flexShrink:0 }} aria-label="Threshold home">
+          <Logo size={32}/>
           <span style={{ fontSize:13, fontWeight:700, letterSpacing:"3px", color:"var(--ink)" }}>
             THRESHOLD
             {IS_BETA && (
@@ -310,7 +310,7 @@ export default function Layout({ children }) {
 
             <div style={{ gridColumn:"span 1", minWidth:220 }}>
               <div style={{ display:"flex", alignItems:"center", gap:9, marginBottom:10 }}>
-                <Logo size={18} white/>
+                <Logo size={16} white/>
                 <span style={{ fontSize:12, fontWeight:700, letterSpacing:"3px", color:"#fff" }}>THRESHOLD</span>
               </div>
               <p style={{ fontSize:12, lineHeight:1.7, maxWidth:280, color:"rgba(245,240,232,0.42)", textWrap:"pretty" }}>
