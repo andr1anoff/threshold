@@ -1,0 +1,146 @@
+# PRE-REGISTRATION -- Ukraine calibration case
+#
+# ===========================================================================
+# THIS FILE IS A DRAFT. It is not pre-registered until YOU have reviewed every
+# row, edited what you disagree with, and committed it. Then paste the commit
+# SHA into registered_commit below and never edit the rows again.
+#
+# The whole point is that the list, the lead window and the threshold are fixed
+# BEFORE the first scorer run. You work alone; nobody is watching your hands.
+# A dated commit is the only thing standing between validation and fitting.
+# ===========================================================================
+
+region_key: ukraine
+registered_commit: 425cd989a825564c1da64792060e2623103f2ae4        # <-- fill after committing, then stop editing rows
+registered_at: null
+
+# --- Pinned test parameters ------------------------------------------------
+# A "hit" = EI for the region exceeded `threshold` at least once inside the
+# `lead_window_days` before the event date, having been below it at the start
+# of that window.
+lead_window_days: 30
+threshold: 0.9729
+
+# Reference period the scaling is calibrated on. Deliberately starts well
+# before the scoring window: ranking against only the 143 calm days of
+# 2013-07..2013-11 pins most of 2014 at the ceiling, making any threshold
+# unreachable. Five years gives the reference distribution a real tail.
+# Contains no ground-truth event, so it stays a clean holdout.
+holdout:
+  start: 2008-01-01
+  end: 2013-11-20
+threshold_basis: "p95 of control windows, EI_norm, rank scaling, holdout 2008-01-01..2013-11-20; event periods not read"
+
+# severity_tier: 1 = strategic rupture, 2 = major escalation, 3 = notable step
+events:
+
+  - event_key: ua_2013_agreement_suspended
+    event_date: 2013-11-21
+    label: Cabinet suspends Association Agreement preparations
+    severity_tier: 2
+    coverage: gdelt10
+    notes: Protests begin the same evening. Political, not kinetic.
+
+  - event_key: ua_2013_vilnius_summit
+    event_date: 2013-11-29
+    label: Vilnius summit ends without signature
+    severity_tier: 3
+    coverage: gdelt10
+
+  - event_key: ua_2013_maidan_dispersal
+    event_date: 2013-11-30
+    label: Violent dispersal of Maidan protesters
+    severity_tier: 2
+    coverage: gdelt10
+    notes: First state violence. Good test of whether the index reacts to force vs rhetoric.
+
+  - event_key: ua_2014_dictatorship_laws
+    event_date: 2014-01-16
+    label: Restrictive protest legislation passed
+    severity_tier: 3
+    coverage: gdelt10
+
+  - event_key: ua_2014_hrushevskoho_clashes
+    event_date: 2014-01-19
+    label: Hrushevskoho street clashes, first protester deaths
+    severity_tier: 2
+    coverage: gdelt10
+
+  - event_key: ua_2014_maidan_killings
+    event_date: 2014-02-18
+    label: Mass casualties in Kyiv over three days
+    severity_tier: 1
+    coverage: gdelt10
+    notes: Peak of the domestic phase. High article volume -- watch the confound here specifically.
+
+  - event_key: ua_2014_yanukovych_removed
+    event_date: 2014-02-22
+    label: Yanukovych leaves Kyiv, parliament votes removal
+    severity_tier: 1
+    coverage: gdelt10
+
+  - event_key: ua_2014_crimea_seizure
+    event_date: 2014-02-27
+    label: Armed men seize Crimean parliament
+    severity_tier: 1
+    coverage: gdelt10
+    notes: The single most important row. An early-warning index that misses
+      this five days after Yanukovych fled has a serious problem. But note the
+      lead window overlaps the Maidan killings, so a hit here may be inherited
+      rather than earned -- check whether EI rose again or merely stayed high.
+
+  - event_key: ua_2014_crimea_annexation
+    event_date: 2014-03-18
+    label: Annexation treaty signed
+    severity_tier: 1
+    coverage: gdelt10
+
+  - event_key: ua_2014_donbas_seizures
+    event_date: 2014-04-06
+    label: Administrative buildings seized in Donetsk and Luhansk
+    severity_tier: 2
+    coverage: gdelt10
+
+  - event_key: ua_2014_sloviansk
+    event_date: 2014-04-12
+    label: Sloviansk seized by armed group
+    severity_tier: 2
+    coverage: gdelt10
+    notes: Start of sustained armed conflict.
+
+  - event_key: ua_2014_mh17
+    event_date: 2014-07-17
+    label: MH17 shot down
+    severity_tier: 1
+    coverage: gdelt10
+    notes: Deliberately included as a HARD case. Almost certainly unpredictable
+      from an escalation index. If the index "predicts" this, suspect the
+      threshold, not the method.
+
+  - event_key: ua_2014_ilovaisk
+    event_date: 2014-08-24
+    label: Ilovaisk, regular units engaged
+    severity_tier: 1
+    coverage: gdelt10
+
+  - event_key: ua_2015_debaltseve
+    event_date: 2015-01-13
+    label: Debaltseve offensive begins
+    severity_tier: 2
+    coverage: gdelt10
+    notes: Lead window straddles the 2015-02-19 instrument break. Flag in results.
+
+# --- Negative control periods ---------------------------------------------
+# Windows with no tier-1 or tier-2 event. False positives are counted here.
+# Without these the whole exercise is cherry-picking.
+control_windows:
+  - start: 2013-07-01
+    end: 2013-11-20
+    notes: Pre-crisis baseline.
+  - start: 2014-05-15
+    end: 2014-07-16
+    notes: Active conflict but no discrete rupture. Hard control -- the index
+      will likely be elevated throughout. Expect false positives; report them.
+  - start: 2015-03-01
+    end: 2015-12-31
+    notes: Post-Minsk II, gdelt20 coverage. Cleanest control in the set.
