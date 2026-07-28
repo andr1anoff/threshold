@@ -1,0 +1,124 @@
+# PRE-REGISTRATION -- Baltic validation case
+#
+# ===========================================================================
+# DRAFT until you have reviewed every row, edited what you disagree with, set
+# the threshold from control windows only, committed, and pasted the SHA into
+# registered_commit. Then stop editing rows.
+#
+# This is the run that carries the claim. Ukraine was calibration and its two
+# nulls are already on the record; whatever this returns is reported next to
+# them, not instead of them.
+# ===========================================================================
+
+region_key: baltic
+registered_commit: null
+registered_at: null
+
+# --- Pinned test parameters ------------------------------------------------
+lead_window_days: 30
+threshold: 0.9550
+threshold_basis: "p95 of control windows, EI_norm, rank scaling, single gdelt20 holdout 2015-03-01..2019-12-31; coincides with mean+1.5sd; event periods not read"
+
+# Single GDELT generation throughout, so one holdout is correct here. It ends
+# before the first ground-truth event and contains none.
+holdout:
+  gdelt20:
+    start: 2015-03-01
+    end: 2019-12-31
+
+# severity_tier: 1 = strategic rupture, 2 = major escalation, 3 = notable step
+#
+# Events are chosen to be physically dated and externally verifiable. Damage
+# to infrastructure has a timestamp that does not depend on anyone's judgement
+# about when a situation "began", which is what made several of the Ukrainian
+# rows arguable.
+events:
+
+  - event_key: balt_2021_belarus_border_crisis
+    event_date: 2021-08-09
+    label: Engineered migration pressure begins on the Lithuanian border
+    severity_tier: 2
+    notes: Start date is contestable; Lithuania declared a state of emergency
+      in early August. Flagged as the weakest-dated row in the set.
+
+  - event_key: balt_2022_invasion
+    event_date: 2022-02-24
+    label: Russian full-scale invasion of Ukraine
+    severity_tier: 1
+    notes: Regional shock rather than a Baltic event. Included because it
+      resets the security environment for every state in the window. If the
+      index does not move here it is unlikely to move anywhere.
+
+  - event_key: balt_2022_nato_applications
+    event_date: 2022-05-18
+    label: Finland and Sweden submit NATO membership applications
+    severity_tier: 2
+
+  - event_key: balt_2022_nord_stream
+    event_date: 2022-09-26
+    label: Nord Stream 1 and 2 explosions in the Swedish and Danish EEZs
+    severity_tier: 1
+    notes: The canonical critical-infrastructure event of the period.
+
+  - event_key: balt_2023_finland_accession
+    event_date: 2023-04-04
+    label: Finland joins NATO
+    severity_tier: 2
+
+  - event_key: balt_2023_balticconnector
+    event_date: 2023-10-08
+    label: Balticconnector pipeline and telecom cables severed by anchor drag
+    severity_tier: 1
+    notes: Newnew Polar Bear. Cable damage to Estonia dated 7-8 October;
+      pipeline 8 October. Pipeline date used.
+
+  - event_key: balt_2024_sweden_accession
+    event_date: 2024-03-07
+    label: Sweden joins NATO
+    severity_tier: 2
+
+  - event_key: balt_2024_clion1_bcs
+    event_date: 2024-11-17
+    label: C-Lion1 and BCS East-West Interlink cables severed
+    severity_tier: 1
+    notes: Damage spans 17-18 November; first date used.
+
+  - event_key: balt_2024_estlink2
+    event_date: 2024-12-25
+    label: Estlink 2 power cable and four telecom lines cut
+    severity_tier: 1
+    notes: Eagle S, Gulf of Finland.
+
+  - event_key: balt_2025_gotland_cable
+    event_date: 2025-01-26
+    label: Latvia to Gotland fibre-optic cable damaged
+    severity_tier: 2
+    notes: Vezhen. A Swedish prosecutor later ruled the breach accidental.
+      Kept because the index is meant to track perceived escalation, and the
+      response at the time was a NATO investigation, but the ruling is worth
+      stating in any write-up.
+
+# --- Negative control periods ---------------------------------------------
+# Windows with no tier-1 or tier-2 event. False positives are counted here.
+control_windows:
+  - start: 2015-03-01
+    end: 2019-12-31
+    notes: Pre-crisis baseline and the calibration holdout. Long and quiet.
+
+  - start: 2020-01-01
+    end: 2021-08-08
+    notes: Pandemic period. Quiet in this theatre, and a useful test of whether
+      the index reacts to sheer news volume, which was extraordinary and had
+      nothing to do with regional security.
+
+  - start: 2023-05-01
+    end: 2023-10-07
+    notes: Between Finnish accession and the Balticconnector damage. Short and
+      genuinely uneventful.
+
+  - start: 2025-02-01
+    end: 2026-07-27
+    notes: After the last recorded incident. No suspicious undersea events were
+      reported in this theatre after January 2025, which makes this the
+      cleanest control in the set. It is also the longest, so report its rate
+      separately rather than only pooled.

@@ -160,9 +160,16 @@ def build_ei(df: pd.DataFrame, holdouts: dict, mode: str) -> pd.DataFrame:
         for name, col in [("raw", "gz_w"), ("norm", "gz_norm_w")]:
             out.loc[seg, f"gzterm_{name}"] = W_GZ * _scale(
                 out.loc[seg, col].to_numpy(float), h[col].to_numpy(float), mode)
+        # The baseline is calibrated on the whole generation, not on the quiet
+        # holdout. Ranking a conflict scalar against a period with almost no
+        # conflict pins nearly every later day at 1.0, which is what made the
+        # first baseline comparison useless: every recorded hit sat exactly at
+        # the ceiling. Using the full distribution costs the baseline nothing
+        # in fairness, since it is a fixed public series rather than something
+        # being fitted.
+        ref_gold = out.loc[seg, "gold_neg_w"].to_numpy(float)
         out.loc[seg, "ei_goldstein"] = _scale(
-            out.loc[seg, "gold_neg_w"].to_numpy(float),
-            h.gold_neg_w.to_numpy(float), mode)
+            out.loc[seg, "gold_neg_w"].to_numpy(float), ref_gold, mode)
 
     for name in ["raw", "norm"]:
         out[f"exterm_{name}"] = out["exterm"]
@@ -261,8 +268,15 @@ def evaluate(df: pd.DataFrame, gt: dict, variant: str) -> tuple[int, int, float]
         for w in gt.get("control_windows", []):
             m = ((df.event_date >= str(w["start"])) & (df.event_date <= str(w["end"])))
             segs.append(df.loc[m, "ei_goldstein"].dropna())
-        thr = float(pd.concat(segs).quantile(0.95))
+        pooled = pd.concat(segs)
+        thr = float(pooled.quantile(0.95))
+        ceil_hits = float((pooled >= 0.999).mean())
         print(f"\n  baseline threshold re-derived as p95 of controls: {thr:.4f}")
+        print(f"  baseline saturation on control days: {ceil_hits:.1%}")
+        if ceil_hits > 0.10 or thr >= 0.999:
+            print("  Baseline is saturated, so this comparison is not valid and")
+            print("  must not be cited. Widen its calibration reference before")
+            print("  reporting any figure from it.")
     lead = int(gt["lead_window_days"])
     col = f"ei_{variant}"
     s = df.set_index("event_date")[col]

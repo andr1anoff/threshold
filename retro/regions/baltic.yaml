@@ -1,0 +1,77 @@
+# Region definition, validation case.
+#
+# This is the case the index is actually meant to serve: sustained tension
+# without war. Ukraine was calibration, and calibration is where a method is
+# debugged, not where its claim is tested.
+#
+# Two properties make this cleaner than Ukraine:
+#
+#   1. The window sits entirely inside GDELT 2.0, which begins 2015-02-19.
+#      No instrument break, so the per-generation calibration that the Ukraine
+#      run needed does not apply here at all.
+#   2. Ground-truth events are physical and dated: cable and pipeline damage,
+#      accession decisions, border crises. They do not depend on a coder's
+#      judgement about when a conflict "started".
+
+region_key: baltic
+display_name: Baltic Sea region
+status: validation
+
+# --- Selector 1: actor country codes (CAMEO) --------------------------------
+actor_country_codes_cameo:
+  - LVA
+  - LTU
+  - EST
+  - FIN
+  - SWE
+  - POL
+action_geo_country_codes_fips:
+  - LG          # Latvia
+  - LH          # Lithuania
+  - EN          # Estonia
+  - FI          # Finland
+  - SW          # Sweden
+  - PL          # Poland
+
+# Counterparties whose involvement still makes an event Baltic-relevant.
+counterparty_codes_cameo:
+  - RUS
+  - BLR
+  - NATO
+  - USA
+  - DEU
+  - NOR
+
+# --- Selector 2: bounding box ----------------------------------------------
+# Covers the Baltic Sea proper plus the littoral states and the Gulf of
+# Finland. Deliberately loose, since GDELT geocoding is roughly 55% accurate
+# on key fields and a tight box silently drops real events.
+bounding_box:
+  lat_min: 53.0
+  lat_max: 66.0
+  lon_min: 9.0
+  lon_max: 30.0
+
+# --- Window ---------------------------------------------------------------
+# Starts after the GDELT 2.0 handover, ends at the extract boundary.
+window:
+  start: 2015-02-19
+  end: 2026-07-27
+  instrument_break: null        # none: single generation throughout
+
+# --- Baseline component ---------------------------------------------------
+baseline_sources:
+  - name: sipri_milex
+    countries: [LVA, LTU, EST, FIN, SWE, POL, RUS, BLR, NOR, DEU]
+    license_class: open
+  - name: cow_mid
+    license_class: open
+  - name: vdem
+    countries: [LVA, LTU, EST, FIN, SWE, POL, RUS, BLR]
+    license_class: open
+
+excluded_sources:
+  - name: acled
+    reason: "EULA bars ML/LLM use and monetized derivatives"
+  - name: iiss_military_balance
+    reason: paywalled
