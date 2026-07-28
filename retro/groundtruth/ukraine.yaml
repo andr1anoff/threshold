@@ -11,7 +11,7 @@
 # ===========================================================================
 
 region_key: ukraine
-registered_commit: 425cd989a825564c1da64792060e2623103f2ae4        # <-- fill after committing, then stop editing rows
+registered_commit: null        # <-- fill after committing, then stop editing rows
 registered_at: null
 
 # --- Pinned test parameters ------------------------------------------------
@@ -19,17 +19,26 @@ registered_at: null
 # `lead_window_days` before the event date, having been below it at the start
 # of that window.
 lead_window_days: 30
-threshold: 0.9729
+threshold: 0.9136
 
-# Reference period the scaling is calibrated on. Deliberately starts well
-# before the scoring window: ranking against only the 143 calm days of
-# 2013-07..2013-11 pins most of 2014 at the ceiling, making any threshold
-# unreachable. Five years gives the reference distribution a real tail.
-# Contains no ground-truth event, so it stays a clean holdout.
+# Reference periods the scaling is calibrated on, one per GDELT generation.
+#
+# Two are needed, not one. GDELT 2.0 added coverage of 65 languages at the
+# 2015-02-19 handover, so the corpus expands sharply. Ranks calibrated on
+# version 1 place ordinary version 2 days near the ceiling -- that artefact
+# produced all 26 false positives in calibration run v1.
+#
+# Both periods contain no ground-truth event. The gdelt20 holdout sits outside
+# the scoring window on purpose: reusing control window 3 would calibrate on
+# the same days the false positive rate is measured over.
 holdout:
-  start: 2008-01-01
-  end: 2013-11-20
-threshold_basis: "p95 of control windows, EI_norm, rank scaling, holdout 2008-01-01..2013-11-20; event periods not read"
+  gdelt10:
+    start: 2008-01-01
+    end: 2013-11-20
+  gdelt20:
+    start: 2016-06-01
+    end: 2018-12-31
+threshold_basis: "p95 of control windows, EI_norm, rank scaling, per-generation holdouts (gdelt10 2008-01-01..2013-11-20, gdelt20 2016-06-01..2018-12-31); EX as share of all events; event periods not read"
 
 # severity_tier: 1 = strategic rupture, 2 = major escalation, 3 = notable step
 events:
