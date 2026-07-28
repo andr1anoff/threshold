@@ -11,7 +11,7 @@
 # ===========================================================================
 
 region_key: ukraine
-registered_commit: null        # <-- fill after committing, then stop editing rows
+registered_commit: 26a717e68ec2c1c82edde690e9c6deaec3ccfca1
 registered_at: null
 
 # --- Pinned test parameters ------------------------------------------------
