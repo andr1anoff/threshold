@@ -1,0 +1,157 @@
+# Assistant-factchecked source ground truth.
+# Still requires human sign-off before verified=true.
+
+- url: https://www.army.mil/article/205976/mp_brigade_sets_stage_for_saber_strike_18
+  published: 2018-05-29
+  exercise: Saber Strike
+  edition: 2018
+  start_date: null
+  start_confidence: absent
+  end_date: 2018-06-15
+  end_confidence: high
+  lead_nation: "United States"
+  participants: [US, EE, LV, LT, PL, GB, DE, MK]
+  participants_complete: false
+  participant_count_claimed: 19
+  scale: 18000
+  scale_basis: planned
+  domain: land
+  location_text: "Estonia, Latvia, Lithuania and Poland; staging and preparations in Grafenwoehr, Germany"
+  parent: null
+  source_tier: official
+  review_status: assistant_factchecked
+  verified: false
+  notes: >
+    Article does not state the start date. Official USAREUR sources give
+    2018-06-03/2018-06-15 and a complete 19-country roster.
+    Grafenwoehr is the article dateline and staging location, not one of
+    the four principal exercise countries.
+
+- url: https://www.lapinkansa.fi/naton-suuri-sotaharjoitus-nordic-response-24-alkaa/6247822
+  published: 2024-03-04
+  exercise: Nordic Response
+  edition: 2024
+  start_date: 2024-03-04
+  start_confidence: high
+  end_date: null
+  end_confidence: low
+  end_text: "mid-March 2024"
+  lead_nation: "Norway"
+  participants: [NO, FI, SE, FR, GB]
+  participants_complete: false
+  participant_count_claimed: 14
+  scale: 20000
+  scale_basis: actual
+  domain: joint
+  location_text: "Northern Norway, Sweden and Finland; waters off Troms and Finnmark"
+  parent: steadfast-defender-2024
+  source_tier: secondary
+  review_status: assistant_factchecked
+  verified: false
+  notes: >
+    Article says the exercise starts on 2024-03-04 and involves approximately
+    20,000 personnel from 14 countries. Official Norwegian sources give the
+    overall exercise window as 2024-03-03/2024-03-14 and list 13 countries.
+    Finland participates for the first time as a NATO member. Article reports
+    50+ vessels, 100+ aircraft, 12 Finnish Hornets and about 4,100 Finns.
+
+- url: https://a1.ro/news/extern/nato-a-inceput-manevre-militare-in-cadrul-trident-juncture-18-id813040.html
+  published: 2018-10-25
+  exercise: Trident Juncture
+  edition: 2018
+  start_date: 2018-10-25
+  start_confidence: high
+  end_date: 2018-11-07
+  end_confidence: high
+  lead_nation: null
+  lead_organization: NATO
+  host_nation: "Norway"
+  exercise_command: "NATO Joint Force Command Naples"
+  participants: [NO, US, GB, SE, FI]
+  participants_complete: false
+  participant_group_claim: "All 29 NATO members plus Sweden and Finland"
+  scale: 50000
+  scale_basis: actual
+  domain: joint
+  location_text: "Norway"
+  parent: null
+  source_tier: secondary
+  provenance: "A1.ro citing News.ro"
+  review_status: assistant_factchecked
+  verified: false
+  notes: >
+    Article reports 10,000 vehicles and 250 aircraft. The United States
+    contributes more than 14,000 personnel and a carrier strike group.
+    Two Russian and two Belarusian observers are invited; they are not participants.
+    AFP origin was not explicitly confirmed on the A1 page.
+
+- url: https://from-ua.com/news/598398-bolee-10-stran-prisoedinilis-k-startovavshim-voennim-ucheniyam-nato-defender-europe-21.html
+  published: 2021-05-04
+  exercise: Defender Europe
+  edition: 2021
+  start_date: 2021-05-04
+  start_confidence: medium
+  end_date: null
+  end_confidence: low
+  end_text: "June 2021"
+  lead_nation: "United States"
+  participants: []
+  participants_complete: false
+  participant_count_claimed: 27
+  scale: 30000
+  scale_qualifier: more_than
+  scale_basis: reported
+  domain: joint
+  location_text: "30 training areas in more than 10 countries"
+  parent: null
+  source_tier: secondary
+  fetch_status: moved_or_current_page_unresolved
+  review_status: assistant_factchecked
+  verified: false
+  notes: >
+    Source claims more than 30,000 personnel from 27 countries.
+    Official sources report more than 28,000 from 26 nations at more than
+    30 training areas in 12 countries. Activities began in March;
+    the May date corresponds to the opening/main public phase.
+    The 10+ figure concerns host countries, while 27 concerns participant nations.
+    Original domain has moved from .com to .org, but the exact migrated page
+    was not recovered.
+
+- url: https://zz.lv/vietejas-zinas/latvijas-zinas/militarajas-macibas-namejs-2018-parbaudis-nbs-gatavibu-valsts-aizsardzibas-uzdevumu-izpildei/
+  published: 2018-08-20
+  exercise: Namejs
+  edition: 2018
+  start_date: 2018-08-20
+  start_confidence: high
+  end_date: 2018-09-02
+  end_confidence: high
+  lead_nation: "Latvia"
+  participants: [LV]
+  participants_complete: false
+  scale: 10000
+  scale_qualifier: more_than
+  scale_basis: planned
+  domain: joint
+  location_text: "Throughout Latvia; Adazi, Skrunda, Meza Mackevici, Lacusils and at least 36 municipalities"
+  parent: null
+  source_tier: secondary
+  fetch_status: live_https
+  review_status: assistant_factchecked
+  verified: false
+  notes: >
+    Article attributes the information to the Latvian Ministry of Defence.
+    It mentions Latvian and allied forces but does not name the allied countries.
+
+- url: "http://www.foreignbrief.com/daily-news/us-forces-join-largest-aurora-17-largest-swedish-military-exercise-decades"
+  exercise: Aurora
+  edition: 2017
+  fetch_status: unverified_truncated_url
+  last_pipeline_status: robots_disallowed
+  review_status: source_not_recoverable
+  verified: false
+  notes: >
+    The URL is incomplete, so the crawler result cannot be independently reproduced.
+    Canonical official sources describe Aurora 17 as a Swedish-led national joint
+    exercise conducted from 2017-09-11 to 2017-09-29. US participation ran
+    approximately 2017-09-19 to 2017-09-27. Do not insert either window into
+    source ground truth until the Foreign Brief text is recovered.
