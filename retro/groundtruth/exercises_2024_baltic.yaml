@@ -1,0 +1,106 @@
+# External recall reference: Baltic theatre, 2024
+#
+# The point of this file is that it does NOT come from the pipeline. Measuring
+# a registry against a list derived from the same URLs would only prove the
+# code is self-consistent. This list is compiled from official announcements and
+# can be re-checked by anyone against the cited sources.
+#
+# Scope filter: an exercise is in scope if any activity took place in, or in the
+# waters of, the countries in the extract -- LV LT EE FI SE NO PL RU BY. That is
+# why Joint Warrior (UK), Maritime Command LIVEX (Spain), Trojan Footprint
+# (Greece/Romania/Georgia) and Brave Warrior (Hungary) are listed as
+# out_of_scope rather than omitted: an honest recall figure has to state what it
+# excluded and why.
+#
+# 2024 only, on purpose. One year is enough to size the gap and small enough to
+# verify by hand.
+
+sources:
+  - name: SHAPE, Steadfast Defender 2024 exercise list
+    url: https://shape.nato.int/stde24/newsroom/exercise-list.aspx
+    note: authoritative list of exercises under the STDE24 umbrella
+  - name: US Navy via GlobalSecurity, BALTOPS 2024 announcement
+    url: https://www.globalsecurity.org/military/library/news/2024/05/mil-240531-usn01.htm
+  - name: Canadian Department of National Defence, STDE24 wrap-up
+    url: https://www.canada.ca/en/department-national-defence/news/2024/05/canada-wraps-up-participation-in-natos-exercise-steadfast-defender-2024.html
+
+in_scope:
+  - name: Steadfast Defender
+    edition: 2024
+    dates: 2024-01-22/2024-05-31
+    countries: [EE, LV, LT, PL, NO]
+    note: umbrella exercise, roughly 90,000 personnel
+
+  - name: Nordic Response
+    edition: 2024
+    dates: 2024-03-05/2024-03-14
+    countries: [NO, SE, FI]
+
+  - name: Crystal Arrow
+    edition: 2024
+    dates: 2024-03-04/2024-03-15
+    countries: [LV]
+
+  - name: Saber Strike
+    edition: 2024
+    dates: 2024-04-08/2024-04-30
+    countries: [DE, PL, LT]
+
+  - name: Spring Storm
+    edition: 2024
+    dates: 2024-05-06/2024-05-17
+    countries: [EE]
+    aliases: [Kevadtorm]
+
+  - name: Grand Quadriga
+    edition: 2024
+    dates: 2024-05-15/2024-05-30
+    countries: [DE, LT]
+
+  - name: Dragon
+    edition: 2024
+    dates: 2024-02-25/2024-03-14
+    countries: [PL]
+    aliases: [Dragon 24, Smok]
+
+  - name: Brilliant Jump
+    edition: 2024
+    dates: 2024-02-12/2024-02-28
+    countries: [DE, PL]
+
+  - name: Immediate Response
+    edition: 2024
+    dates: 2024-03-30/2024-05-31
+    countries: [CZ, EE, FI, DE, NO, PL, SE]
+
+  - name: Swift Response
+    edition: 2024
+    dates: 2024-05-05/2024-05-24
+    countries: [EE, HU, IT, MD, MK, PL, RO, SE]
+
+  - name: BALTOPS
+    edition: 2024
+    dates: 2024-06-07/2024-06-20
+    countries: [LT, LV, EE, PL, SE, FI, DE, DK]
+    note: 19 allies, 50+ ships, 85+ aircraft, ~9,000 personnel
+
+out_of_scope:
+  - name: Joint Warrior
+    edition: 2024
+    reason: United Kingdom, outside the extract countries
+  - name: Maritime Command LIVEX
+    edition: 2024
+    reason: Spain and Atlantic
+  - name: Trojan Footprint
+    edition: 2024
+    reason: Greece, Romania, Georgia
+  - name: Brave Warrior
+    edition: 2024
+    reason: Hungary
+
+# Known incompleteness, stated rather than hidden: this list covers NATO
+# exercises announced under or alongside STDE24. National exercises run outside
+# that umbrella (Lithuania's Iron Wolf, Latvia's Namejs, Finland's national
+# series) and all Russian and Belarusian exercises are absent. Recall measured
+# against this list is therefore recall against NATO's own announced programme,
+# not against everything that happened.

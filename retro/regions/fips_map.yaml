@@ -1,0 +1,49 @@
+# FIPS 10-4 country codes -> region_key
+#
+# GDELT's ActionGeo_CountryCode uses FIPS 10-4, NOT ISO 3166. This is the
+# mapping for the 15 countries in the extract. Note that FIPS 'UK' means
+# Ukraine in some legacy tables but here 'UP' is Ukraine and 'UK' is the
+# United Kingdom, which is exactly the kind of collision worth pinning down
+# in a file rather than remembering.
+#
+# Every key is quoted on purpose: unquoted NO parses as the boolean false in
+# YAML, which silently dropped all 163k Norway rows on the first run.
+
+fips_to_region:
+  "UP": ukraine            # Ukraine
+  "RS": russia             # Russian Federation
+  "BO": belarus            # Belarus
+
+  "LG": baltic             # Latvia
+  "LH": baltic             # Lithuania
+  "EN": baltic             # Estonia
+
+  "PL": central_europe     # Poland
+  "EZ": central_europe     # Czechia
+  "LO": central_europe     # Slovakia
+
+  "FI": nordic             # Finland
+  "SW": nordic             # Sweden
+  "NO": nordic             # Norway
+
+  "GM": western_europe     # Germany
+  "UK": western_europe     # United Kingdom
+  "US": north_america      # United States
+
+# Which regions matter for which purpose. Everything else is loaded but not
+# scored, so you can widen later without re-querying BigQuery.
+roles:
+  calibration: [ukraine]
+  validation: [baltic]
+  context: [russia, belarus, nordic, central_europe, western_europe, north_america]
+
+# Date sanity bounds. GDELT SQLDATE contains impossible values -- 4.8% of the
+# v2 rows are dated before the table's own 2015-02-19 start, some as early as
+# 1920. Rows outside these bounds are dropped and counted, not silently kept.
+date_bounds:
+  gdelt10:
+    min: 19790101
+    max: 20150218
+  gdelt20:
+    min: 20150219
+    max: 20261231

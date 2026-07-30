@@ -1,0 +1,59 @@
+# Deterministic CAMEO -> category crosswalk. Not an LLM.
+#
+# ===========================================================================
+# ALIGN THIS WITH YOUR LIVE TAXONOMY BEFORE TRUSTING ANY RESULT.
+#
+# The `category` values below are placeholders using the CAMEO conflict ladder.
+# Your live classifier assigns its own categories, and the whole point of the
+# retro/live overlap test is comparing the two. If the label sets differ, the
+# comparison is meaningless.
+#
+# Edit the right-hand side to your actual category names. Do not edit the
+# left-hand side: CAMEO root codes 01-20 are fixed.
+# ===========================================================================
+
+# CAMEO EventRootCode -> your category
+root_codes:
+  "01": statement          # MAKE PUBLIC STATEMENT
+  "02": appeal             # APPEAL
+  "03": cooperation        # EXPRESS INTENT TO COOPERATE
+  "04": diplomacy          # CONSULT
+  "05": diplomacy          # ENGAGE IN DIPLOMATIC COOPERATION
+  "06": cooperation        # ENGAGE IN MATERIAL COOPERATION
+  "07": aid                # PROVIDE AID
+  "08": concession         # YIELD
+  "09": investigation      # INVESTIGATE
+  "10": demand             # DEMAND
+  "11": disapproval        # DISAPPROVE
+  "12": rejection          # REJECT
+  "13": threat             # THREATEN
+  "14": protest            # PROTEST
+  "15": force_posture      # EXHIBIT FORCE POSTURE  <- exercises, deployments, alerts
+  "16": relations_cut      # REDUCE RELATIONS
+  "17": coercion           # COERCE
+  "18": assault            # ASSAULT
+  "19": armed_clash        # FIGHT
+  "20": mass_violence      # USE UNCONVENTIONAL MASS VIOLENCE
+
+# Fallback for unparseable or missing codes. These rows are kept, not dropped,
+# so you can measure how much of the stream is junk rather than hiding it.
+unknown_category: unknown
+
+# QuadClass is GDELT's own 4-way collapse. Kept alongside the category because
+# it is the crudest possible escalation proxy and therefore a useful baseline
+# to beat: 1 verbal cooperation, 2 material cooperation, 3 verbal conflict,
+# 4 material conflict.
+quad_class_labels:
+  1: verbal_cooperation
+  2: material_cooperation
+  3: verbal_conflict
+  4: material_conflict
+
+# Which root codes count toward the GZ (incident pressure) term.
+# Deliberately explicit rather than derived from QuadClass, so you can change
+# one without silently changing the other.
+gz_root_codes: ["13", "14", "15", "16", "17", "18", "19", "20"]
+
+# Which root codes count toward the EX (force posture / exercise) term.
+# 15 is the CAMEO code that actually carries exercises and deployments.
+ex_root_codes: ["15"]

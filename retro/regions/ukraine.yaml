@@ -1,0 +1,73 @@
+# Region definition, calibration case.
+#
+# One region only, on purpose. The other 19 wait until the pipeline is proven
+# on this one. Adding regions is cheap once the shape is right; changing the
+# shape after 20 regions are loaded is not.
+#
+# Two independent selectors are defined because GDELT geo-coding is unreliable
+# (~55% field accuracy per the 2025 MDPI audit). Rows are kept if EITHER
+# selector matches, and which one matched is recorded, so you can measure how
+# much of your stream depends on bad geocoding.
+
+region_key: ukraine
+display_name: Ukraine
+status: calibration          # calibration | validation | production
+
+# --- Selector 1: actor country codes (CAMEO/FIPS as used in GDELT) ----------
+# GDELT Actor1CountryCode / Actor2CountryCode use CAMEO country codes.
+# ActionGeo_CountryCode uses FIPS 10-4, which is NOT the same. Both listed.
+actor_country_codes_cameo:
+  - UKR
+action_geo_country_codes_fips:
+  - UP                        # FIPS 10-4 for Ukraine. Not "UA".
+
+# Counterparties whose involvement still makes an event Ukraine-relevant.
+# Kept separate so you can later test whether including them changes the index.
+counterparty_codes_cameo:
+  - RUS
+  - NATO
+  - USA
+  - POL
+  - BLR
+
+# --- Selector 2: bounding box ----------------------------------------------
+# Generous box covering Ukraine incl. Crimea and the Donbas. Deliberately
+# loose: tight boxes plus bad geocoding silently drop real events.
+bounding_box:
+  lat_min: 44.0
+  lat_max: 52.5
+  lon_min: 22.0
+  lon_max: 40.3
+
+# --- Window ---------------------------------------------------------------
+# Mid-2013 start per the calibration plan. Note the instrument break:
+# GDELT 2.0 begins 2015-02-19, so this window spans two generations.
+# Everything before that date has NO translingual coverage, meaning
+# Russian- and Ukrainian-language media are largely absent and the stream
+# reflects Western attention rather than local signal. Documented, not fixed.
+window:
+  start: 2013-07-01
+  end: 2015-12-31
+  instrument_break: 2015-02-19
+
+# --- Baseline component ---------------------------------------------------
+# The 0.20 BASELINE weight needs structural inputs. All open-licensed.
+baseline_sources:
+  - name: sipri_milex
+    countries: [UKR, RUS, POL, BLR]
+    license_class: open
+  - name: cow_mid
+    license_class: open
+  - name: vdem
+    countries: [UKR, RUS]
+    license_class: open
+
+# --- Explicitly excluded --------------------------------------------------
+# ACLED prohibits use with ML/LLM systems regardless of commercial or
+# academic purpose, and prohibits monetized derivative products. Both apply
+# here. Not usable in either lane. Do not add it back.
+excluded_sources:
+  - name: acled
+    reason: "EULA bars ML/LLM use and monetized derivatives"
+  - name: iiss_military_balance
+    reason: paywalled

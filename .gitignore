@@ -8,3 +8,6 @@ venv/
 dist/
 .DS_Store
 *.log
+retro/data/
+retro/*.duckdb
+retro/*.duckdb
