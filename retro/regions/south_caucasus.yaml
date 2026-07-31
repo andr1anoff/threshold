@@ -1,0 +1,51 @@
+# Region definition, second validation case.
+#
+# Same structural advantage as Baltic: the whole window sits inside GDELT 2.0,
+# so there is no instrument break and no per-generation calibration. Unlike
+# Baltic, the theatre contains a full-scale 44-day war with an unambiguous
+# start date, which makes it a harder test: if the index cannot see that, the
+# null is not about signal subtlety.
+
+region_key: south_caucasus
+display_name: South Caucasus
+status: validation
+
+actor_country_codes_cameo:
+  - ARM
+  - AZE
+action_geo_country_codes_fips:
+  - "AM"          # Armenia
+  - "AJ"          # Azerbaijan
+
+counterparty_codes_cameo:
+  - RUS
+  - TUR
+  - IRN
+  - GEO
+
+bounding_box:
+  lat_min: 38.0
+  lat_max: 42.5
+  lon_min: 43.0
+  lon_max: 51.0
+
+window:
+  start: 2015-02-19
+  end: 2026-07-27
+  instrument_break: null
+
+baseline_sources:
+  - name: sipri_milex
+    countries: [ARM, AZE, RUS, TUR, GEO, IRN]
+    license_class: open
+  - name: cow_mid
+    license_class: open
+  - name: vdem
+    countries: [ARM, AZE, RUS, TUR, GEO]
+    license_class: open
+
+excluded_sources:
+  - name: acled
+    reason: "EULA bars ML/LLM use and monetized derivatives"
+  - name: iiss_military_balance
+    reason: paywalled

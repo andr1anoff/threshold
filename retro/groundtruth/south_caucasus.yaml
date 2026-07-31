@@ -1,0 +1,105 @@
+# PRE-REGISTRATION -- South Caucasus validation case
+#
+# ===========================================================================
+# DRAFT until you have reviewed every row, edited what you disagree with, set
+# the threshold from control windows only, committed, and pasted the SHA into
+# registered_commit. Then stop editing rows.
+#
+# Third anchor. Ukraine was calibration, Baltic was validation under sustained
+# tension without war. This theatre contains a 44-day interstate war with an
+# unambiguous start date. If the index cannot see that, the null is not about
+# signal subtlety, and that is the point of adding it.
+# ===========================================================================
+
+region_key: south_caucasus
+registered_commit: null
+registered_at: null
+
+# --- Pinned test parameters ------------------------------------------------
+lead_window_days: 30
+threshold: 0.8780
+threshold_basis: "p95 of control windows, EI_norm, rank scaling, single gdelt20 holdout 2017-01-01..2020-06-30; same procedure as baltic; event periods not read"
+
+# Single GDELT generation throughout: the window opens at the 2.0 handover,
+# so no per-generation calibration applies and one holdout is correct.
+# Widened from 2015-02-19..2016-03-01 (377 days) to the longest event-free
+# stretch in the window (1277 days). Reason is sample size for the rank
+# reference, decided before any event period was read. Both candidates are
+# event-free; the longer one is simply a more stable distribution.
+holdout:
+  gdelt20:
+    start: 2017-01-01
+    end: 2020-06-30
+
+# severity_tier: 1 = strategic rupture, 2 = major escalation, 3 = notable step
+#
+# Dates are the first day of fighting as reported by both sides, not the day a
+# situation is judged to have "begun". Where the two governments disagree on
+# who fired first, the date is not in dispute -- only attribution is.
+events:
+
+  - event_key: sc_2016_four_day_war
+    event_date: 2016-04-02
+    label: Four-Day War along the Karabakh line of contact
+    severity_tier: 2
+    notes: Heaviest fighting since the 1994 ceasefire up to that point.
+      Ended 2016-04-05 by a Moscow-brokered agreement.
+
+  - event_key: sc_2020_tavush_clashes
+    event_date: 2020-07-12
+    label: Tavush-Tovuz border clashes
+    severity_tier: 3
+    notes: Interstate border, not the Karabakh line. Included because it is
+      the clearest precursor available before September 2020.
+
+  - event_key: sc_2020_second_karabakh_war
+    event_date: 2020-09-27
+    label: Second Nagorno-Karabakh War begins
+    severity_tier: 1
+    notes: The primary test. Full-scale interstate war, 44 days.
+
+  - event_key: sc_2020_trilateral_ceasefire
+    event_date: 2020-11-10
+    label: Trilateral ceasefire statement, Russian peacekeepers deployed
+    severity_tier: 1
+    notes: Termination, not escalation. Kept because the index should also
+      register de-escalation; score it separately if that muddies the claim.
+
+  - event_key: sc_2021_syunik_incursion
+    event_date: 2021-05-12
+    label: Azerbaijani forces cross into Syunik and Gegharkunik
+    severity_tier: 3
+
+  - event_key: sc_2022_september_clashes
+    event_date: 2022-09-13
+    label: Largest interstate border fighting outside Karabakh
+    severity_tier: 2
+    notes: Struck Armenian territory proper, not the disputed area.
+
+  - event_key: sc_2023_azerbaijani_offensive
+    event_date: 2023-09-19
+    label: Azerbaijani offensive; Karabakh authorities capitulate in 24 hours
+    severity_tier: 1
+    notes: Second primary test. Followed by the departure of roughly 100,400
+      people within a fortnight. The exodus is a consequence of this event and
+      is deliberately not listed as a separate row.
+
+# --- Negative control periods ---------------------------------------------
+# Windows with no tier-1 or tier-2 event. False positives are counted here.
+control_windows:
+  - start: 2015-02-19
+    end: 2016-03-01
+    notes: Opening of GDELT 2.0 to just before the Four-Day War. Short, and
+      that is a known weakness -- report its rate separately.
+
+  - start: 2017-01-01
+    end: 2020-06-30
+    notes: Longest quiet stretch in the window. Contains the 2018 Velvet
+      Revolution, which is domestic rather than interstate and is therefore
+      not treated as an escalation event. If the index spikes here, that is
+      a finding about what it actually measures.
+
+  - start: 2024-06-01
+    end: 2026-07-27
+    notes: After the Karabakh question closed. Border delimitation talks and
+      a peace-treaty process, no fighting at scale.

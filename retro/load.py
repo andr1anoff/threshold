@@ -34,10 +34,13 @@ from pathlib import Path
 import duckdb
 import yaml
 
-EXPECTED = {
-    "gdelt10": "gdelt10_countries15.csv",
-    "gdelt20": "gdelt20_countries15.csv",
-}
+# (source_version, filename). A list, not a dict: several extracts can share
+# one source_version, which happens as soon as a second region is pulled.
+EXPECTED = [
+    ("gdelt10", "gdelt10_countries15.csv"),
+    ("gdelt20", "gdelt20_countries15.csv"),
+    ("gdelt20", "gdelt20_south_caucasus.csv"),
+]
 
 
 def load_configs(root: Path) -> tuple[dict, dict]:
@@ -215,7 +218,7 @@ def main() -> int:
     create_schema(con)
 
     if not args.summary_only:
-        missing = [n for n in EXPECTED.values() if not (args.data / n).exists()]
+        missing = [n for _, n in EXPECTED if not (args.data / n).exists()]
         if missing:
             print("missing in " + str(args.data) + ":")
             for m in missing:
@@ -223,7 +226,7 @@ def main() -> int:
             print("\nRename the BigQuery exports first. See README.")
             return 1
         print(f"loading into {args.db}")
-        for sv, name in EXPECTED.items():
+        for sv, name in EXPECTED:
             ingest(con, args.data / name, sv, cw, fm)
 
     summary(con)

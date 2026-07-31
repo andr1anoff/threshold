@@ -26,6 +26,9 @@ fips_to_region:
   "SW": nordic             # Sweden
   "NO": nordic             # Norway
 
+  "AM": south_caucasus     # Armenia
+  "AJ": south_caucasus     # Azerbaijan
+
   "GM": western_europe     # Germany
   "UK": western_europe     # United Kingdom
   "US": north_america      # United States
@@ -34,7 +37,7 @@ fips_to_region:
 # scored, so you can widen later without re-querying BigQuery.
 roles:
   calibration: [ukraine]
-  validation: [baltic]
+  validation: [baltic, south_caucasus]
   context: [russia, belarus, nordic, central_europe, western_europe, north_america]
 
 # Date sanity bounds. GDELT SQLDATE contains impossible values -- 4.8% of the
