@@ -19,7 +19,7 @@ registered_at: null
 # `lead_window_days` before the event date, having been below it at the start
 # of that window.
 lead_window_days: 30
-threshold: 0.9136
+threshold: 0.9871
 
 # Reference periods the scaling is calibrated on, one per GDELT generation.
 #
@@ -38,7 +38,7 @@ holdout:
   gdelt20:
     start: 2016-06-01
     end: 2018-12-31
-threshold_basis: "p95 of control windows, EI_norm, rank scaling, per-generation holdouts (gdelt10 2008-01-01..2013-11-20, gdelt20 2016-06-01..2018-12-31); EX as share of all events; event periods not read"
+threshold_basis: "POST-HOC. p95 of control windows, EI_raw, rank scaling. Chosen after EI_norm returned a near-total null on this theatre, so this is NOT a pre-registered specification. The pre-registered result stands at commit 26a717e and is unchanged. Two of the three control windows here are periods of active conflict, which inflates the raw-variant percentile; that is the finding, not a nuisance to be tuned away."
 
 # severity_tier: 1 = strategic rupture, 2 = major escalation, 3 = notable step
 events:
