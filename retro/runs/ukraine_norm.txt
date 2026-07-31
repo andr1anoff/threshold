@@ -1,0 +1,54 @@
+window from regions/ukraine.yaml: 2013-07-01 .. 2015-12-31
+region ukraine   window 7d rolling
+series 2007-12-25 .. 2018-12-31   4,025 days
+scaling=rank   calibration per GDELT generation:
+  gdelt10: holdout 2008-01-01 .. 2013-11-20  (2151 days)
+  gdelt20: holdout 2016-06-01 .. 2018-12-31  (944 days)
+BASELINE term is a constant placeholder (no SIPRI/COW/V-Dem yet):
+  it shifts the level, not the shape.
+
+--- term contributions (mean |value| over complete windows) ---
+  EI_raw   GZ    0.266 ( 39.9%)   EX    0.201 ( 30.1%)   BASE  0.200 ( 30.0%)
+  EI_norm  GZ    0.228 ( 36.2%)   EX    0.201 ( 32.0%)   BASE  0.200 ( 31.8%)
+  Nominal weights are GZ 0.45 / EX 0.35 / BASE 0.20.
+  If the realised shares differ sharply, the weights are decorative.
+
+--- confound check (whole series, complete windows only) ---
+  EI_raw   vs article volume : +0.377   <- largely independent of volume
+  EI_raw   vs Goldstein sum   : -0.133
+  EI_norm  vs article volume : +0.113   <- largely independent of volume
+  EI_norm  vs Goldstein sum   : -0.457
+
+  Goldstein is GDELT's own conflict scalar and costs nothing to
+  compute. If EI does not beat it, EI has no product in it.
+
+--- event study, EI_norm, threshold 0.9136, lead 30d ---
+event                             date        tier       peak  result
+ua_2013_agreement_suspended       2013-11-21  2        0.7037  miss
+ua_2013_vilnius_summit            2013-11-29  3        0.7037  miss
+ua_2013_maidan_dispersal          2013-11-30  2        0.6730  miss
+ua_2014_dictatorship_laws         2014-01-16  3        0.7657  miss
+ua_2014_hrushevskoho_clashes      2014-01-19  2        0.7856  miss
+ua_2014_maidan_killings           2014-02-18  1        0.8632  miss
+ua_2014_yanukovych_removed        2014-02-22  1        0.8568  miss
+ua_2014_crimea_seizure            2014-02-27  1        0.7798  miss
+ua_2014_crimea_annexation         2014-03-18  1        0.7188  miss
+ua_2014_donbas_seizures           2014-04-06  2        0.7344  miss
+ua_2014_sloviansk                 2014-04-12  2        0.8354  miss
+ua_2014_mh17                      2014-07-17  1        0.9285  HIT
+ua_2014_ilovaisk                  2014-08-24  1        0.9039  miss
+ua_2015_debaltseve                2015-01-13  2        0.7063  miss
+
+  false positives by control window:
+    2013-07-01 .. 2013-11-20     0 /  143    0.0%   Pre-crisis baseline
+    2014-05-15 .. 2014-07-16     5 /   63    7.9%   Active conflict but no discrete rupture
+    2015-03-01 .. 2015-12-31    21 /  306    6.9%   Post-Minsk II, gdelt20 coverage
+
+  hits 1   misses 13
+  false positives 26 of 512 control days -> 5.1%
+  A single pooled rate hides which window they sit in. If they
+  cluster in an active-conflict window, the index is describing the
+  present rather than forecasting -- a nowcast, not a forecast.
+
+  Report this rate whatever it is. An index with a documented 40%
+  false positive rate is sellable. One without the number is not.

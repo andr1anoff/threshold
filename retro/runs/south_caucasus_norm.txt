@@ -1,0 +1,46 @@
+window from regions/south_caucasus.yaml: 2015-02-19 .. 2026-07-27
+region south_caucasus   window 7d rolling
+series 2015-02-19 .. 2026-07-27   4,177 days
+scaling=rank   calibration per GDELT generation:
+  gdelt20: holdout 2017-01-01 .. 2020-06-30  (1277 days)
+BASELINE term is a constant placeholder (no SIPRI/COW/V-Dem yet):
+  it shifts the level, not the shape.
+
+--- term contributions (mean |value| over complete windows) ---
+  EI_raw   GZ    0.250 ( 38.8%)   EX    0.193 ( 30.1%)   BASE  0.200 ( 31.1%)
+  EI_norm  GZ    0.289 ( 42.4%)   EX    0.193 ( 28.3%)   BASE  0.200 ( 29.3%)
+  Nominal weights are GZ 0.45 / EX 0.35 / BASE 0.20.
+  If the realised shares differ sharply, the weights are decorative.
+
+--- confound check (whole series, complete windows only) ---
+  EI_raw   vs article volume : +0.533   <- largely independent of volume
+  EI_raw   vs Goldstein sum   : -0.139
+  EI_norm  vs article volume : +0.121   <- largely independent of volume
+  EI_norm  vs Goldstein sum   : -0.419
+
+  Goldstein is GDELT's own conflict scalar and costs nothing to
+  compute. If EI does not beat it, EI has no product in it.
+
+--- event study, EI_norm, threshold 0.8780, lead 30d ---
+event                             date        tier       peak  result
+sc_2016_four_day_war              2016-04-02  2        0.9188  HIT
+sc_2020_tavush_clashes            2020-07-12  3        0.7159  miss
+sc_2020_second_karabakh_war       2020-09-27  1        0.9937  hit (inherited, already elevated)
+sc_2020_trilateral_ceasefire      2020-11-10  1        0.9992  hit (inherited, already elevated)
+sc_2021_syunik_incursion          2021-05-12  3        0.9341  hit (inherited, already elevated)
+sc_2022_september_clashes         2022-09-13  2        0.9052  HIT
+sc_2023_azerbaijani_offensive     2023-09-19  1        0.9995  hit (inherited, already elevated)
+
+  false positives by control window:
+    2015-02-19 .. 2016-03-01    40 /  371   10.8%   Opening of GDELT 2
+    2017-01-01 .. 2020-06-30    56 / 1277    4.4%   Longest quiet stretch in the window
+    2024-06-01 .. 2026-07-27    26 /  787    3.3%   After the Karabakh question closed
+
+  hits 2   misses 1
+  false positives 122 of 2435 control days -> 5.0%
+  A single pooled rate hides which window they sit in. If they
+  cluster in an active-conflict window, the index is describing the
+  present rather than forecasting -- a nowcast, not a forecast.
+
+  Report this rate whatever it is. An index with a documented 40%
+  false positive rate is sellable. One without the number is not.
