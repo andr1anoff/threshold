@@ -11,3 +11,7 @@ dist/
 retro/data/
 retro/*.duckdb
 retro/*.duckdb
+.vercel
+.env*
+.vercel
+backend/data/resample.jsonl
