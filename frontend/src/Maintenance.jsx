@@ -32,24 +32,38 @@ const CSS = `
   background:var(--void);
   color:var(--phos);
   font-family:var(--thm-mono);
-  font-size:15px;
-  line-height:1.7;
+  font-size:clamp(16px,1.35vw,21px);
+  line-height:1.72;
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:clamp(16px,4vw,48px);
+  padding:clamp(20px,5vw,72px);
   overflow-y:auto;
   overflow-x:hidden;
   text-shadow:0 0 2px rgba(77,255,122,.55),0 0 12px rgba(77,255,122,.18);
-  animation:thm-flicker 6s steps(1) infinite;
+  animation:thm-flicker 9s linear infinite;
 }
 .thm-root *{box-sizing:border-box;margin:0;padding:0}
 
 @keyframes thm-flicker{
-  0%,96%,100%{opacity:1}
-  97%{opacity:.94}
-  98%{opacity:1}
-  99%{opacity:.97}
+  0%   {opacity:1;    filter:brightness(1)}
+  8%   {opacity:.985; filter:brightness(1.04)}
+  9%   {opacity:1;    filter:brightness(.97)}
+  23%  {opacity:1;    filter:brightness(1)}
+  24%  {opacity:.96;  filter:brightness(1.07)}
+  25%  {opacity:1;    filter:brightness(.99)}
+  47%  {opacity:1;    filter:brightness(1)}
+  48%  {opacity:.99;  filter:brightness(1.03)}
+  62%  {opacity:1;    filter:brightness(.98)}
+  63%  {opacity:.93;  filter:brightness(1.09)}
+  64%  {opacity:1;    filter:brightness(1)}
+  81%  {opacity:1;    filter:brightness(1)}
+  82%  {opacity:.975; filter:brightness(1.05)}
+  83%  {opacity:1;    filter:brightness(.98)}
+  95%  {opacity:1;    filter:brightness(1)}
+  96%  {opacity:.955; filter:brightness(1.06)}
+  97%  {opacity:1;    filter:brightness(1)}
+  100% {opacity:1;    filter:brightness(1)}
 }
 
 .thm-crt{position:absolute;inset:0;pointer-events:none;z-index:9}
@@ -57,37 +71,26 @@ const CSS = `
   content:"";position:absolute;inset:0;
   background:repeating-linear-gradient(to bottom,
     rgba(0,0,0,0) 0px,rgba(0,0,0,0) 2px,
-    rgba(0,0,0,.34) 3px,rgba(0,0,0,.34) 4px);
+    rgba(0,0,0,.30) 3px,rgba(0,0,0,.30) 5px);
 }
 .thm-crt::after{
   content:"";position:absolute;inset:0;
   background:radial-gradient(ellipse 78% 68% at 50% 50%,
     rgba(0,0,0,0) 42%,rgba(0,0,0,.55) 78%,rgba(0,0,0,.9) 100%);
 }
-.thm-sweep{
-  position:absolute;left:0;right:0;height:180px;z-index:10;pointer-events:none;
-  background:linear-gradient(to bottom,
-    rgba(77,255,122,0) 0%,rgba(77,255,122,.035) 50%,rgba(77,255,122,0) 100%);
-  animation:thm-sweep 7s linear infinite;
-}
-@keyframes thm-sweep{
-  0%{transform:translateY(-200px)}
-  100%{transform:translateY(105vh)}
-}
+.thm-term{position:relative;z-index:2;width:100%;max-width:min(1100px,86vw)}
 
-.thm-term{position:relative;z-index:2;width:100%;max-width:720px}
-
-.thm-mark{display:flex;align-items:center;gap:14px;margin-bottom:30px}
+.thm-mark{display:flex;align-items:center;gap:1.1em;margin-bottom:2.1em}
 .thm-mark svg{display:block;filter:drop-shadow(0 0 6px rgba(77,255,122,.5))}
 .thm-wordmark{
-  font-size:13px;letter-spacing:.34em;text-transform:uppercase;color:var(--phos-dim);
+  font-size:.82em;letter-spacing:.34em;text-transform:uppercase;color:var(--phos-dim);
 }
 
-.thm-rule{border:0;border-top:1px solid var(--phos-ghost);margin:0 0 26px}
+.thm-rule{border:0;border-top:1px solid var(--phos-ghost);margin:0 0 1.8em}
 
 .thm-title{
-  font-size:clamp(30px,7vw,54px);font-weight:500;letter-spacing:.02em;
-  line-height:1.08;margin-bottom:6px;
+  font-size:clamp(34px,6.4vw,86px);font-weight:500;letter-spacing:.01em;
+  line-height:1.05;margin-bottom:.18em;
 }
 .thm-cursor{
   display:inline-block;width:.56em;height:.86em;background:var(--phos);
@@ -98,12 +101,12 @@ const CSS = `
 @keyframes thm-blink{0%,49%{opacity:1}50%,100%{opacity:0}}
 
 .thm-sub{
-  color:var(--amber);font-size:14px;letter-spacing:.16em;text-transform:uppercase;
-  margin-bottom:34px;
+  color:var(--amber);font-size:.9em;letter-spacing:.17em;text-transform:uppercase;
+  margin-bottom:2.3em;
   text-shadow:0 0 2px rgba(255,184,77,.5),0 0 12px rgba(255,184,77,.2);
 }
 
-.thm-log{list-style:none;font-size:13.5px;margin-bottom:34px}
+.thm-log{list-style:none;font-size:.92em;margin-bottom:2.3em}
 .thm-log li{
   display:flex;align-items:baseline;gap:.6ch;
   color:var(--phos-dim);white-space:nowrap;
@@ -123,14 +126,14 @@ const CSS = `
 }
 
 .thm-note{
-  border-left:2px solid var(--phos-ghost);padding-left:16px;
-  color:var(--phos-dim);font-size:13.5px;max-width:58ch;margin-bottom:34px;
+  border-left:2px solid var(--phos-ghost);padding-left:1.2em;
+  color:var(--phos-dim);font-size:.92em;max-width:64ch;margin-bottom:2.3em;
 }
 .thm-note strong{color:var(--phos);font-weight:500}
 
 .thm-foot{
-  border-top:1px solid var(--phos-ghost);padding-top:16px;font-size:12px;
-  color:var(--phos-ghost);display:flex;flex-wrap:wrap;gap:6px 22px;align-items:baseline;
+  border-top:1px solid var(--phos-ghost);padding-top:1.1em;font-size:.8em;
+  color:var(--phos-ghost);display:flex;flex-wrap:wrap;gap:.5em 1.8em;align-items:baseline;
 }
 .thm-foot a{color:var(--phos-dim);text-decoration:none;border-bottom:1px dotted var(--phos-ghost)}
 .thm-foot a:hover,.thm-foot a:focus-visible{color:var(--phos);border-bottom-color:var(--phos)}
@@ -138,15 +141,15 @@ const CSS = `
 .thm-spacer{flex:1 1 auto}
 
 @media (max-width:560px){
-  .thm-root{font-size:14px;align-items:flex-start;padding-top:40px}
+  .thm-root{font-size:14px;align-items:flex-start;padding-top:36px}
+  .thm-term{max-width:100%}
   .thm-log{font-size:11.5px}
   .thm-log .thm-dots{letter-spacing:.08em;min-width:1ch}
-  .thm-sub{font-size:12px;letter-spacing:.12em}
+  .thm-sub{font-size:.86em;letter-spacing:.12em}
 }
 
 @media (prefers-reduced-motion:reduce){
   .thm-root{animation:none}
-  .thm-sweep{display:none}
   .thm-cursor{animation:none}
   .thm-log li{opacity:1;transition:none}
 }
@@ -177,11 +180,10 @@ export default function Maintenance() {
     <div className="thm-root">
       <style>{CSS}</style>
       <div className="thm-crt" aria-hidden="true" />
-      <div className="thm-sweep" aria-hidden="true" />
 
       <main className="thm-term">
         <div className="thm-mark">
-          <svg width="34" height="34" viewBox="0 0 32 32" role="img" aria-label="Threshold">
+          <svg width="1em" height="1em" viewBox="0 0 32 32" style={{ width: "2.4em", height: "2.4em" }} role="img" aria-label="Threshold">
             <rect x="3" y="6" width="10" height="4" fill="#e0483a" />
             <rect x="11" y="12" width="10" height="4" fill="currentColor" />
             <rect x="19" y="18" width="10" height="4" fill="currentColor" />
@@ -202,7 +204,7 @@ export default function Maintenance() {
             <li key={line.k} className={i < shown ? "thm-on" : ""}>
               <span className="thm-k">{line.k}</span>
               <span className="thm-dots" aria-hidden="true">
-                {"·".repeat(120)}
+                {"·".repeat(160)}
               </span>
               <span
                 className={
@@ -228,7 +230,7 @@ export default function Maintenance() {
         </p>
 
         <footer className="thm-foot">
-          <span>Ivan Andrianov</span>
+          <a href="https://evandrianov.pro/">Ivan Andrianov</a>
           <a href="https://github.com/andr1anoff/threshold">Repository</a>
           <a href="mailto:ivaa03@zedat.fu-berlin.de">Contact</a>
           <span className="thm-spacer" />
